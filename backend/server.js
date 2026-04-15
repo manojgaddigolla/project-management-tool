@@ -17,6 +17,9 @@ app.use("/api/users", userRoutes);
 const authRoutes = require("./routes/auth");
 app.use("/api/auth", authRoutes);
 
+const projectRoutes = require("./routes/projects");
+app.use("/api/projects", projectRoutes);
+
 app.get("/api/health", (req, res) => {
   res.json({ status: "UP", message: "Server is healthy." });
 });
