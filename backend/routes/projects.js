@@ -2,7 +2,11 @@ const express = require("express");
 const router = express.Router();
 const { check } = require("express-validator");
 const auth = require("../middleware/auth");
-const { createProject } = require("../controllers/projectController");
+const {
+  createProject,
+  getProjects,
+  getProjectById
+} = require("../controllers/projectController");
 
 router.post(
   "/",
@@ -10,8 +14,8 @@ router.post(
   createProject,
 );
 
-// router.get('/', (req, res) => {
-//   res.send('Project routes are ready!');
-// });
+router.get("/", auth, getProjects);
+
+router.get('/:id', auth, getProjectById);
 
 module.exports = router;
