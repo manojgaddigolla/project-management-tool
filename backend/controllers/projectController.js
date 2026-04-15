@@ -70,30 +70,8 @@ const getProjects = async (req, res) => {
 
 const getProjectById = async (req, res) => {
   try {
-    const project = await Project.findById(req.params.id);
-
-    if (!project) {
-      return res.status(404).json({ msg: "Project not found" });
-    }
-
-    const userId = req.user.id;
-
-    const isOwner = project.owner.toString() === userId;
-
-    const isMember = project.members.some(
-      (memberId) => memberId.toString() === userId,
-    );
-
-    if (!isOwner && !isMember) {
-      return res.status(404).json({ msg: "Project not found" });
-    }
-
-    res.json(project);
+    res.json(req.project);
   } catch (err) {
-    if (err.kind === "ObjectId") {
-      return res.status(404).json({ msg: "Project not found" });
-    }
-
     console.error(err.message);
     res.status(500).send("Server Error");
   }
