@@ -9,6 +9,8 @@ const userRoutes = require("./routes/users");
 const authRoutes = require("./routes/auth");
 const projectRoutes = require("./routes/projects");
 const boardRoutes = require("./routes/boards");
+const columnRoutes = require("./routes/columns");
+const cardRoutes = require("./routes/cards");
 
 const app = express();
 
@@ -23,6 +25,10 @@ app.use("/api/auth", authRoutes);
 app.use("/api/projects", projectRoutes);
 
 app.use("/api/boards", boardRoutes);
+
+app.use("/api/columns",columnRoutes)
+
+app.use("/api/cards", cardRoutes);
 
 app.get("/api/health", (req, res) => {
   res.json({ status: "UP", message: "Server is healthy." });
