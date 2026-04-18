@@ -10,7 +10,7 @@ const useAuthStore = create((set, get) => ({
   loading: false,
 
   setToken: (token) => {
-    localStorage.setItem("token", token);
+    localStorage.setItem('token', token);
     set({ token: token, isAuthenticated: true });
   },
 
