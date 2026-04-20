@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { Route, Routes } from "react-router-dom";
 import Navbar from "./components/layout/Navbar";
 import Sidebar from "./components/layout/Sidebar";
@@ -9,10 +9,17 @@ import RegisterPage from "./pages/RegisterPage";
 import LoginPage from "./pages/LoginPage";
 import DashboardPage from "./pages/DashboardPage";
 import ProjectBoardPage from "./pages/ProjectBoardPage";
-
+import PrivateRoute from "./components/routing/PrivateRoute";
+import useAuthStore from "./store/authStore";
 import "./App.css";
 
 function App() {
+  const loadUser = useAuthStore((state) => state.loadUser);
+
+  useEffect(() => {
+    loadUser();
+  }, [loadUser]);
+
   return (
     <div className="app-container">
       <Navbar />
@@ -24,8 +31,14 @@ function App() {
             <Route path="/register" element={<RegisterPage />} />
             <Route path="/login" element={<LoginPage />} />
 
-            <Route path="/dashboard" element={<DashboardPage />} />
-            <Route path="/project/:projectId" element={<ProjectBoardPage />} />
+            <Route element={<PrivateRoute />}>
+              <Route path="/dashboard" element={<DashboardPage />} />
+
+              <Route
+                path="/project/:projectId"
+                element={<ProjectBoardPage />}
+              />
+            </Route>
           </Routes>
         </main>
       </div>
