@@ -8,6 +8,7 @@ import HomePage from "./pages/HomePage";
 import RegisterPage from "./pages/RegisterPage";
 import LoginPage from "./pages/LoginPage";
 import DashboardPage from "./pages/DashboardPage";
+import BoardPage from "./pages/BoardPage";
 import ProjectBoardPage from "./pages/ProjectBoardPage";
 import PrivateRoute from "./components/routing/PrivateRoute";
 import useAuthStore from "./store/authStore";
@@ -33,11 +34,7 @@ function App() {
 
             <Route element={<PrivateRoute />}>
               <Route path="/dashboard" element={<DashboardPage />} />
-
-              <Route
-                path="/project/:projectId"
-                element={<ProjectBoardPage />}
-              />
+              <Route path="/project/:projectId" element={<BoardPage />} />
             </Route>
           </Routes>
         </main>

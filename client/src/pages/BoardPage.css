@@ -1,0 +1,56 @@
+.board-page-container {
+    padding: 2rem;
+    background-color: #f9f9f9;
+    min-height: 100%;
+}
+
+.board-loading,
+.board-error {
+    text-align: center;
+    font-size: 1.2rem;
+    color: #666;
+    margin-top: 5rem;
+}
+
+.board-error {
+    color: #d9534f;
+}
+
+.board-page-title {
+    font-size: 1.8rem;
+    color: #333;
+    margin-bottom: 1rem;
+    flex-shrink: 0;
+}
+
+.board-canvas {
+    display: flex;
+    flex-direction: row;
+    align-items: flex-start;
+    flex-grow: 1;
+    overflow-x: auto;
+    overflow-y: hidden;
+    padding-bottom: 1rem;
+}
+
+.data-dump {
+    margin-top: 2rem;
+    background-color: #2d2d2d;
+    color: #f8f8f2;
+    border-radius: 5px;
+    padding: 1rem;
+    font-family: 'Courier New', Courier, monospace;
+    overflow-x: auto;
+}
+
+.data-dump h3 {
+    margin-top: 0;
+    border-bottom: 1px solid #555;
+    padding-bottom: 0.5rem;
+    margin-bottom: 1rem;
+}
+
+.data-dump pre {
+    white-space: pre-wrap;
+    word-wrap: break-word;
+}
