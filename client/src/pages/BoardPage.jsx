@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
+import { io } from "socket.io-client";
 import { getBoardByProjectId } from "../services/projectService";
 import { DragDropContext } from "react-beautiful-dnd";
 import "./BoardPage.css";
@@ -30,6 +31,23 @@ const BoardPage = () => {
     };
 
     fetchBoard();
+  }, [projectId]);
+
+  useEffect(() => {
+    const socket = io("http://localhost:5000");
+
+    socket.emit("joinProject", projectId);
+
+    socket.on("boardUpdated", (updatedBoard) => {
+      console.log("Board update received from server:", updatedBoard);
+      setBoardData(updatedBoard);
+    });
+
+    return () => {
+      socket.off('boardUpdated');
+      console.log("Disconnecting socket...");
+      socket.disconnect();
+    };
   }, [projectId]);
 
   const onDragEnd = (result) => {
@@ -72,43 +90,44 @@ const BoardPage = () => {
       setBoardData(newBoardData);
       return;
     }
-   
-   const finishColumn = boardData.columns.find(col => col._id === destination.droppableId);
 
-   if (startColumn && finishColumn) {
-     const startCards = Array.from(startColumn.cards);
-     const finishCards = Array.from(finishColumn.cards);
+    const finishColumn = boardData.columns.find(
+      (col) => col._id === destination.droppableId,
+    );
 
-     const [movedCard] = startCards.splice(source.index, 1);
+    if (startColumn && finishColumn) {
+      const startCards = Array.from(startColumn.cards);
+      const finishCards = Array.from(finishColumn.cards);
 
-     finishCards.splice(destination.index, 0, movedCard);
+      const [movedCard] = startCards.splice(source.index, 1);
 
-     const newStartColumn = {
-       ...startColumn,
-       cards: startCards,
-     };
+      finishCards.splice(destination.index, 0, movedCard);
 
-     const newFinishColumn = {
-       ...finishColumn,
-       cards: finishCards,
-     };
+      const newStartColumn = {
+        ...startColumn,
+        cards: startCards,
+      };
 
-     const newBoardData = {
-       ...boardData,
-       columns: boardData.columns.map(col => {
-         if (col._id === newStartColumn._id) {
-           return newStartColumn;
-         }
-         if (col._id === newFinishColumn._id) {
-           return newFinishColumn;
-         }
-         return col;
-       }),
-     };
+      const newFinishColumn = {
+        ...finishColumn,
+        cards: finishCards,
+      };
 
-     setBoardData(newBoardData);
-   }
+      const newBoardData = {
+        ...boardData,
+        columns: boardData.columns.map((col) => {
+          if (col._id === newStartColumn._id) {
+            return newStartColumn;
+          }
+          if (col._id === newFinishColumn._id) {
+            return newFinishColumn;
+          }
+          return col;
+        }),
+      };
 
+      setBoardData(newBoardData);
+    }
   };
 
   if (loading) {

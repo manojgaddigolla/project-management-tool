@@ -1,10 +1,11 @@
 require("dotenv").config();
 
 const connectDB = require("./config/db");
-connectDB();
 
 const express = require("express");
 const cors = require("cors");
+const http = require("http");
+const { Server } = require("socket.io");
 const userRoutes = require("./routes/users");
 const authRoutes = require("./routes/auth");
 const projectRoutes = require("./routes/projects");
@@ -13,6 +14,7 @@ const columnRoutes = require("./routes/columns");
 const cardRoutes = require("./routes/cards");
 
 const app = express();
+connectDB();
 
 app.use(cors());
 
@@ -26,7 +28,7 @@ app.use("/api/projects", projectRoutes);
 
 app.use("/api/boards", boardRoutes);
 
-app.use("/api/columns",columnRoutes)
+app.use("/api/columns", columnRoutes);
 
 app.use("/api/cards", cardRoutes);
 
@@ -36,4 +38,29 @@ app.get("/api/health", (req, res) => {
 
 const PORT = process.env.PORT || 5000;
 
-app.listen(PORT, () => console.log(`Server is running on port ${PORT}`));
+const httpServer = http.createServer(app);
+
+const io = new Server(httpServer, {
+  cors: {
+    origin: "http://localhost:5173",
+    methods: ["GET", "POST"],
+  },
+});
+
+io.on("connection", (socket) => {
+  console.log(`✅ New client connected: ${socket.id}`);
+
+  socket.on("joinProject", (projectId) => {
+    socket.join(projectId);
+
+    console.log(`Socket ${socket.id} successfully joined room: ${projectId}`);
+  });
+
+  socket.on("disconnect", () => {
+    console.log(`❌ Client disconnected: ${socket.id}`);
+  });
+});
+
+httpServer.listen(PORT, () =>
+  console.log(`Server with real-time support started on port ${PORT}`),
+);
