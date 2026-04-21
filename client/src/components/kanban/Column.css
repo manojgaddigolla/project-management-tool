@@ -22,8 +22,13 @@
 .kanban-card-list {
   overflow-y: auto;
   flex-grow: 1; 
-  padding: 0 5px;
+  padding: 0 5px;  
+  transition: background-color 0.2s ease; 
 }
+
+ .kanban-card-list.dragging-over {
+   background-color: #e6e6e6; 
+ }
 
 .kanban-card-list::-webkit-scrollbar {
   width: 8px;

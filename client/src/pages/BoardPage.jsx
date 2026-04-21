@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import { getBoardByProjectId } from "../services/projectService";
+import { DragDropContext } from "react-beautiful-dnd";
 import "./BoardPage.css";
 import Column from "../components/kanban/Column";
 
@@ -31,6 +32,85 @@ const BoardPage = () => {
     fetchBoard();
   }, [projectId]);
 
+  const onDragEnd = (result) => {
+    const { destination, source, draggableId } = result;
+
+    if (!destination) {
+      return;
+    }
+
+    if (
+      destination.droppableId === source.droppableId &&
+      destination.index === source.index
+    ) {
+      return;
+    }
+
+    const startColumn = boardData.columns.find(
+      (col) => col._id === source.droppableId,
+    );
+
+    if (startColumn && destination.droppableId === source.droppableId) {
+      const newCards = Array.from(startColumn.cards);
+
+      const [reorderedCard] = newCards.splice(source.index, 1);
+
+      newCards.splice(destination.index, 0, reorderedCard);
+
+      const newColumn = {
+        ...startColumn,
+        cards: newCards,
+      };
+
+      const newBoardData = {
+        ...boardData,
+        columns: boardData.columns.map((col) =>
+          col._id === newColumn._id ? newColumn : col,
+        ),
+      };
+
+      setBoardData(newBoardData);
+      return;
+    }
+   
+   const finishColumn = boardData.columns.find(col => col._id === destination.droppableId);
+
+   if (startColumn && finishColumn) {
+     const startCards = Array.from(startColumn.cards);
+     const finishCards = Array.from(finishColumn.cards);
+
+     const [movedCard] = startCards.splice(source.index, 1);
+
+     finishCards.splice(destination.index, 0, movedCard);
+
+     const newStartColumn = {
+       ...startColumn,
+       cards: startCards,
+     };
+
+     const newFinishColumn = {
+       ...finishColumn,
+       cards: finishCards,
+     };
+
+     const newBoardData = {
+       ...boardData,
+       columns: boardData.columns.map(col => {
+         if (col._id === newStartColumn._id) {
+           return newStartColumn;
+         }
+         if (col._id === newFinishColumn._id) {
+           return newFinishColumn;
+         }
+         return col;
+       }),
+     };
+
+     setBoardData(newBoardData);
+   }
+
+  };
+
   if (loading) {
     return <div className="board-loading">Loading Board...</div>;
   }
@@ -44,15 +124,17 @@ const BoardPage = () => {
   }
 
   return (
-    <div className="board-page-container">
-      <h2 className="board-page-title">{boardData.project.name}</h2>
+    <DragDropContext onDragEnd={onDragEnd}>
+      <div className="board-page-container">
+        <h2 className="board-page-title">{boardData.project.name}</h2>
 
-      <div className="board-canvas">
-        {boardData.columns.map((column) => (
-          <Column key={column._id} column={column} />
-        ))}
+        <div className="board-canvas">
+          {boardData.columns.map((column) => (
+            <Column key={column._id} column={column} />
+          ))}
+        </div>
       </div>
-    </div>
+    </DragDropContext>
   );
 };
 
