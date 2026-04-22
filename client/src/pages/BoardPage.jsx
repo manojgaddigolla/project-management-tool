@@ -1,7 +1,8 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useParams } from "react-router-dom";
 import { io } from "socket.io-client";
 import { getBoardByProjectId } from "../services/projectService";
+import { moveCard } from "../services/cardService";
 import { DragDropContext } from "react-beautiful-dnd";
 import "./BoardPage.css";
 import Column from "../components/kanban/Column";
@@ -11,6 +12,7 @@ const BoardPage = () => {
   const [boardData, setBoardData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const socketRef = useRef(null);
 
   useEffect(() => {
     const fetchBoard = async () => {
@@ -34,19 +36,29 @@ const BoardPage = () => {
   }, [projectId]);
 
   useEffect(() => {
-    const socket = io("http://localhost:5000");
+    socketRef.current = io("http://localhost:5000");
 
-    socket.emit("joinProject", projectId);
+    socketRef.current.emit("joinProject", projectId);
 
-    socket.on("boardUpdated", (updatedBoard) => {
-      console.log("Board update received from server:", updatedBoard);
-      setBoardData(updatedBoard);
+    socketRef.current.on("boardUpdated", (payload) => {
+      const { board, originatorSocketId } = payload;
+
+      if (originatorSocketId === socketRef.current.id) {
+        return;
+      }
+
+      console.log(
+        "Received a valid board update from another user. Updating state.",
+      );
+      setBoardData(board);
     });
 
     return () => {
-      socket.off('boardUpdated');
-      console.log("Disconnecting socket...");
-      socket.disconnect();
+      if (socketRef.current) {
+        socketRef.current.off("boardUpdated");
+        console.log("Disconnecting socket...");
+        socketRef.current.disconnect();
+      }
     };
   }, [projectId]);
 
@@ -88,6 +100,21 @@ const BoardPage = () => {
       };
 
       setBoardData(newBoardData);
+
+      (async () => {
+        try {
+          const socketId = socketRef.current ? socketRef.current.id : null;
+          await moveCard(draggableId, {
+            fromColumnId: source.droppableId,
+            toColumnId: destination.droppableId,
+            fromIndex: source.index,
+            toIndex: destination.index,
+            socketId: socketId,
+          });
+        } catch (err) {
+          console.error("Failed to move card on the server:", err);
+        }
+      })();
       return;
     }
 

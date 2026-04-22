@@ -162,11 +162,14 @@ const moveCard = async (req, res) => {
     return res.status(400).json({ errors: errors.array() });
   }
 
+  const { io } = req;
   const {
     sourceColumnId,
     destinationColumnId,
     sourceIndex,
     destinationIndex,
+    socketId
+    
   } = req.body;
   const cardId = req.params.id;
   const userId = req.user.id; 
@@ -211,7 +214,37 @@ const moveCard = async (req, res) => {
     
     await session.commitTransaction();
     
-    res.json({ msg: 'Card moved successfully' });
+   const anyColumn = await Column.findById(toColumnId).populate({
+     path: 'board',
+     select: 'project'
+   });
+   const projectId = anyColumn.board.project.toString();
+
+   const updatedBoard = await Board.findOne({ project: projectId })
+     .populate({
+       path: 'columns',
+       populate: {
+         path: 'cards',
+         model: 'Card',
+       },
+     });
+
+   io.to(projectId).emit('boardUpdated', updatedBoard);
+
+   if (socketId) {
+     io.to(projectId).except(socketId).emit('boardUpdated', updatedBoard);
+   } else {
+     io.to(projectId).emit('boardUpdated', updatedBoard);
+   }
+
+   const payload = {
+     board: updatedBoard,
+     originatorSocketId: socketId,
+   };
+
+   io.to(projectId).emit('boardUpdated', payload);
+
+   res.json(updatedBoard); 
 
   } catch (err) {
     await session.abortTransaction();
