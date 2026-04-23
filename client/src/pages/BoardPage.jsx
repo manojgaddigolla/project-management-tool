@@ -6,6 +6,7 @@ import { moveCard } from "../services/cardService";
 import { DragDropContext } from "react-beautiful-dnd";
 import "./BoardPage.css";
 import Column from "../components/kanban/Column";
+import CardModal from "../components/kanban/CardModal";
 
 const BoardPage = () => {
   const { projectId } = useParams();
@@ -13,6 +14,7 @@ const BoardPage = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const socketRef = useRef(null);
+  const [selectedCard, setSelectedCard] = useState(null);
 
   useEffect(() => {
     const fetchBoard = async () => {
@@ -157,6 +159,14 @@ const BoardPage = () => {
     }
   };
 
+  const handleOpenModal = (card) => {
+    setSelectedCard(card);
+  };
+
+  const handleCloseModal = () => {
+    setSelectedCard(null);
+  };
+
   if (loading) {
     return <div className="board-loading">Loading Board...</div>;
   }
@@ -170,17 +180,26 @@ const BoardPage = () => {
   }
 
   return (
-    <DragDropContext onDragEnd={onDragEnd}>
-      <div className="board-page-container">
-        <h2 className="board-page-title">{boardData.project.name}</h2>
-
-        <div className="board-canvas">
+    <div className="board-page">
+      <h1 className="board-title">{boardData.project?.name} Board</h1>
+      <DragDropContext onDragEnd={onDragEnd}>
+        <div className="board-columns-container">
           {boardData.columns.map((column) => (
-            <Column key={column._id} column={column} />
+            <Column
+              key={column._id}
+              column={column}
+              onCardClick={handleOpenModal}
+            />
           ))}
         </div>
-      </div>
-    </DragDropContext>
+      </DragDropContext>
+
+      <CardModal
+        show={selectedCard !== null}
+        onClose={handleCloseModal}
+        card={selectedCard}
+      />
+    </div>
   );
 };
 

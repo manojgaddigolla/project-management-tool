@@ -1,10 +1,10 @@
-const mongoose = require('mongoose');
+const mongoose = require("mongoose");
 
 const CardSchema = new mongoose.Schema(
   {
     title: {
       type: String,
-      required: [true, 'Please provide a card title'],
+      required: [true, "Please provide a card title"],
       trim: true,
     },
 
@@ -13,22 +13,41 @@ const CardSchema = new mongoose.Schema(
       trim: true,
     },
 
-    assignedTo: [
-      {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'User',
-      },
-    ],
+    assignedTo: [{ type: Schema.Types.ObjectId, ref: "User" }],
 
     column: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: 'Column',
+      ref: "Column",
       required: true,
     },
+
+    comments: [
+      {
+        user: {
+          type: Schema.Types.ObjectId,
+          ref: "User",
+          required: true,
+        },
+        text: {
+          type: String,
+          required: true,
+        },
+        name: {
+          type: String,
+        },
+        avatar: {
+          type: String,
+        },
+        date: {
+          type: Date,
+          default: Date.now,
+        },
+      },
+    ],
   },
   {
     timestamps: true,
-  }
+  },
 );
 
-module.exports = mongoose.model('Card', CardSchema);
+module.exports = mongoose.model("Card", CardSchema);

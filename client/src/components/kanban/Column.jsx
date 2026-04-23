@@ -3,7 +3,7 @@ import Card from "./Card";
 import { Droppable } from "react-beautiful-dnd";
 import "./Column.css";
 
-const Column = ({ column }) => {
+const Column = ({ column, onCardClick }) => {
   return (
     <div className="kanban-column">
       <h3 className="kanban-column-title">{column.title}</h3>
@@ -16,7 +16,12 @@ const Column = ({ column }) => {
             {...provided.droppableProps}
           >
             {column.cards.map((card, index) => (
-              <Card key={card._id} card={card} index={index} />
+              <Card
+                key={card._id}
+                card={card}
+                index={index}
+                onClick={() => onCardClick(card)}
+              />
             ))}
             {provided.placeholder}
           </div>

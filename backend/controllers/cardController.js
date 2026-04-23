@@ -1,8 +1,8 @@
-const { validationResult } = require('express-validator');
-const Card = require('../models/Card');
-const Column = require('../models/Column');
-const Board = require('../models/Board');
-const Project = require('../models/Project');
+const { validationResult } = require("express-validator");
+const Card = require("../models/Card");
+const Column = require("../models/Column");
+const Board = require("../models/Board");
+const Project = require("../models/Project");
 
 const createCard = async (req, res) => {
   const errors = validationResult(req);
@@ -11,28 +11,31 @@ const createCard = async (req, res) => {
   }
 
   const { title, description, columnId } = req.body;
-  const userId = req.user.id; 
+  const userId = req.user.id;
 
   try {
-
     const column = await Column.findById(columnId);
     if (!column) {
-      return res.status(404).json({ msg: 'Column not found' });
+      return res.status(404).json({ msg: "Column not found" });
     }
 
     const board = await Board.findById(column.board);
     if (!board) {
-      return res.status(404).json({ msg: 'Board not found' });
+      return res.status(404).json({ msg: "Board not found" });
     }
 
     const project = await Project.findById(board.project);
     if (!project) {
-        return res.status(404).json({ msg: 'Project not found' });
+      return res.status(404).json({ msg: "Project not found" });
     }
 
-    const isMember = project.members.some(member => member.toString() === userId);
+    const isMember = project.members.some(
+      (member) => member.toString() === userId,
+    );
     if (!isMember) {
-      return res.status(403).json({ msg: 'User is not a member of this project' });
+      return res
+        .status(403)
+        .json({ msg: "User is not a member of this project" });
     }
 
     const newCard = new Card({
@@ -46,13 +49,12 @@ const createCard = async (req, res) => {
     await column.save();
 
     res.status(201).json(card);
-
   } catch (err) {
-    if (err.kind === 'ObjectId') {
-        return res.status(404).json({ msg: 'Invalid ID format' });
+    if (err.kind === "ObjectId") {
+      return res.status(404).json({ msg: "Invalid ID format" });
     }
     console.error(err.message);
-    res.status(500).send('Server Error');
+    res.status(500).send("Server Error");
   }
 };
 
@@ -64,21 +66,25 @@ const updateCard = async (req, res) => {
 
   const { title, description } = req.body;
   const cardId = req.params.id;
-  const userId = req.user.id; 
+  const userId = req.user.id;
 
   try {
     const card = await Card.findById(cardId);
     if (!card) {
-      return res.status(404).json({ msg: 'Card not found' });
+      return res.status(404).json({ msg: "Card not found" });
     }
 
     const column = await Column.findById(card.column);
     const board = await Board.findById(column.board);
     const project = await Project.findById(board.project);
 
-    const isMember = project.members.some(member => member.toString() === userId);
+    const isMember = project.members.some(
+      (member) => member.toString() === userId,
+    );
     if (!isMember) {
-      return res.status(403).json({ msg: 'User is not authorized to update this card' });
+      return res
+        .status(403)
+        .json({ msg: "User is not authorized to update this card" });
     }
 
     if (title !== undefined) {
@@ -91,19 +97,18 @@ const updateCard = async (req, res) => {
     const updatedCard = await card.save();
 
     res.json(updatedCard);
-
   } catch (err) {
-    if (err.kind === 'ObjectId') {
-        return res.status(404).json({ msg: 'Card not found' });
+    if (err.kind === "ObjectId") {
+      return res.status(404).json({ msg: "Card not found" });
     }
     console.error(err.message);
-    res.status(500).send('Server Error');
+    res.status(500).send("Server Error");
   }
 };
 
 const deleteCard = async (req, res) => {
   const cardId = req.params.id;
-  const userId = req.user.id; 
+  const userId = req.user.id;
 
   const session = await mongoose.startSession();
 
@@ -114,24 +119,28 @@ const deleteCard = async (req, res) => {
     if (!card) {
       await session.abortTransaction();
       session.endSession();
-      return res.status(404).json({ msg: 'Card not found' });
+      return res.status(404).json({ msg: "Card not found" });
     }
 
     const column = await Column.findById(card.column).session(session);
     if (!column) {
       await session.abortTransaction();
       session.endSession();
-      return res.status(404).json({ msg: 'Parent column not found' });
+      return res.status(404).json({ msg: "Parent column not found" });
     }
 
     const board = await Board.findById(column.board).session(session);
     const project = await Project.findById(board.project).session(session);
-    
-    const isMember = project.members.some(member => member.toString() === userId);
+
+    const isMember = project.members.some(
+      (member) => member.toString() === userId,
+    );
     if (!isMember) {
       await session.abortTransaction();
       session.endSession();
-      return res.status(403).json({ msg: 'User is not authorized to delete this card' });
+      return res
+        .status(403)
+        .json({ msg: "User is not authorized to delete this card" });
     }
 
     await Card.findByIdAndDelete(cardId).session(session);
@@ -141,16 +150,15 @@ const deleteCard = async (req, res) => {
 
     await session.commitTransaction();
 
-    res.json({ msg: 'Card successfully deleted' });
-
+    res.json({ msg: "Card successfully deleted" });
   } catch (err) {
     await session.abortTransaction();
 
-    if (err.kind === 'ObjectId') {
-        return res.status(404).json({ msg: 'Card not found' });
+    if (err.kind === "ObjectId") {
+      return res.status(404).json({ msg: "Card not found" });
     }
     console.error(err.message);
-    res.status(500).send('Server Error');
+    res.status(500).send("Server Error");
   } finally {
     session.endSession();
   }
@@ -168,11 +176,10 @@ const moveCard = async (req, res) => {
     destinationColumnId,
     sourceIndex,
     destinationIndex,
-    socketId
-    
+    socketId,
   } = req.body;
   const cardId = req.params.id;
-  const userId = req.user.id; 
+  const userId = req.user.id;
 
   const session = await mongoose.startSession();
 
@@ -180,28 +187,30 @@ const moveCard = async (req, res) => {
     session.startTransaction();
 
     const card = await Card.findById(cardId).session(session);
-    if (!card) throw new Error('Card not found');
+    if (!card) throw new Error("Card not found");
 
     const sourceColumn = await Column.findById(sourceColumnId).session(session);
-    if (!sourceColumn) throw new Error('Source column not found');
+    if (!sourceColumn) throw new Error("Source column not found");
 
     const destinationColumn =
       sourceColumnId === destinationColumnId
         ? sourceColumn
         : await Column.findById(destinationColumnId).session(session);
-    if (!destinationColumn) throw new Error('Destination column not found');
-    
+    if (!destinationColumn) throw new Error("Destination column not found");
+
     const board = await Board.findById(sourceColumn.board).session(session);
     const project = await Project.findById(board.project).session(session);
-    const isMember = project.members.some(member => member.toString() === userId);
+    const isMember = project.members.some(
+      (member) => member.toString() === userId,
+    );
     if (!isMember) {
-      throw new Error('User is not authorized to move this card');
+      throw new Error("User is not authorized to move this card");
     }
 
     const [movedCardId] = sourceColumn.cards.splice(sourceIndex, 1);
-    
+
     destinationColumn.cards.splice(destinationIndex, 0, movedCardId);
-    
+
     await sourceColumn.save({ session });
     if (sourceColumnId !== destinationColumnId) {
       await destinationColumn.save({ session });
@@ -211,51 +220,155 @@ const moveCard = async (req, res) => {
       card.column = destinationColumnId;
       await card.save({ session });
     }
-    
+
     await session.commitTransaction();
-    
-   const anyColumn = await Column.findById(toColumnId).populate({
-     path: 'board',
-     select: 'project'
-   });
-   const projectId = anyColumn.board.project.toString();
 
-   const updatedBoard = await Board.findOne({ project: projectId })
-     .populate({
-       path: 'columns',
-       populate: {
-         path: 'cards',
-         model: 'Card',
-       },
-     });
+    const anyColumn = await Column.findById(toColumnId).populate({
+      path: "board",
+      select: "project",
+    });
+    const projectId = anyColumn.board.project.toString();
 
-   io.to(projectId).emit('boardUpdated', updatedBoard);
+    const updatedBoard = await Board.findOne({ project: projectId }).populate({
+      path: "columns",
+      populate: {
+        path: "cards",
+        model: "Card",
+      },
+    });
 
-   if (socketId) {
-     io.to(projectId).except(socketId).emit('boardUpdated', updatedBoard);
-   } else {
-     io.to(projectId).emit('boardUpdated', updatedBoard);
-   }
+    io.to(projectId).emit("boardUpdated", updatedBoard);
 
-   const payload = {
-     board: updatedBoard,
-     originatorSocketId: socketId,
-   };
+    if (socketId) {
+      io.to(projectId).except(socketId).emit("boardUpdated", updatedBoard);
+    } else {
+      io.to(projectId).emit("boardUpdated", updatedBoard);
+    }
 
-   io.to(projectId).emit('boardUpdated', payload);
+    const payload = {
+      board: updatedBoard,
+      originatorSocketId: socketId,
+    };
 
-   res.json(updatedBoard); 
+    io.to(projectId).emit("boardUpdated", payload);
 
+    res.json(updatedBoard);
   } catch (err) {
     await session.abortTransaction();
-    
-    if (err.message.includes('not found') || err.message.includes('not authorized')) {
-        return res.status(404).json({ msg: err.message });
+
+    if (
+      err.message.includes("not found") ||
+      err.message.includes("not authorized")
+    ) {
+      return res.status(404).json({ msg: err.message });
     }
     console.error(err.message);
-    res.status(500).send('Server Error');
+    res.status(500).send("Server Error");
   } finally {
     session.endSession();
+  }
+};
+
+const addComment = async (req, res) => {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    return res.status(400).json({ errors: errors.array() });
+  }
+
+  const { io } = req;
+  const { cardId } = req.params;
+  const { text } = req.body;
+
+  try {
+    const card = await Card.findById(cardId);
+    const user = await User.findById(req.user.id).select("-password");
+
+    if (!card) {
+      return res.status(404).json({ msg: "Card not found" });
+    }
+    if (!user) {
+      return res.status(404).json({ msg: "User not found" });
+    }
+
+    const newComment = {
+      user: req.user.id,
+      text: text,
+      name: user.name,
+      avatar: user.avatar,
+    };
+
+    card.comments.unshift(newComment);
+
+    await card.save();
+
+    const column = await Column.findById(card.column).populate({
+      path: "board",
+      select: "project",
+    });
+    const projectId = column.board.project.toString();
+
+    const updatedBoard = await Board.findOne({ project: projectId }).populate({
+      path: "columns",
+      populate: {
+        path: "cards",
+        model: "Card",
+        populate: { path: "comments.user assignedTo", select: "name avatar" },
+      },
+    });
+
+    const payload = {
+      board: updatedBoard,
+      originatorSocketId: req.body.socketId,
+    };
+
+    io.to(projectId).emit("boardUpdated", payload);
+
+    res.json(card);
+  } catch (err) {
+    console.error(err.message);
+    res.status(500).send("Server Error");
+  }
+};
+
+const assignUser = async (req, res) => {
+  const { io } = req;
+  const { cardId } = req.params;
+  const { assignedTo } = req.body;
+
+  try {
+    const card = await Card.findByIdAndUpdate(
+      cardId,
+      { assignedTo: assignedTo },
+      { new: true }
+    );
+
+    if (!card) {
+      return res.status(404).json({ msg: 'Card not found' });
+    }
+
+    const column = await Column.findById(card.column).populate({
+      path: 'board',
+      select: 'project',
+    });
+    const projectId = column.board.project.toString();
+
+    const updatedBoard = await Board.findOne({ project: projectId }).populate({
+      path: 'columns',
+      populate: { path: 'cards', model: 'Card', populate: { path: 'comments.user assignedTo', select: 'name avatar' } },
+    });
+
+    const payload = {
+      board: updatedBoard,
+      originatorSocketId: req.body.socketId,
+    };
+
+    io.to(projectId).emit('boardUpdated', payload);
+    
+    res.json(card);
+
+  } catch (err) {
+    console.error(err.message);
+    res.status(500).send('Server Error');
   }
 };
 
@@ -263,5 +376,7 @@ module.exports = {
   createCard,
   updateCard,
   deleteCard,
-  moveCard
+  moveCard,
+  addComment,
+  assignUser,
 };
