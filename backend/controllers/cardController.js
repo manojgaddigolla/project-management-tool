@@ -307,23 +307,31 @@ const addComment = async (req, res) => {
     });
     const projectId = column.board.project.toString();
 
-    const updatedBoard = await Board.findOne({ project: projectId }).populate({
-      path: "columns",
-      populate: {
-        path: "cards",
-        model: "Card",
-        populate: { path: "comments.user assignedTo", select: "name avatar" },
-      },
-    });
+    const updatedBoard = await Board.findOne({ project: projectId })
+      .populate({
+        path: "columns",
+        populate: {
+          path: "cards",
+          model: "Card",
+          populate: [
+            { path: "assignedTo", select: "name avatar" },
+            { path: "comments.user", select: "name avatar" },
+          ],
+        },
+      })
+      .populate({
+        path: "project",
+        populate: { path: "owner members", select: "name avatar email" },
+      });
 
     const payload = {
       board: updatedBoard,
-      originatorSocketId: req.body.socketId,
+      originatorSocketId: socketId,
     };
 
     io.to(projectId).emit("boardUpdated", payload);
 
-    res.json(card);
+    res.json(card.comments);
   } catch (err) {
     console.error(err.message);
     res.status(500).send("Server Error");
@@ -339,36 +347,47 @@ const assignUser = async (req, res) => {
     const card = await Card.findByIdAndUpdate(
       cardId,
       { assignedTo: assignedTo },
-      { new: true }
+      { new: true },
     );
 
     if (!card) {
-      return res.status(404).json({ msg: 'Card not found' });
+      return res.status(404).json({ msg: "Card not found" });
     }
 
     const column = await Column.findById(card.column).populate({
-      path: 'board',
-      select: 'project',
+      path: "board",
+      select: "project",
     });
     const projectId = column.board.project.toString();
 
-    const updatedBoard = await Board.findOne({ project: projectId }).populate({
-      path: 'columns',
-      populate: { path: 'cards', model: 'Card', populate: { path: 'comments.user assignedTo', select: 'name avatar' } },
-    });
+    const updatedBoard = await Board.findOne({ project: projectId })
+      .populate({
+        path: "columns",
+        populate: {
+          path: "cards",
+          model: "Card",
+          populate: [
+            { path: "assignedTo", select: "name avatar" },
+            { path: "comments.user", select: "name avatar" },
+          ],
+        },
+      })
+      .populate({
+        path: "project",
+        populate: { path: "owner members", select: "name avatar email" },
+      });
 
     const payload = {
       board: updatedBoard,
-      originatorSocketId: req.body.socketId,
+      originatorSocketId: socketId,
     };
 
-    io.to(projectId).emit('boardUpdated', payload);
-    
-    res.json(card);
+    io.to(projectId).emit("boardUpdated", payload);
 
+    res.json(card);
   } catch (err) {
     console.error(err.message);
-    res.status(500).send('Server Error');
+    res.status(500).send("Server Error");
   }
 };
 

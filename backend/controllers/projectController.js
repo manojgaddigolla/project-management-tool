@@ -1,5 +1,6 @@
 const { validationResult } = require("express-validator");
 const Project = require("../models/Project");
+const User = require('../models/User');
 const Board = require("../models/Board");
 const Column = require("../models/Column");
 const mongoose = require("mongoose");
@@ -77,8 +78,70 @@ const getProjectById = async (req, res) => {
   }
 };
 
+const inviteUserToProject = async (req, res) => {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    return res.status(400).json({ errors: errors.array() });
+  }
+  
+  const { io } = req;
+  const { projectId } = req.params;
+  const { email } = req.body;
+
+  try {
+    const userToInvite = await User.findOne({ email }).select('-password');
+    if (!userToInvite) {
+      return res.status(404).json({ msg: 'User not found' });
+    }
+
+    const project = await Project.findById(projectId);
+    if (!project) {
+      return res.status(404).json({ msg: 'Project not found' });
+    }
+
+    if (project.owner.toString() !== req.user.id) {
+      return res.status(401).json({ msg: 'User not authorized' });
+    }
+
+    const isAlreadyOwner = project.owner.toString() === userToInvite._id.toString();
+    const isAlreadyMember = project.members.some(
+      (memberId) => memberId.toString() === userToInvite._id.toString()
+    );
+
+    if (isAlreadyOwner || isAlreadyMember) {
+      return res.status(400).json({ msg: 'User is already in the project' });
+    }
+
+    project.members.push(userToInvite._id);
+
+    await project.save();
+   
+    const updatedBoard = await Board.findOne({ project: projectId }).populate({
+        path: 'columns',
+        populate: { path: 'cards', model: 'Card', populate: { path: 'comments.user assignedTo', select: 'name avatar' } },
+    }).populate({
+        path: 'project',
+        populate: { path: 'owner members', select: 'name avatar email' }
+    });
+
+    const payload = {
+        board: updatedBoard,
+        originatorSocketId: req.body.socketId,
+    };
+    io.to(projectId).emit('boardUpdated', payload);
+
+    const populatedProject = await project.populate('members', ['name', 'avatar', 'email']);
+    res.json(populatedProject);
+
+  } catch (err) {
+    console.error(err.message);
+    res.status(500).send('Server Error');
+  }
+};
+
 module.exports = {
   createProject,
   getProjects,
   getProjectById,
+  inviteUserToProject
 };

@@ -17,3 +17,11 @@ export const getProjects = async () => {
      throw error.response.data;
    }
  };
+
+ export const inviteUserToProject = async (projectId, inviteData) => {
+  const response = await axios.post(
+    `${API_URL}/projects/${projectId}/invite`,
+    inviteData
+  );
+  return response.data;
+};

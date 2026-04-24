@@ -153,3 +153,93 @@
    white-space: pre-wrap; 
    word-break: break-word; 
  }
+
+ .comment-form {
+  margin-bottom: 20px;
+}
+
+.comment-textarea {
+  width: 100%;
+  min-height: 80px;
+  padding: 8px 12px;
+  border-radius: 3px;
+  border: 1px solid #dfe1e6;
+  font-size: 14px;
+  margin-bottom: 8px;
+  box-sizing: border-box; 
+}
+
+.comment-textarea:focus {
+  outline: none;
+  border-color: #4c9aff;
+  box-shadow: 0 0 0 1px #4c9aff;
+}
+
+.comment-submit-button {
+  background-color: #0079bf;
+  color: #fff;
+  border: none;
+  border-radius: 3px;
+  padding: 8px 16px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.comment-submit-button:hover {
+  background-color: #026aa7;
+}
+
+.comment-submit-button:disabled {
+  background-color: #a5adba;
+  cursor: not-allowed;
+}
+
+.member-assignment-section {
+  margin-top: 24px;
+  border-top: 1px solid #dfe1e6;
+  padding-top: 16px;
+}
+
+.members-list {
+  max-height: 200px;
+  overflow-y: auto;
+  margin-bottom: 12px;
+}
+
+.member-item {
+  margin-bottom: 8px;
+}
+
+.member-item label {
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 3px;
+  transition: background-color 0.2s;
+}
+
+.member-item label:hover {
+  background-color: #e9ecef;
+}
+
+.member-item input[type="checkbox"] {
+  margin-right: 10px;
+}
+
+.assignee-save-button {
+  width: 100%;
+  background-color: #5aac44; 
+  color: #fff;
+  border: none;
+  border-radius: 3px;
+  padding: 8px 16px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.assignee-save-button:hover {
+  background-color: #61bd4f;
+}

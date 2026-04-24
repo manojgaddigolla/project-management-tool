@@ -1,12 +1,16 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useParams } from "react-router-dom";
 import { io } from "socket.io-client";
-import { getBoardByProjectId } from "../services/projectService";
+import {
+  getBoardByProjectId,
+  inviteUserToProject,
+} from "../services/projectService";
 import { moveCard } from "../services/cardService";
 import { DragDropContext } from "react-beautiful-dnd";
 import "./BoardPage.css";
 import Column from "../components/kanban/Column";
 import CardModal from "../components/kanban/CardModal";
+import { useAuth } from "../context/AuthContext";
 
 const BoardPage = () => {
   const { projectId } = useParams();
@@ -15,6 +19,8 @@ const BoardPage = () => {
   const [error, setError] = useState(null);
   const socketRef = useRef(null);
   const [selectedCard, setSelectedCard] = useState(null);
+  const [inviteEmail, setInviteEmail] = useState("");
+  const { user: authUser } = useAuth();
 
   useEffect(() => {
     const fetchBoard = async () => {
@@ -167,6 +173,29 @@ const BoardPage = () => {
     setSelectedCard(null);
   };
 
+  const isOwner = boardData?.project?.owner === authUser?._id;
+
+  const handleInviteSubmit = async (e) => {
+    e.preventDefault();
+    if (!inviteEmail.trim()) {
+      alert("Please enter a valid email.");
+      return;
+    }
+    try {
+      await inviteUserToProject(projectId, {
+        email: inviteEmail,
+        socketId: socketRef.current?.id,
+      });
+      alert(`Invitation sent to ${inviteEmail}`);
+      setInviteEmail("");
+    } catch (err) {
+      const errorMessage =
+        err.response?.data?.msg || "Failed to send invitation.";
+      console.error(errorMessage);
+      alert(`Error: ${errorMessage}`);
+    }
+  };
+
   if (loading) {
     return <div className="board-loading">Loading Board...</div>;
   }
@@ -182,6 +211,23 @@ const BoardPage = () => {
   return (
     <div className="board-page">
       <h1 className="board-title">{boardData.project?.name} Board</h1>
+
+      {isOwner && (
+        <form onSubmit={handleInviteSubmit} className="invite-form">
+          <input
+            type="email"
+            className="invite-input"
+            placeholder="Invite user by email"
+            value={inviteEmail}
+            onChange={(e) => setInviteEmail(e.target.value)}
+            required
+          />
+          <button type="submit" className="invite-button">
+            Invite
+          </button>
+        </form>
+      )}
+
       <DragDropContext onDragEnd={onDragEnd}>
         <div className="board-columns-container">
           {boardData.columns.map((column) => (
@@ -198,6 +244,8 @@ const BoardPage = () => {
         show={selectedCard !== null}
         onClose={handleCloseModal}
         card={selectedCard}
+        socketId={socketRef.current?.id}
+        projectMembers={boardData?.project?.members}
       />
     </div>
   );

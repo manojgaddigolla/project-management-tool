@@ -2,11 +2,12 @@ const express = require("express");
 const router = express.Router();
 const { check } = require("express-validator");
 const auth = require("../middleware/auth");
-const { checkProjectMember } = require('../middleware/projectAuth');
+const { checkProjectMember } = require("../middleware/projectAuth");
 const {
   createProject,
   getProjects,
-  getProjectById
+  getProjectById,
+  inviteUserToProject,
 } = require("../controllers/projectController");
 
 router.post(
@@ -15,8 +16,14 @@ router.post(
   createProject,
 );
 
+router.post(
+  "/:projectId/invite",
+  [auth, [check("email", "Please include a valid email").isEmail()]],
+  inviteUserToProject,
+);
+
 router.get("/", auth, getProjects);
 
-router.get('/:id', [auth, checkProjectMember], getProjectById);
+router.get("/:id", [auth, checkProjectMember], getProjectById);
 
 module.exports = router;

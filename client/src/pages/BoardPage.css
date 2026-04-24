@@ -54,3 +54,52 @@
     white-space: pre-wrap;
     word-wrap: break-word;
 }
+
+.board-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.board-title {
+  margin: 0;
+}
+
+.invite-form {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.invite-input {
+  padding: 8px 12px;
+  font-size: 14px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  width: 250px;
+}
+
+.invite-input:focus {
+  outline: none;
+  border-color: #0079bf;
+  box-shadow: 0 0 0 2px rgba(0, 121, 191, 0.3);
+}
+
+.invite-button {
+  padding: 8px 16px;
+  font-size: 14px;
+  font-weight: bold;
+  color: #fff;
+  background-color: #5aac44; 
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.2s ease-in-out;
+}
+
+.invite-button:hover {
+  background-color: #61bd4f;
+}
