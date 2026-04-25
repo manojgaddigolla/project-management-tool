@@ -4,6 +4,7 @@ const User = require('../models/User');
 const Board = require("../models/Board");
 const Column = require("../models/Column");
 const mongoose = require("mongoose");
+const createActivityLog = require('../utils/activityLogger');
 
 const createProject = async (req, res) => {
   const errors = validationResult(req);
@@ -115,6 +116,10 @@ const inviteUserToProject = async (req, res) => {
     project.members.push(userToInvite._id);
 
     await project.save();
+
+   const inviter = await User.findById(req.user.id);
+   const actionText = `${inviter.name} invited ${userToInvite.name} (${userToInvite.email}) to the project.`;
+   await createActivityLog(projectId, req.user.id, actionText);
    
     const updatedBoard = await Board.findOne({ project: projectId }).populate({
         path: 'columns',

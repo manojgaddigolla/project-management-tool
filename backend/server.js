@@ -12,6 +12,7 @@ const projectRoutes = require("./routes/projects");
 const boardRoutes = require("./routes/boards");
 const columnRoutes = require("./routes/columns");
 const cardRoutes = require("./routes/cards");
+const jwt = require("jsonwebtoken");
 
 const app = express();
 connectDB();
@@ -47,13 +48,27 @@ const io = new Server(httpServer, {
   },
 });
 
- app.use((req, res, next) => {
-   req.io = io;
-   next(); 
- });
+app.use((req, res, next) => {
+  req.io = io;
+  next();
+});
 
 io.on("connection", (socket) => {
-  console.log(`✅ New client connected: ${socket.id}`);
+  console.log(`New client connected: ${socket.id}`);
+
+  try {
+    const token = socket.handshake.auth.token;
+    if (token) {
+      const decoded = jwt.verify(token, process.env.JWT_SECRET);
+      const userId = decoded.user.id;
+      socket.join(userId);
+      console.log(
+        `User ${userId} with socket ${socket.id} joined their private room.`,
+      );
+    }
+  } catch (err) {
+    console.log("Socket connection not authenticated.");
+  }
 
   socket.on("joinProject", (projectId) => {
     socket.join(projectId);
@@ -62,7 +77,7 @@ io.on("connection", (socket) => {
   });
 
   socket.on("disconnect", () => {
-    console.log(`❌ Client disconnected: ${socket.id}`);
+    console.log(`Client disconnected: ${socket.id}`);
   });
 });
 

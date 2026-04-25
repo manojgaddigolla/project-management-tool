@@ -44,7 +44,11 @@ const BoardPage = () => {
   }, [projectId]);
 
   useEffect(() => {
-    socketRef.current = io("http://localhost:5000");
+    socketRef.current = io("http://localhost:5000", {
+      auth: {
+        token: localStorage.getItem("token"),
+      },
+    });
 
     socketRef.current.emit("joinProject", projectId);
 

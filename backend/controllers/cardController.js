@@ -3,6 +3,8 @@ const Card = require("../models/Card");
 const Column = require("../models/Column");
 const Board = require("../models/Board");
 const Project = require("../models/Project");
+const createActivityLog = require("../utils/activityLogger");
+const createNotification = require("../utils/notificationManager");
 
 const createCard = async (req, res) => {
   const errors = validationResult(req);
@@ -252,6 +254,14 @@ const moveCard = async (req, res) => {
 
     io.to(projectId).emit("boardUpdated", payload);
 
+    const user = await User.findById(req.user.id);
+    const actionText = `${user.name} moved card '${card.title}' from '${fromColumnName}' to '${toColumnName}'`;
+    const columnForProject =
+      await Column.findById(toColumnId).populate("board");
+    const projectId = columnForProject.board.project;
+
+    await createActivityLog(projectId, req.user.id, actionText, cardId);
+
     res.json(updatedBoard);
   } catch (err) {
     await session.abortTransaction();
@@ -301,6 +311,11 @@ const addComment = async (req, res) => {
 
     await card.save();
 
+    const actionText = `${user.name} commented on card '${card.title}'`;
+    const column = await Column.findById(card.column).populate("board");
+    const projectId = column.board.project;
+    await createActivityLog(projectId, req.user.id, actionText, cardId);
+
     const column = await Column.findById(card.column).populate({
       path: "board",
       select: "project",
@@ -341,9 +356,28 @@ const addComment = async (req, res) => {
 const assignUser = async (req, res) => {
   const { io } = req;
   const { cardId } = req.params;
-  const { assignedTo } = req.body;
+  const { assignedTo, socketId } = req.body;
 
   try {
+    const user = await User.findById(req.user.id);
+    const card = await Card.findById(cardId);
+    if (!card) {
+      return res.status(404).json({ msg: "Card not found" });
+    }
+    const oldAssignees = card.assignedTo.map((id) => id.toString());
+    const assignedUsers = await User.find({ _id: { $in: assignedTo } }).select(
+      "name",
+    );
+    const assignedNames = assignedUsers.map((u) => u.name).join(", ");
+
+    const actionText = assignedNames
+      ? `${user.name} assigned ${assignedNames} to card '${card.title}'`
+      : `${user.name} unassigned all users from card '${card.title}'`;
+
+    const column = await Column.findById(card.column).populate("board");
+    const projectId = column.board.project;
+    await createActivityLog(projectId, req.user.id, actionText, cardId);
+
     const card = await Card.findByIdAndUpdate(
       cardId,
       { assignedTo: assignedTo },
@@ -376,6 +410,22 @@ const assignUser = async (req, res) => {
         path: "project",
         populate: { path: "owner members", select: "name avatar email" },
       });
+
+    const assigner = await User.findById(req.user.id);
+    const newlyAssigned = updatedCard.assignedTo.filter(
+      (user) => !oldAssignees.includes(user._id.toString()),
+    );
+
+    const column = await Column.findById(updatedCard.column).populate("board");
+    const projectId = column.board.project;
+
+    for (const user of newlyAssigned) {
+      if (user._id.toString() !== req.user.id) {
+        const message = `${assigner.name} assigned you to the card '${updatedCard.title}'`;
+        const link = `/project/${projectId}/board?card=${updatedCard._id}`;
+        await createNotification(io, user._id, message, projectId, link);
+      }
+    }
 
     const payload = {
       board: updatedBoard,
