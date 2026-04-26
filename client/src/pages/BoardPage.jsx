@@ -11,6 +11,7 @@ import "./BoardPage.css";
 import Column from "../components/kanban/Column";
 import CardModal from "../components/kanban/CardModal";
 import { useAuth } from "../context/AuthContext";
+import ActivityFeed from "../components/kanban/ActivityFeed";
 
 const BoardPage = () => {
   const { projectId } = useParams();
@@ -21,6 +22,7 @@ const BoardPage = () => {
   const [selectedCard, setSelectedCard] = useState(null);
   const [inviteEmail, setInviteEmail] = useState("");
   const { user: authUser } = useAuth();
+  const [isActivityFeedVisible, setActivityFeedVisible] = useState(false);
 
   useEffect(() => {
     const fetchBoard = async () => {
@@ -214,23 +216,33 @@ const BoardPage = () => {
 
   return (
     <div className="board-page">
-      <h1 className="board-title">{boardData.project?.name} Board</h1>
+      <div className="board-header">
+        <h1 className="board-title">{boardData.project?.name} Board</h1>
+        <div className="board-actions">
+          {isOwner && (
+            <form onSubmit={handleInviteSubmit} className="invite-form">
+              <input
+                type="email"
+                className="invite-input"
+                placeholder="Invite user by email"
+                value={inviteEmail}
+                onChange={(e) => setInviteEmail(e.target.value)}
+                required
+              />
+              <button type="submit" className="invite-button">
+                Invite
+              </button>
+            </form>
+          )}
 
-      {isOwner && (
-        <form onSubmit={handleInviteSubmit} className="invite-form">
-          <input
-            type="email"
-            className="invite-input"
-            placeholder="Invite user by email"
-            value={inviteEmail}
-            onChange={(e) => setInviteEmail(e.target.value)}
-            required
-          />
-          <button type="submit" className="invite-button">
-            Invite
+          <button
+            className="board-action-button"
+            onClick={() => setActivityFeedVisible(true)}
+          >
+            <i className="fas fa-history"></i> Activity
           </button>
-        </form>
-      )}
+        </div>
+      </div>
 
       <DragDropContext onDragEnd={onDragEnd}>
         <div className="board-columns-container">
@@ -250,6 +262,12 @@ const BoardPage = () => {
         card={selectedCard}
         socketId={socketRef.current?.id}
         projectMembers={boardData?.project?.members}
+      />
+
+      <ActivityFeed
+        projectId={projectId}
+        isVisible={isActivityFeedVisible}
+        onClose={() => setActivityFeedVisible(false)}
       />
     </div>
   );

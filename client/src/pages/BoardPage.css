@@ -1,58 +1,58 @@
 .board-page-container {
-    padding: 2rem;
-    background-color: #f9f9f9;
-    min-height: 100%;
+  padding: 2rem;
+  background-color: #f9f9f9;
+  min-height: 100%;
 }
 
 .board-loading,
 .board-error {
-    text-align: center;
-    font-size: 1.2rem;
-    color: #666;
-    margin-top: 5rem;
+  text-align: center;
+  font-size: 1.2rem;
+  color: #666;
+  margin-top: 5rem;
 }
 
 .board-error {
-    color: #d9534f;
+  color: #d9534f;
 }
 
 .board-page-title {
-    font-size: 1.8rem;
-    color: #333;
-    margin-bottom: 1rem;
-    flex-shrink: 0;
+  font-size: 1.8rem;
+  color: #333;
+  margin-bottom: 1rem;
+  flex-shrink: 0;
 }
 
 .board-canvas {
-    display: flex;
-    flex-direction: row;
-    align-items: flex-start;
-    flex-grow: 1;
-    overflow-x: auto;
-    overflow-y: hidden;
-    padding-bottom: 1rem;
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  flex-grow: 1;
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding-bottom: 1rem;
 }
 
 .data-dump {
-    margin-top: 2rem;
-    background-color: #2d2d2d;
-    color: #f8f8f2;
-    border-radius: 5px;
-    padding: 1rem;
-    font-family: 'Courier New', Courier, monospace;
-    overflow-x: auto;
+  margin-top: 2rem;
+  background-color: #2d2d2d;
+  color: #f8f8f2;
+  border-radius: 5px;
+  padding: 1rem;
+  font-family: 'Courier New', Courier, monospace;
+  overflow-x: auto;
 }
 
 .data-dump h3 {
-    margin-top: 0;
-    border-bottom: 1px solid #555;
-    padding-bottom: 0.5rem;
-    margin-bottom: 1rem;
+  margin-top: 0;
+  border-bottom: 1px solid #555;
+  padding-bottom: 0.5rem;
+  margin-bottom: 1rem;
 }
 
 .data-dump pre {
-    white-space: pre-wrap;
-    word-wrap: break-word;
+  white-space: pre-wrap;
+  word-wrap: break-word;
 }
 
 .board-header {
@@ -62,6 +62,9 @@
   margin-bottom: 20px;
   flex-wrap: wrap;
   gap: 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 }
 
 .board-title {
@@ -93,7 +96,7 @@
   font-size: 14px;
   font-weight: bold;
   color: #fff;
-  background-color: #5aac44; 
+  background-color: #5aac44;
   border: none;
   border-radius: 4px;
   cursor: pointer;
@@ -102,4 +105,30 @@
 
 .invite-button:hover {
   background-color: #61bd4f;
+}
+
+
+.board-actions {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.board-action-button {
+  padding: 8px 16px;
+  font-size: 14px;
+  background-color: rgba(255, 255, 255, 0.2);
+  color: #fff;
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.board-action-button:hover {
+  background-color: rgba(255, 255, 255, 0.3);
+}
+
+.board-action-button i {
+  margin-right: 8px;
 }

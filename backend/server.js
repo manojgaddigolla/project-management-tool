@@ -33,6 +33,10 @@ app.use("/api/columns", columnRoutes);
 
 app.use("/api/cards", cardRoutes);
 
+app.use('/api/notifications', require('./routes/notifications'));
+
+app.use('/api/activities', require('./routes/activities'));
+
 app.get("/api/health", (req, res) => {
   res.json({ status: "UP", message: "Server is healthy." });
 });
