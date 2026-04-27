@@ -6,6 +6,7 @@ const express = require("express");
 const cors = require("cors");
 const http = require("http");
 const { Server } = require("socket.io");
+const rateLimit = require("express-rate-limit");
 const userRoutes = require("./routes/users");
 const authRoutes = require("./routes/auth");
 const projectRoutes = require("./routes/projects");
@@ -15,46 +16,66 @@ const cardRoutes = require("./routes/cards");
 const jwt = require("jsonwebtoken");
 
 const app = express();
-connectDB();
+
+if (process.env.NODE_ENV !== "test") {
+  connectDB();
+}
 
 app.use(cors());
 
 app.use(express.json());
 
-app.use("/api/users", userRoutes);
-
-app.use("/api/auth", authRoutes);
-
-app.use("/api/projects", projectRoutes);
-
-app.use("/api/boards", boardRoutes);
-
-app.use("/api/columns", columnRoutes);
-
-app.use("/api/cards", cardRoutes);
-
-app.use('/api/notifications', require('./routes/notifications'));
-
-app.use('/api/activities', require('./routes/activities'));
-
-app.get("/api/health", (req, res) => {
-  res.json({ status: "UP", message: "Server is healthy." });
+// General API rate limiter: 100 requests per 15 minutes per IP
+const apiLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 100,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { msg: "Too many requests, please try again later." },
 });
 
-const PORT = process.env.PORT || 5000;
+// Stricter limiter for auth endpoints to mitigate brute-force attacks
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 20,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { msg: "Too many authentication attempts, please try again later." },
+});
 
 const httpServer = http.createServer(app);
 
-const io = new Server(httpServer, {
+let io = new Server(httpServer, {
   cors: {
-    origin: "http://localhost:5173",
+    origin: process.env.CORS_ORIGIN || "http://localhost:5173",
     methods: ["GET", "POST"],
   },
 });
 
+// Attach io to every request so route handlers can emit events
 app.use((req, res, next) => {
   req.io = io;
   next();
+});
+
+app.use("/api/users", authLimiter, userRoutes);
+
+app.use("/api/auth", authLimiter, authRoutes);
+
+app.use("/api/projects", apiLimiter, projectRoutes);
+
+app.use("/api/boards", apiLimiter, boardRoutes);
+
+app.use("/api/columns", apiLimiter, columnRoutes);
+
+app.use("/api/cards", apiLimiter, cardRoutes);
+
+app.use("/api/notifications", apiLimiter, require("./routes/notifications"));
+
+app.use("/api/activities", apiLimiter, require("./routes/activities"));
+
+app.get("/api/health", (req, res) => {
+  res.json({ status: "UP", message: "Server is healthy." });
 });
 
 io.on("connection", (socket) => {
@@ -76,7 +97,6 @@ io.on("connection", (socket) => {
 
   socket.on("joinProject", (projectId) => {
     socket.join(projectId);
-
     console.log(`Socket ${socket.id} successfully joined room: ${projectId}`);
   });
 
@@ -85,8 +105,12 @@ io.on("connection", (socket) => {
   });
 });
 
-httpServer.listen(PORT, () =>
-  console.log(`Server with real-time support started on port ${PORT}`),
-);
+const PORT = process.env.PORT || 5000;
 
-export default app;
+if (process.env.NODE_ENV !== "test") {
+  httpServer.listen(PORT, () =>
+    console.log(`Server with real-time support started on port ${PORT}`),
+  );
+}
+
+module.exports = app;

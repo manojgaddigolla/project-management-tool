@@ -1,8 +1,10 @@
 const { validationResult } = require("express-validator");
+const mongoose = require("mongoose");
 const Card = require("../models/Card");
 const Column = require("../models/Column");
 const Board = require("../models/Board");
 const Project = require("../models/Project");
+const User = require("../models/User");
 const createActivityLog = require("../utils/activityLogger");
 const createNotification = require("../utils/notificationManager");
 
@@ -209,43 +211,39 @@ const moveCard = async (req, res) => {
       throw new Error("User is not authorized to move this card");
     }
 
-    const [movedCardId] = sourceColumn.cards.splice(sourceIndex, 1);
+    // Capture column names for the activity log before splicing
+    const fromColumnName = sourceColumn.title;
+    const toColumnName = destinationColumn.title;
+    const projectId = board.project.toString();
 
+    const [movedCardId] = sourceColumn.cards.splice(sourceIndex, 1);
     destinationColumn.cards.splice(destinationIndex, 0, movedCardId);
 
     await sourceColumn.save({ session });
     if (sourceColumnId !== destinationColumnId) {
       await destinationColumn.save({ session });
-    }
-
-    if (sourceColumnId !== destinationColumnId) {
       card.column = destinationColumnId;
       await card.save({ session });
     }
 
     await session.commitTransaction();
 
-    const anyColumn = await Column.findById(toColumnId).populate({
-      path: "board",
-      select: "project",
-    });
-    const projectId = anyColumn.board.project.toString();
-
-    const updatedBoard = await Board.findOne({ project: projectId }).populate({
-      path: "columns",
-      populate: {
-        path: "cards",
-        model: "Card",
-      },
-    });
-
-    io.to(projectId).emit("boardUpdated", updatedBoard);
-
-    if (socketId) {
-      io.to(projectId).except(socketId).emit("boardUpdated", updatedBoard);
-    } else {
-      io.to(projectId).emit("boardUpdated", updatedBoard);
-    }
+    const updatedBoard = await Board.findOne({ project: projectId })
+      .populate({
+        path: "columns",
+        populate: {
+          path: "cards",
+          model: "Card",
+          populate: [
+            { path: "assignedTo", select: "name avatar" },
+            { path: "comments.user", select: "name avatar" },
+          ],
+        },
+      })
+      .populate({
+        path: "project",
+        populate: { path: "owner members", select: "name avatar email" },
+      });
 
     const payload = {
       board: updatedBoard,
@@ -254,13 +252,9 @@ const moveCard = async (req, res) => {
 
     io.to(projectId).emit("boardUpdated", payload);
 
-    const user = await User.findById(req.user.id);
+    const user = await User.findById(userId);
     const actionText = `${user.name} moved card '${card.title}' from '${fromColumnName}' to '${toColumnName}'`;
-    const columnForProject =
-      await Column.findById(toColumnId).populate("board");
-    const projectId = columnForProject.board.project;
-
-    await createActivityLog(projectId, req.user.id, actionText, cardId);
+    await createActivityLog(projectId, userId, actionText, cardId);
 
     res.json(updatedBoard);
   } catch (err) {
@@ -287,7 +281,7 @@ const addComment = async (req, res) => {
 
   const { io } = req;
   const { cardId } = req.params;
-  const { text } = req.body;
+  const { text, socketId } = req.body;
 
   try {
     const card = await Card.findById(cardId);
@@ -311,16 +305,11 @@ const addComment = async (req, res) => {
 
     await card.save();
 
-    const actionText = `${user.name} commented on card '${card.title}'`;
     const column = await Column.findById(card.column).populate("board");
-    const projectId = column.board.project;
-    await createActivityLog(projectId, req.user.id, actionText, cardId);
-
-    const column = await Column.findById(card.column).populate({
-      path: "board",
-      select: "project",
-    });
     const projectId = column.board.project.toString();
+
+    const actionText = `${user.name} commented on card '${card.title}'`;
+    await createActivityLog(projectId, req.user.id, actionText, cardId);
 
     const updatedBoard = await Board.findOne({ project: projectId })
       .populate({
@@ -359,40 +348,40 @@ const assignUser = async (req, res) => {
   const { assignedTo, socketId } = req.body;
 
   try {
-    const user = await User.findById(req.user.id);
+    const assigner = await User.findById(req.user.id);
     const card = await Card.findById(cardId);
     if (!card) {
       return res.status(404).json({ msg: "Card not found" });
     }
+
     const oldAssignees = card.assignedTo.map((id) => id.toString());
+
     const assignedUsers = await User.find({ _id: { $in: assignedTo } }).select(
       "name",
     );
     const assignedNames = assignedUsers.map((u) => u.name).join(", ");
 
     const actionText = assignedNames
-      ? `${user.name} assigned ${assignedNames} to card '${card.title}'`
-      : `${user.name} unassigned all users from card '${card.title}'`;
+      ? `${assigner.name} assigned ${assignedNames} to card '${card.title}'`
+      : `${assigner.name} unassigned all users from card '${card.title}'`;
 
-    const column = await Column.findById(card.column).populate("board");
-    const projectId = column.board.project;
-    await createActivityLog(projectId, req.user.id, actionText, cardId);
-
-    const card = await Card.findByIdAndUpdate(
+    const updatedCard = await Card.findByIdAndUpdate(
       cardId,
       { assignedTo: assignedTo },
       { new: true },
     );
 
-    if (!card) {
+    if (!updatedCard) {
       return res.status(404).json({ msg: "Card not found" });
     }
 
-    const column = await Column.findById(card.column).populate({
+    const column = await Column.findById(updatedCard.column).populate({
       path: "board",
       select: "project",
     });
     const projectId = column.board.project.toString();
+
+    await createActivityLog(projectId, req.user.id, actionText, cardId);
 
     const updatedBoard = await Board.findOne({ project: projectId })
       .populate({
@@ -411,19 +400,16 @@ const assignUser = async (req, res) => {
         populate: { path: "owner members", select: "name avatar email" },
       });
 
-    const assigner = await User.findById(req.user.id);
-    const newlyAssigned = updatedCard.assignedTo.filter(
-      (user) => !oldAssignees.includes(user._id.toString()),
+    // Notify newly assigned users
+    const newlyAssignedIds = (assignedTo || []).filter(
+      (id) => !oldAssignees.includes(id.toString()),
     );
 
-    const column = await Column.findById(updatedCard.column).populate("board");
-    const projectId = column.board.project;
-
-    for (const user of newlyAssigned) {
-      if (user._id.toString() !== req.user.id) {
-        const message = `${assigner.name} assigned you to the card '${updatedCard.title}'`;
-        const link = `/project/${projectId}/board?card=${updatedCard._id}`;
-        await createNotification(io, user._id, message, projectId, link);
+    for (const assigneeId of newlyAssignedIds) {
+      if (assigneeId.toString() !== req.user.id) {
+        const message = `${assigner.name} assigned you to the card '${card.title}'`;
+        const link = `/project/${projectId}/board?card=${cardId}`;
+        await createNotification(io, assigneeId, message, projectId, link);
       }
     }
 
@@ -434,7 +420,7 @@ const assignUser = async (req, res) => {
 
     io.to(projectId).emit("boardUpdated", payload);
 
-    res.json(card);
+    res.json(updatedCard);
   } catch (err) {
     console.error(err.message);
     res.status(500).send("Server Error");

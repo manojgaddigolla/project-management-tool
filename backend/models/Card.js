@@ -13,7 +13,7 @@ const CardSchema = new mongoose.Schema(
       trim: true,
     },
 
-    assignedTo: [{ type: Schema.Types.ObjectId, ref: "User" }],
+    assignedTo: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
 
     column: {
       type: mongoose.Schema.Types.ObjectId,
@@ -24,7 +24,7 @@ const CardSchema = new mongoose.Schema(
     comments: [
       {
         user: {
-          type: Schema.Types.ObjectId,
+          type: mongoose.Schema.Types.ObjectId,
           ref: "User",
           required: true,
         },

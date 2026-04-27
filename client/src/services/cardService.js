@@ -1,22 +1,21 @@
-import axios from "axios";
-
-const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
+import axiosInstance from "../api/axios";
 
 export const moveCard = async (cardId, moveData) => {
-  return axios.put(`${API_URL}/cards/move/${cardId}`, moveData);
+  const response = await axiosInstance.put(`/cards/move/${cardId}`, moveData);
+  return response.data;
 };
 
 export const addComment = async (cardId, commentData) => {
-  const response = await axios.post(
-    `${API_URL}/cards/${cardId}/comments`,
+  const response = await axiosInstance.post(
+    `/cards/${cardId}/comments`,
     commentData,
   );
   return response.data;
 };
 
 export const assignUsersToCard = async (cardId, assignmentData) => {
-  const response = await axios.put(
-    `${API_URL}/cards/${cardId}/assign`,
+  const response = await axiosInstance.put(
+    `/cards/${cardId}/assign`,
     assignmentData,
   );
   return response.data;
