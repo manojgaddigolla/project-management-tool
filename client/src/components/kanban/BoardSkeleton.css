@@ -1,0 +1,51 @@
+@keyframes shimmer {
+    0% {
+        background-position: -468px 0;
+    }
+
+    100% {
+        background-position: 468px 0;
+    }
+}
+
+.skeleton-board {
+    display: flex;
+    gap: 16px;
+    padding: 0 16px;
+    overflow-x: hidden;
+}
+
+.skeleton {
+    animation: shimmer 1.5s linear infinite;
+    background: linear-gradient(to right, #e0e0e0 8%, #f0f0f0 18%, #e0e0e0 33%);
+    background-size: 800px 104px;
+    position: relative;
+    border-radius: 4px;
+}
+
+.skeleton-column {
+    width: 272px;
+    flex-shrink: 0;
+    background-color: #e0e0e0;
+    padding: 12px;
+    border-radius: 8px;
+}
+
+.skeleton-column-title {
+    height: 24px;
+    width: 60%;
+    margin-bottom: 16px;
+}
+
+.skeleton-card {
+    height: 60px;
+    margin-bottom: 8px;
+}
+
+.skeleton-card:nth-child(2) {
+    width: 90%;
+}
+
+.skeleton-card:nth-child(3) {
+    width: 75%;
+}

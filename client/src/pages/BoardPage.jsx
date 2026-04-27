@@ -12,6 +12,7 @@ import Column from "../components/kanban/Column";
 import CardModal from "../components/kanban/CardModal";
 import { useAuth } from "../context/AuthContext";
 import ActivityFeed from "../components/kanban/ActivityFeed";
+import BoardSkeleton from "../components/kanban/BoardSkeleton";
 
 const BoardPage = () => {
   const { projectId } = useParams();
@@ -184,7 +185,7 @@ const BoardPage = () => {
   const handleInviteSubmit = async (e) => {
     e.preventDefault();
     if (!inviteEmail.trim()) {
-      alert("Please enter a valid email.");
+      toast.warn("Please enter a valid email.");
       return;
     }
     try {
@@ -192,18 +193,15 @@ const BoardPage = () => {
         email: inviteEmail,
         socketId: socketRef.current?.id,
       });
-      alert(`Invitation sent to ${inviteEmail}`);
+      toast.success(`Invitation sent to ${inviteEmail}`);
       setInviteEmail("");
     } catch (err) {
-      const errorMessage =
-        err.response?.data?.msg || "Failed to send invitation.";
-      console.error(errorMessage);
-      alert(`Error: ${errorMessage}`);
+      console.error('Invite failed:', err);
     }
   };
 
   if (loading) {
-    return <div className="board-loading">Loading Board...</div>;
+    return <BoardSkeleton />;
   }
 
   if (error) {

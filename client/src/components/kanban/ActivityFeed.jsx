@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { getActivitiesForProject } from "../../services/activityService";
+import Spinner from "../layout/Spinner";
 import "./ActivityFeed.css";
 
 const Avatar = ({ user }) => {
@@ -47,7 +48,15 @@ const ActivityFeed = ({ projectId, isVisible, onClose }) => {
       </div>
       <ul className="activity-list">
         {loading ? (
-          <p>Loading activities...</p>
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "center",
+              marginTop: "40px",
+            }}
+          >
+            <Spinner />
+          </div>
         ) : activities.length > 0 ? (
           activities.map((activity) => (
             <li key={activity._id} className="activity-item">

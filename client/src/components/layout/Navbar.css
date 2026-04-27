@@ -5,6 +5,14 @@
   padding: 0 2rem;
   background-color: #172b4d; 
   color: #fff;
+ flex-wrap: wrap; 
+ gap: 1rem;
+}
+
+@media (max-width: 768px) {
+  .navbar {
+    padding: 1rem;
+  }
 }
 
 .navbar-links {

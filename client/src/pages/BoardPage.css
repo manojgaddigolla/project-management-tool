@@ -132,3 +132,32 @@
 .board-action-button i {
   margin-right: 8px;
 }
+
+@media (max-width: 768px) {
+  .board-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 20px;
+  }
+
+  .invite-form {
+    width: 100%;
+  }
+
+  .invite-input {
+    width: 100%;
+    flex-grow: 1;
+  }
+
+  .board-columns-container {
+    overflow-x: auto;
+    padding: 0 16px 8px 16px;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: thin;
+  }
+
+  .column-container {
+    height: fit-content;
+    max-height: calc(100vh - 200px);
+  }
+}
