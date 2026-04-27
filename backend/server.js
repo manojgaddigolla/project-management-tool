@@ -88,3 +88,5 @@ io.on("connection", (socket) => {
 httpServer.listen(PORT, () =>
   console.log(`Server with real-time support started on port ${PORT}`),
 );
+
+export default app;
