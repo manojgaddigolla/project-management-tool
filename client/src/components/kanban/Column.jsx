@@ -1,6 +1,6 @@
 import React from "react";
 import Card from "./Card";
-import { Droppable } from "react-beautiful-dnd";
+import { Droppable } from "@hello-pangea/dnd";
 import "./Column.css";
 
 const Column = ({ column, onCardClick }) => {

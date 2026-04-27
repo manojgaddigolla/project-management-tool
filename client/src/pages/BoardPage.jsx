@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { DragDropContext } from "react-beautiful-dnd";
+import { DragDropContext } from "@hello-pangea/dnd";
 import { toast } from "react-toastify";
 import { inviteUserToProject } from "../services/projectService";
 import { useBoard } from "../hooks/useBoard";
