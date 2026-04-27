@@ -6,6 +6,7 @@ const express = require("express");
 const cors = require("cors");
 const http = require("http");
 const { Server } = require("socket.io");
+const rateLimit = require("express-rate-limit");
 const userRoutes = require("./routes/users");
 const authRoutes = require("./routes/auth");
 const projectRoutes = require("./routes/projects");
@@ -24,6 +25,24 @@ app.use(cors());
 
 app.use(express.json());
 
+// General API rate limiter: 100 requests per 15 minutes per IP
+const apiLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 100,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { msg: "Too many requests, please try again later." },
+});
+
+// Stricter limiter for auth endpoints to mitigate brute-force attacks
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 20,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { msg: "Too many authentication attempts, please try again later." },
+});
+
 const httpServer = http.createServer(app);
 
 let io = new Server(httpServer, {
@@ -39,21 +58,21 @@ app.use((req, res, next) => {
   next();
 });
 
-app.use("/api/users", userRoutes);
+app.use("/api/users", authLimiter, userRoutes);
 
-app.use("/api/auth", authRoutes);
+app.use("/api/auth", authLimiter, authRoutes);
 
-app.use("/api/projects", projectRoutes);
+app.use("/api/projects", apiLimiter, projectRoutes);
 
-app.use("/api/boards", boardRoutes);
+app.use("/api/boards", apiLimiter, boardRoutes);
 
-app.use("/api/columns", columnRoutes);
+app.use("/api/columns", apiLimiter, columnRoutes);
 
-app.use("/api/cards", cardRoutes);
+app.use("/api/cards", apiLimiter, cardRoutes);
 
-app.use("/api/notifications", require("./routes/notifications"));
+app.use("/api/notifications", apiLimiter, require("./routes/notifications"));
 
-app.use("/api/activities", require("./routes/activities"));
+app.use("/api/activities", apiLimiter, require("./routes/activities"));
 
 app.get("/api/health", (req, res) => {
   res.json({ status: "UP", message: "Server is healthy." });
