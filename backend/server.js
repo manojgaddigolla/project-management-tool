@@ -15,11 +15,29 @@ const cardRoutes = require("./routes/cards");
 const jwt = require("jsonwebtoken");
 
 const app = express();
-connectDB();
+
+if (process.env.NODE_ENV !== "test") {
+  connectDB();
+}
 
 app.use(cors());
 
 app.use(express.json());
+
+const httpServer = http.createServer(app);
+
+let io = new Server(httpServer, {
+  cors: {
+    origin: process.env.CORS_ORIGIN || "http://localhost:5173",
+    methods: ["GET", "POST"],
+  },
+});
+
+// Attach io to every request so route handlers can emit events
+app.use((req, res, next) => {
+  req.io = io;
+  next();
+});
 
 app.use("/api/users", userRoutes);
 
@@ -33,28 +51,12 @@ app.use("/api/columns", columnRoutes);
 
 app.use("/api/cards", cardRoutes);
 
-app.use('/api/notifications', require('./routes/notifications'));
+app.use("/api/notifications", require("./routes/notifications"));
 
-app.use('/api/activities', require('./routes/activities'));
+app.use("/api/activities", require("./routes/activities"));
 
 app.get("/api/health", (req, res) => {
   res.json({ status: "UP", message: "Server is healthy." });
-});
-
-const PORT = process.env.PORT || 5000;
-
-const httpServer = http.createServer(app);
-
-const io = new Server(httpServer, {
-  cors: {
-    origin: "http://localhost:5173",
-    methods: ["GET", "POST"],
-  },
-});
-
-app.use((req, res, next) => {
-  req.io = io;
-  next();
 });
 
 io.on("connection", (socket) => {
@@ -76,7 +78,6 @@ io.on("connection", (socket) => {
 
   socket.on("joinProject", (projectId) => {
     socket.join(projectId);
-
     console.log(`Socket ${socket.id} successfully joined room: ${projectId}`);
   });
 
@@ -85,8 +86,12 @@ io.on("connection", (socket) => {
   });
 });
 
-httpServer.listen(PORT, () =>
-  console.log(`Server with real-time support started on port ${PORT}`),
-);
+const PORT = process.env.PORT || 5000;
 
-export default app;
+if (process.env.NODE_ENV !== "test") {
+  httpServer.listen(PORT, () =>
+    console.log(`Server with real-time support started on port ${PORT}`),
+  );
+}
+
+module.exports = app;

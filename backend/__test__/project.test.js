@@ -3,6 +3,9 @@ const { MongoMemoryServer } = require("mongodb-memory-server");
 const request = require("supertest");
 const User = require("../models/User");
 const Project = require("../models/Project");
+const Board = require("../models/Board");
+const Column = require("../models/Column");
+const Card = require("../models/Card");
 const app = require("../server");
 
 let mongoServer;
@@ -10,10 +13,7 @@ let mongoServer;
 beforeAll(async () => {
   mongoServer = await MongoMemoryServer.create();
   const mongoUri = mongoServer.getUri();
-  await mongoose.connect(mongoUri, {
-    useNewUrlParser: true,
-    useUnifiedTopology: true,
-  });
+  await mongoose.connect(mongoUri);
 });
 
 afterAll(async () => {
@@ -116,10 +116,10 @@ describe("PUT /api/cards/move/:id - Card Movement", () => {
 
   it("should move a card from one column to another and update db state", async () => {
     const movePayload = {
-      fromColumnId: fromColumn._id,
-      toColumnId: toColumn._id,
-      fromIndex: 0,
-      toIndex: 0,
+      sourceColumnId: fromColumn._id,
+      destinationColumnId: toColumn._id,
+      sourceIndex: 0,
+      destinationIndex: 0,
     };
 
     const response = await request(app)

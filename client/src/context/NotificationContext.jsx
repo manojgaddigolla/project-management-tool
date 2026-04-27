@@ -1,7 +1,8 @@
 import React, { createContext, useState, useEffect, useContext, useRef } from 'react';
 import { io } from 'socket.io-client';
-import axios from 'axios';
-import { useAuth } from './AuthContext'; 
+import { toast } from 'react-toastify';
+import axiosInstance from '../api/axios';
+import useAuthStore from '../store/authStore';
 
 const NotificationContext = createContext();
 
@@ -12,14 +13,14 @@ export const useNotifications = () => {
 export const NotificationProvider = ({ children }) => {
   const [notifications, setNotifications] = useState([]);
   const [unreadCount, setUnreadCount] = useState(0);
-  const { user } = useAuth();
+  const user = useAuthStore((state) => state.user);
   const socketRef = useRef(null);
 
   useEffect(() => {
     if (user) {
       const fetchNotifications = async () => {
         try {
-          const res = await axios.get('/api/notifications');
+          const res = await axiosInstance.get('/notifications');
           setNotifications(res.data);
           setUnreadCount(res.data.filter(n => !n.read).length);
         } catch (err) {
@@ -37,13 +38,14 @@ export const NotificationProvider = ({ children }) => {
       socketRef.current.on('newNotification', (newNotification) => {
         setNotifications(prev => [newNotification, ...prev]);
         setUnreadCount(prev => prev + 1);
-        alert(`New Notification: ${newNotification.message}`);
+        toast.info(newNotification.message);
       });
 
       return () => {
         if (socketRef.current) {
           socketRef.current.off('newNotification');
           socketRef.current.disconnect();
+          socketRef.current = null;
         }
       };
     } else {
@@ -54,13 +56,14 @@ export const NotificationProvider = ({ children }) => {
       setNotifications([]);
       setUnreadCount(0);
     }
-  }, [user]); 
+  }, [user]);
+
   const markAsRead = async () => {
     if (unreadCount === 0) return;
     try {
       setUnreadCount(0);
       setNotifications(prev => prev.map(n => ({ ...n, read: true })));
-      await axios.put('/api/notifications/mark-read');
+      await axiosInstance.put('/notifications/mark-read');
     } catch (err) {
       console.error('Failed to mark notifications as read', err);
     }

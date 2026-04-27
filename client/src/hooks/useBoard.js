@@ -3,6 +3,7 @@ import { useParams } from "react-router-dom";
 import { io } from "socket.io-client";
 import { getBoardByProjectId } from "../services/projectService";
 import { moveCard } from "../services/cardService";
+import useAuthStore from "../store/authStore";
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
 
@@ -12,6 +13,7 @@ export const useBoard = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const socketRef = useRef(null);
+  const user = useAuthStore((state) => state.user);
 
   const fetchBoardData = useCallback(async () => {
     try {
@@ -68,10 +70,10 @@ export const useBoard = () => {
 
     try {
       await moveCard(draggableId, {
-        fromColumnId: source.droppableId,
-        toColumnId: destination.droppableId,
-        fromIndex: source.index,
-        toIndex: destination.index,
+        sourceColumnId: source.droppableId,
+        destinationColumnId: destination.droppableId,
+        sourceIndex: source.index,
+        destinationIndex: destination.index,
         socketId: socketRef.current.id,
       });
     } catch (err) {
@@ -80,15 +82,17 @@ export const useBoard = () => {
     }
   };
 
+  const isOwner =
+    boardData?.project?.owner?._id?.toString() === user?._id?.toString();
+
   return {
     boardData,
     loading,
     error,
     handleDragEnd,
     socketId: socketRef.current?.id,
+    projectId,
     projectMembers: boardData?.project?.members,
-    isOwner:
-      boardData?.project?.owner ===
-      JSON.parse(atob(localStorage.getItem("token").split(".")[1])).user.id, 
+    isOwner,
   };
 };

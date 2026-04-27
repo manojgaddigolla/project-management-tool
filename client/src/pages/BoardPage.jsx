@@ -1,19 +1,13 @@
-import React, { useState, useEffect, useRef } from "react";
-import { useParams } from "react-router-dom";
-import { io } from "socket.io-client";
-import {
-  getBoardByProjectId,
-  inviteUserToProject,
-} from "../services/projectService";
-import { moveCard } from "../services/cardService";
+import React, { useState } from "react";
 import { DragDropContext } from "react-beautiful-dnd";
-import "./BoardPage.css";
+import { toast } from "react-toastify";
+import { inviteUserToProject } from "../services/projectService";
+import { useBoard } from "../hooks/useBoard";
 import Column from "../components/kanban/Column";
 import CardModal from "../components/kanban/CardModal";
-import { useAuth } from "../context/AuthContext";
-import { useBoard } from "../../hooks/useBoard";
 import ActivityFeed from "../components/kanban/ActivityFeed";
 import BoardSkeleton from "../components/kanban/BoardSkeleton";
+import "./BoardPage.css";
 
 const BoardPage = () => {
   const {
@@ -22,6 +16,7 @@ const BoardPage = () => {
     error,
     handleDragEnd,
     socketId,
+    projectId,
     projectMembers,
     isOwner,
   } = useBoard();
@@ -29,7 +24,6 @@ const BoardPage = () => {
   const [selectedCard, setSelectedCard] = useState(null);
   const [inviteEmail, setInviteEmail] = useState("");
   const [isActivityFeedVisible, setActivityFeedVisible] = useState(false);
-
 
   const handleOpenModal = (card) => {
     setSelectedCard(card);
@@ -39,7 +33,7 @@ const BoardPage = () => {
     setSelectedCard(null);
   };
 
-    const handleInviteSubmit = async (e) => {
+  const handleInviteSubmit = async (e) => {
     e.preventDefault();
     if (!inviteEmail.trim()) {
       toast.warn("Please enter a valid email.");
@@ -48,16 +42,17 @@ const BoardPage = () => {
     try {
       await inviteUserToProject(projectId, {
         email: inviteEmail,
-        socketId: socketRef.current?.id,
+        socketId: socketId,
       });
       toast.success(`Invitation sent to ${inviteEmail}`);
       setInviteEmail("");
     } catch (err) {
       console.error("Invite failed:", err);
+      toast.error("Failed to send invitation.");
     }
   };
 
-    if (loading) {
+  if (loading) {
     return <BoardSkeleton />;
   }
 
@@ -68,12 +63,6 @@ const BoardPage = () => {
   if (!boardData) {
     return <div>Project board not found.</div>;
   }
-
-  const isOwner = boardData?.project?.owner === authUser?._id;
-
-
-
-
 
   return (
     <div className="board-page">
@@ -122,7 +111,7 @@ const BoardPage = () => {
         onClose={handleCloseModal}
         card={selectedCard}
         socketId={socketId}
-       projectMembers={projectMembers}
+        projectMembers={projectMembers}
       />
 
       <ActivityFeed
