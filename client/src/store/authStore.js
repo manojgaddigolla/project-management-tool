@@ -24,7 +24,7 @@ const useAuthStore = create((set, get) => ({
     try {
       const userData = await fetchUser();
       set({ user: userData, isAuthenticated: true, loading: false });
-    } catch (error) {
+    } catch {
       get().logout();
       set({ loading: false });
     }

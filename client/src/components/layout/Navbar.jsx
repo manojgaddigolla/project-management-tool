@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import useAuthStore from "../../store/authStore";
-import { useNotifications } from "../../context/NotificationContext";
+import useNotifications from "../../hooks/useNotifications";
 import "./Navbar.css";
 
 const Navbar = () => {

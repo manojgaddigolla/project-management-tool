@@ -1,20 +1,26 @@
-import React, { createContext, useState, useEffect, useContext, useRef } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { io } from 'socket.io-client';
 import { toast } from 'react-toastify';
 import axiosInstance from '../api/axios';
 import useAuthStore from '../store/authStore';
-
-const NotificationContext = createContext();
-
-export const useNotifications = () => {
-  return useContext(NotificationContext);
-};
+import { NotificationContext } from './notificationContext';
 
 export const NotificationProvider = ({ children }) => {
   const [notifications, setNotifications] = useState([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const user = useAuthStore((state) => state.user);
   const socketRef = useRef(null);
+  const [prevUser, setPrevUser] = useState(user);
+
+  // Clear notifications during render when user logs out, avoiding a
+  // synchronous setState inside an effect.
+  if (prevUser !== user) {
+    setPrevUser(user);
+    if (!user) {
+      setNotifications([]);
+      setUnreadCount(0);
+    }
+  }
 
   useEffect(() => {
     if (user) {
@@ -53,8 +59,6 @@ export const NotificationProvider = ({ children }) => {
         socketRef.current.disconnect();
         socketRef.current = null;
       }
-      setNotifications([]);
-      setUnreadCount(0);
     }
   }, [user]);
 
