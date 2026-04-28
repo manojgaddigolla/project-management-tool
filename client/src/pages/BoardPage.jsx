@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { DndContext, closestCorners } from "@dnd-kit/core";
+import { DragDropContext } from "@hello-pangea/dnd";
 import { toast } from "react-toastify";
 import { inviteUserToProject } from "../services/projectService";
 import { useBoard } from "../hooks/useBoard";

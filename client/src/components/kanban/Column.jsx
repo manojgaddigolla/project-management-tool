@@ -2,6 +2,7 @@ import React from "react";
 import Card from "./Card";
 import { useDroppable } from "@dnd-kit/core";
 import { SortableContext, verticalListSortingStrategy } from "@dnd-kit/sortable";
+import { Droppable } from "@hello-pangea/dnd";
 import "./Column.css";
 
 const Column = ({ column, onCardClick }) => {
