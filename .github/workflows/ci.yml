@@ -10,6 +10,8 @@ jobs:
   backend-test:
     name: Backend Tests
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
 
     services:
       mongodb:
@@ -47,6 +49,8 @@ jobs:
   client-build:
     name: Client Build & Lint
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
 
     steps:
       - uses: actions/checkout@v4
