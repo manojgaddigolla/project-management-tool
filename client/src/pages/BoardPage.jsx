@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { DndContext, closestCorners } from "@dnd-kit/core";
 import { DragDropContext } from "@hello-pangea/dnd";
 import { toast } from "react-toastify";
 import { inviteUserToProject } from "../services/projectService";
@@ -94,7 +95,7 @@ const BoardPage = () => {
         </div>
       </div>
 
-      <DragDropContext onDragEnd={handleDragEnd}>
+      <DndContext onDragEnd={handleDragEnd} collisionDetection={closestCorners}>
         <div className="board-columns-container">
           {boardData.columns.map((column) => (
             <Column
@@ -104,7 +105,7 @@ const BoardPage = () => {
             />
           ))}
         </div>
-      </DragDropContext>
+      </DndContext>
 
       <CardModal
         show={selectedCard !== null}

@@ -12,12 +12,21 @@ export const useBoard = () => {
   const [boardData, setBoardData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [socketId, setSocketId] = useState(null);
+  const [prevProjectId, setPrevProjectId] = useState(projectId);
   const socketRef = useRef(null);
   const user = useAuthStore((state) => state.user);
 
+  // Reset to loading state during render when the project changes, avoiding a
+  // synchronous setState inside an effect.
+  if (prevProjectId !== projectId) {
+    setPrevProjectId(projectId);
+    setLoading(true);
+  }
+
+  // fetchBoardData is used for error recovery in event handlers (not in effects).
   const fetchBoardData = useCallback(async () => {
     try {
-      setLoading(true);
       const data = await getBoardByProjectId(projectId);
       setBoardData(data);
       setError(null);
@@ -30,50 +39,97 @@ export const useBoard = () => {
   }, [projectId]);
 
   useEffect(() => {
-    fetchBoardData();
-  }, [fetchBoardData]);
+    let cancelled = false;
+    // Inline async load so all setState calls happen after awaits (not synchronously).
+    (async () => {
+      try {
+        const data = await getBoardByProjectId(projectId);
+        if (cancelled) return;
+        setBoardData(data);
+        setError(null);
+      } catch (err) {
+        if (cancelled) return;
+        setError("Failed to fetch board data.");
+        console.error(err);
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [projectId]);
 
   useEffect(() => {
-    socketRef.current = io(API_URL, {
+    const socket = io(API_URL, {
       auth: { token: localStorage.getItem("token") },
     });
+    socketRef.current = socket;
 
-    socketRef.current.emit("joinProject", projectId);
+    socket.on("connect", () => {
+      setSocketId(socket.id);
+    });
 
-    socketRef.current.on("boardUpdated", ({ board, originatorSocketId }) => {
-      if (socketRef.current.id !== originatorSocketId) {
+    socket.emit("joinProject", projectId);
+
+    socket.on("boardUpdated", ({ board, originatorSocketId }) => {
+      if (socket.id !== originatorSocketId) {
         setBoardData(board);
       }
     });
 
     return () => {
-      socketRef.current.off("boardUpdated");
-      socketRef.current.disconnect();
+      socket.off("boardUpdated");
+      socket.off("connect");
+      socket.disconnect();
     };
   }, [projectId]);
 
-  const handleDragEnd = async (result) => {
-    const { source, destination, draggableId } = result;
+  const handleDragEnd = async (event) => {
+    const { active, over } = event;
 
-    if (!destination) return;
+    if (!over || active.id === over.id) return;
 
-    const newBoardData = { ...boardData };
-    const sourceColumn = newBoardData.columns.find(
-      (c) => c._id === source.droppableId,
+    const activeCardId = active.id;
+    const sourceColumnId = active.data.current?.columnId;
+
+    // Determine destination column and index from the over target
+    const overType = over.data.current?.type;
+    const destColumnId =
+      overType === "card" ? over.data.current.columnId : over.id;
+
+    const sourceColumn = boardData.columns.find((c) => c._id === sourceColumnId);
+    const destColumn = boardData.columns.find((c) => c._id === destColumnId);
+
+    if (!sourceColumn || !destColumn) return;
+
+    const sourceIndex = sourceColumn.cards.findIndex(
+      (c) => c._id === activeCardId,
     );
-    const destColumn = newBoardData.columns.find(
-      (c) => c._id === destination.droppableId,
-    );
-    const [movedCard] = sourceColumn.cards.splice(source.index, 1);
-    destColumn.cards.splice(destination.index, 0, movedCard);
+
+    let destIndex;
+    if (overType === "card") {
+      destIndex = destColumn.cards.findIndex((c) => c._id === over.id);
+      if (destIndex === -1) destIndex = destColumn.cards.length;
+    } else {
+      // Dropped on column droppable area (e.g. empty column)
+      destIndex = destColumn.cards.length;
+    }
+
+    // Optimistic update
+    const newBoardData = JSON.parse(JSON.stringify(boardData));
+    const srcCol = newBoardData.columns.find((c) => c._id === sourceColumnId);
+    const dstCol = newBoardData.columns.find((c) => c._id === destColumnId);
+    const [movedCard] = srcCol.cards.splice(sourceIndex, 1);
+    dstCol.cards.splice(destIndex, 0, movedCard);
     setBoardData(newBoardData);
 
     try {
-      await moveCard(draggableId, {
-        sourceColumnId: source.droppableId,
-        destinationColumnId: destination.droppableId,
-        sourceIndex: source.index,
-        destinationIndex: destination.index,
+      await moveCard(activeCardId, {
+        sourceColumnId,
+        destinationColumnId: destColumnId,
+        sourceIndex,
+        destinationIndex: destIndex,
         socketId: socketRef.current.id,
       });
     } catch (err) {
@@ -90,7 +146,7 @@ export const useBoard = () => {
     loading,
     error,
     handleDragEnd,
-    socketId: socketRef.current?.id,
+    socketId,
     projectId,
     projectMembers: boardData?.project?.members,
     isOwner,

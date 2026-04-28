@@ -5,12 +5,14 @@ import "./CardModal.css";
 const CardModal = ({ show, onClose, card, socketId, projectMembers = [] }) => {
   const [newCommentText, setNewCommentText] = useState("");
   const [selectedAssignees, setSelectedAssignees] = useState([]);
+  const [prevCard, setPrevCard] = useState(null);
 
-  useEffect(() => {
-    if (card && card.assignedTo) {
-      setSelectedAssignees(card.assignedTo.map((user) => user._id));
-    }
-  }, [card]);
+  // Reset selected assignees whenever the card prop changes (update during render,
+  // avoiding a synchronous setState inside an effect).
+  if (card !== prevCard) {
+    setPrevCard(card);
+    setSelectedAssignees(card?.assignedTo?.map((user) => user._id) ?? []);
+  }
 
   useEffect(() => {
     const handleEsc = (event) => {
