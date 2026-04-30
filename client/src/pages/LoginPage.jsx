@@ -7,6 +7,7 @@ import "./Form.css";
 const LoginPage = () => {
   const navigate = useNavigate();
   const setToken = useAuthStore((state) => state.setToken);
+  const loadUser = useAuthStore((state) => state.loadUser);
 
   const [formData, setFormData] = useState({
     email: "",
@@ -31,10 +32,15 @@ const LoginPage = () => {
       const data = await login({ email, password });
 
       setToken(data.token);
+      await loadUser();
 
       navigate("/dashboard");
     } catch (err) {
-      setError(err.msg || "Login failed. Please check your credentials.");
+      setError(
+        err.msg ||
+          err.errors?.[0]?.msg ||
+          "Login failed. Please check your credentials.",
+      );
     } finally {
       setLoading(false);
     }

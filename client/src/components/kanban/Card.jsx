@@ -1,7 +1,6 @@
 import React from "react";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { Draggable } from "@hello-pangea/dnd";
 import "./Card.css";
 
 const Card = ({ card, columnId, onClick }) => {

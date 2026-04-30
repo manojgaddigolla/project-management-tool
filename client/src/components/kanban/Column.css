@@ -24,6 +24,7 @@
   flex-grow: 1; 
   padding: 0 5px;  
   transition: background-color 0.2s ease; 
+  min-height: 40px;
 }
 
  .kanban-card-list.dragging-over {
@@ -46,4 +47,71 @@
 
 .kanban-card-list::-webkit-scrollbar-thumb:hover {
   background: #a5adba;
+}
+
+.add-card-button {
+  margin-top: 10px;
+  border: none;
+  background: transparent;
+  color: #44546f;
+  text-align: left;
+  padding: 10px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 700;
+}
+
+.add-card-button:hover {
+  background: #dfe1e6;
+  color: #172b4d;
+}
+
+.add-card-form {
+  margin-top: 10px;
+  display: grid;
+  gap: 8px;
+}
+
+.add-card-input,
+.add-card-textarea {
+  width: 100%;
+  box-sizing: border-box;
+  border: 1px solid #cfd7e2;
+  border-radius: 6px;
+  padding: 8px 10px;
+  background: #fff;
+  color: #172b4d;
+}
+
+.add-card-textarea {
+  min-height: 72px;
+  resize: vertical;
+}
+
+.add-card-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.add-card-actions button {
+  border: none;
+  border-radius: 6px;
+  padding: 8px 12px;
+  cursor: pointer;
+  font-weight: 700;
+}
+
+.add-card-actions button[type="submit"] {
+  background: #0c66e4;
+  color: #fff;
+}
+
+.add-card-actions button[type="button"] {
+  background: #dfe1e6;
+  color: #172b4d;
+}
+
+.add-card-actions button:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
 }

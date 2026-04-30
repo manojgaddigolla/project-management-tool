@@ -5,20 +5,39 @@
   padding: 0 2rem;
   background-color: #172b4d; 
   color: #fff;
- flex-wrap: wrap; 
- gap: 1rem;
+  flex-wrap: wrap; 
+  gap: 1rem;
+  min-height: 64px;
 }
 
-@media (max-width: 768px) {
-  .navbar {
-    padding: 1rem;
-  }
+.navbar a {
+  color: #fff;
+  text-decoration: none;
+}
+
+.navbar ul {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.navbar h1 {
+  font-size: 20px;
+  margin: 0;
+}
+
+.navbar-logo {
+  font-weight: 800;
 }
 
 .navbar-links {
-    display: flex;
-    align-items: center;
-    gap: 20px;
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  flex-wrap: wrap;
 }
 
 .notification-bell {
@@ -86,4 +105,17 @@
 .notification-date {
   font-size: 12px;
   color: #5e6c84;
+}
+
+@media (max-width: 768px) {
+  .navbar {
+    padding: 1rem;
+    align-items: flex-start;
+  }
+
+  .navbar-links,
+  .navbar ul {
+    width: 100%;
+    justify-content: flex-start;
+  }
 }

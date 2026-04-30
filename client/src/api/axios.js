@@ -1,8 +1,9 @@
 import axios from "axios";
 import { toast } from "react-toastify";
+import { API_BASE_URL } from "../services/config";
 
 const axiosInstance = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || "http://localhost:5000/api",
+  baseURL: API_BASE_URL,
 });
 
 axiosInstance.interceptors.request.use(

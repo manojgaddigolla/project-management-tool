@@ -1,6 +1,5 @@
-import React, { useState } from "react";
+import React, { useMemo, useState } from "react";
 import { DndContext, closestCorners } from "@dnd-kit/core";
-import { DragDropContext } from "@hello-pangea/dnd";
 import { toast } from "react-toastify";
 import { inviteUserToProject } from "../services/projectService";
 import { useBoard } from "../hooks/useBoard";
@@ -16,22 +15,35 @@ const BoardPage = () => {
     loading,
     error,
     handleDragEnd,
+    handleCreateCard,
     socketId,
     projectId,
     projectMembers,
     isOwner,
   } = useBoard();
 
-  const [selectedCard, setSelectedCard] = useState(null);
+  const [selectedCardId, setSelectedCardId] = useState(null);
   const [inviteEmail, setInviteEmail] = useState("");
   const [isActivityFeedVisible, setActivityFeedVisible] = useState(false);
 
+  const selectedCard = useMemo(() => {
+    if (!selectedCardId || !boardData?.columns) {
+      return null;
+    }
+
+    return (
+      boardData.columns
+        .flatMap((column) => column.cards)
+        .find((card) => card._id === selectedCardId) || null
+    );
+  }, [boardData, selectedCardId]);
+
   const handleOpenModal = (card) => {
-    setSelectedCard(card);
+    setSelectedCardId(card._id);
   };
 
   const handleCloseModal = () => {
-    setSelectedCard(null);
+    setSelectedCardId(null);
   };
 
   const handleInviteSubmit = async (e) => {
@@ -102,13 +114,14 @@ const BoardPage = () => {
               key={column._id}
               column={column}
               onCardClick={handleOpenModal}
+              onCreateCard={handleCreateCard}
             />
           ))}
         </div>
       </DndContext>
 
       <CardModal
-        show={selectedCard !== null}
+        show={selectedCardId !== null}
         onClose={handleCloseModal}
         card={selectedCard}
         socketId={socketId}

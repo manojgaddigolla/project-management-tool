@@ -17,11 +17,9 @@ const Navbar = () => {
   };
   
   const navigate = useNavigate();
-  const { isAuthenticated, user, logout } = useAuthStore((state) => ({
-    isAuthenticated: state.isAuthenticated,
-    user: state.user,
-    logout: state.logout,
-  }));
+  const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
+  const user = useAuthStore((state) => state.user);
+  const logout = useAuthStore((state) => state.logout);
 
   const onLogout = () => {
     logout();
@@ -68,31 +66,33 @@ const Navbar = () => {
           </Link>
         </h1>
         <>{isAuthenticated ? authLinks : guestLinks}</>
-        <div className="notification-bell" onClick={handleBellClick}>
-          <i className="fas fa-bell"></i>
-          {unreadCount > 0 && (
-            <span className="notification-badge">{unreadCount}</span>
-          )}
-          {isDropdownVisible && (
-            <div className="notification-dropdown">
-              {notifications.length > 0 ? (
-                notifications.map((n) => (
-                  <Link
-                    to={n.link || "#"}
-                    key={n._id}
-                    className="notification-item"
-                    onClick={() => setDropdownVisible(false)}
-                  >
-                    <p>{n.message}</p>
-                    <small>{new Date(n.createdAt).toLocaleString()}</small>
-                  </Link>
-                ))
-              ) : (
-                <div className="notification-item">No new notifications</div>
-              )}
-            </div>
-          )}
-        </div>
+        {isAuthenticated && (
+          <div className="notification-bell" onClick={handleBellClick}>
+            <i className="fas fa-bell"></i>
+            {unreadCount > 0 && (
+              <span className="notification-badge">{unreadCount}</span>
+            )}
+            {isDropdownVisible && (
+              <div className="notification-dropdown">
+                {notifications.length > 0 ? (
+                  notifications.map((n) => (
+                    <Link
+                      to={n.link || "#"}
+                      key={n._id}
+                      className="notification-item"
+                      onClick={() => setDropdownVisible(false)}
+                    >
+                      <p>{n.message}</p>
+                      <small>{new Date(n.createdAt).toLocaleString()}</small>
+                    </Link>
+                  ))
+                ) : (
+                  <div className="notification-item">No new notifications</div>
+                )}
+              </div>
+            )}
+          </div>
+        )}
       </div>
     </nav>
   );

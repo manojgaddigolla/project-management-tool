@@ -3,7 +3,6 @@ const Project = require("../models/Project");
 const User = require('../models/User');
 const Board = require("../models/Board");
 const Column = require("../models/Column");
-const mongoose = require("mongoose");
 const createActivityLog = require('../utils/activityLogger');
 
 const createProject = async (req, res) => {
@@ -13,11 +12,10 @@ const createProject = async (req, res) => {
     return res.status(400).json({ errors: errors.array() });
   }
 
-  const session = await mongoose.startSession();
+  let project;
+  let board;
 
   try {
-    session.startTransaction();
-
     const { name, description } = req.body;
     const newProject = new Project({
       name,
@@ -26,32 +24,34 @@ const createProject = async (req, res) => {
       members: [req.user.id],
     });
 
-    const project = await newProject.save({ session });
+    project = await newProject.save();
 
     const newBoard = new Board({
       project: project._id,
     });
-    const board = await newBoard.save({ session });
+    board = await newBoard.save();
 
     const defaultColumns = [
       { title: "To-Do", board: board._id, cards: [] },
       { title: "In Progress", board: board._id, cards: [] },
       { title: "Done", board: board._id, cards: [] },
     ];
-    const columns = await Column.insertMany(defaultColumns, { session });
+    const columns = await Column.insertMany(defaultColumns);
 
     board.columns = columns.map((col) => col._id);
-    await board.save({ session });
-
-    await session.commitTransaction();
+    await board.save();
 
     res.status(201).json(project);
   } catch (err) {
-    await session.abortTransaction();
+    if (board?._id) {
+      await Column.deleteMany({ board: board._id }).catch(() => {});
+      await Board.findByIdAndDelete(board._id).catch(() => {});
+    }
+    if (project?._id) {
+      await Project.findByIdAndDelete(project._id).catch(() => {});
+    }
     console.error(err.message);
     res.status(500).send("Server Error");
-  } finally {
-    session.endSession();
   }
 };
 

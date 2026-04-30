@@ -9,6 +9,15 @@ export const getProjects = async () => {
   }
 };
 
+export const createProject = async (projectData) => {
+  try {
+    const response = await axiosInstance.post("/projects", projectData);
+    return response.data;
+  } catch (error) {
+    throw error.response ? error.response.data : error;
+  }
+};
+
 export const getBoardByProjectId = async (projectId) => {
   try {
     const response = await axiosInstance.get(`/boards/${projectId}`);

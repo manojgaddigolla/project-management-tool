@@ -2,10 +2,9 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { useParams } from "react-router-dom";
 import { io } from "socket.io-client";
 import { getBoardByProjectId } from "../services/projectService";
-import { moveCard } from "../services/cardService";
+import { createCard, moveCard } from "../services/cardService";
+import { API_ORIGIN } from "../services/config";
 import useAuthStore from "../store/authStore";
-
-const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
 
 export const useBoard = () => {
   const { projectId } = useParams();
@@ -13,25 +12,17 @@ export const useBoard = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [socketId, setSocketId] = useState(null);
-  const [prevProjectId, setPrevProjectId] = useState(projectId);
   const socketRef = useRef(null);
   const user = useAuthStore((state) => state.user);
 
-  // Reset to loading state during render when the project changes, avoiding a
-  // synchronous setState inside an effect.
-  if (prevProjectId !== projectId) {
-    setPrevProjectId(projectId);
-    setLoading(true);
-  }
-
-  // fetchBoardData is used for error recovery in event handlers (not in effects).
   const fetchBoardData = useCallback(async () => {
     try {
+      setLoading(true);
       const data = await getBoardByProjectId(projectId);
       setBoardData(data);
       setError(null);
     } catch (err) {
-      setError("Failed to fetch board data.");
+      setError(err?.msg || "Failed to fetch board data.");
       console.error(err);
     } finally {
       setLoading(false);
@@ -40,28 +31,35 @@ export const useBoard = () => {
 
   useEffect(() => {
     let cancelled = false;
-    // Inline async load so all setState calls happen after awaits (not synchronously).
-    (async () => {
+
+    const loadBoard = async () => {
+      await Promise.resolve();
+      if (cancelled) return;
+
       try {
+        setLoading(true);
         const data = await getBoardByProjectId(projectId);
         if (cancelled) return;
         setBoardData(data);
         setError(null);
       } catch (err) {
         if (cancelled) return;
-        setError("Failed to fetch board data.");
+        setError(err?.msg || "Failed to fetch board data.");
         console.error(err);
       } finally {
         if (!cancelled) setLoading(false);
       }
-    })();
+    };
+
+    loadBoard();
+
     return () => {
       cancelled = true;
     };
   }, [projectId]);
 
   useEffect(() => {
-    const socket = io(API_URL, {
+    const socket = io(API_ORIGIN, {
       auth: { token: localStorage.getItem("token") },
     });
     socketRef.current = socket;
@@ -72,10 +70,8 @@ export const useBoard = () => {
 
     socket.emit("joinProject", projectId);
 
-    socket.on("boardUpdated", ({ board, originatorSocketId }) => {
-      if (socket.id !== originatorSocketId) {
-        setBoardData(board);
-      }
+    socket.on("boardUpdated", ({ board }) => {
+      setBoardData(board);
     });
 
     return () => {
@@ -85,10 +81,19 @@ export const useBoard = () => {
     };
   }, [projectId]);
 
+  const handleCreateCard = async (columnId, cardData) => {
+    await createCard({
+      ...cardData,
+      columnId,
+      socketId: socketRef.current?.id,
+    });
+    await fetchBoardData();
+  };
+
   const handleDragEnd = async (event) => {
     const { active, over } = event;
 
-    if (!over || active.id === over.id) return;
+    if (!boardData || !over || active.id === over.id) return;
 
     const activeCardId = active.id;
     const sourceColumnId = active.data.current?.columnId;
@@ -122,6 +127,9 @@ export const useBoard = () => {
     const dstCol = newBoardData.columns.find((c) => c._id === destColumnId);
     const [movedCard] = srcCol.cards.splice(sourceIndex, 1);
     dstCol.cards.splice(destIndex, 0, movedCard);
+    if (movedCard) {
+      movedCard.column = destColumnId;
+    }
     setBoardData(newBoardData);
 
     try {
@@ -130,11 +138,11 @@ export const useBoard = () => {
         destinationColumnId: destColumnId,
         sourceIndex,
         destinationIndex: destIndex,
-        socketId: socketRef.current.id,
+        socketId: socketRef.current?.id,
       });
     } catch (err) {
       console.error("Failed to move card:", err);
-      fetchBoardData();
+      await fetchBoardData();
     }
   };
 
@@ -146,6 +154,7 @@ export const useBoard = () => {
     loading,
     error,
     handleDragEnd,
+    handleCreateCard,
     socketId,
     projectId,
     projectMembers: boardData?.project?.members,

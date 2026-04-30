@@ -62,9 +62,6 @@
   margin-bottom: 20px;
   flex-wrap: wrap;
   gap: 16px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
 }
 
 .board-title {
@@ -117,16 +114,16 @@
 .board-action-button {
   padding: 8px 16px;
   font-size: 14px;
-  background-color: rgba(255, 255, 255, 0.2);
+  background-color: #172b4d;
   color: #fff;
-  border: 1px solid rgba(255, 255, 255, 0.5);
+  border: 1px solid #172b4d;
   border-radius: 4px;
   cursor: pointer;
   transition: background-color 0.2s;
 }
 
 .board-action-button:hover {
-  background-color: rgba(255, 255, 255, 0.3);
+  background-color: #253858;
 }
 
 .board-action-button i {

@@ -8,6 +8,7 @@ const RegisterPage = () => {
   const navigate = useNavigate();
 
   const setToken = useAuthStore((state) => state.setToken);
+  const loadUser = useAuthStore((state) => state.loadUser);
 
   const [formData, setFormData] = useState({
     name: "",
@@ -40,10 +41,15 @@ const RegisterPage = () => {
       const data = await register({ name, email, password });
 
       setToken(data.token);
+      await loadUser();
 
       navigate("/dashboard");
     } catch (err) {
-      setError(err.msg || "Registration failed. Please try again.");
+      setError(
+        err.msg ||
+          err.errors?.[0]?.msg ||
+          "Registration failed. Please try again.",
+      );
     } finally {
       setLoading(false);
     }

@@ -1,5 +1,10 @@
 import axiosInstance from "../api/axios";
 
+export const createCard = async (cardData) => {
+  const response = await axiosInstance.post("/cards", cardData);
+  return response.data;
+};
+
 export const moveCard = async (cardId, moveData) => {
   const response = await axiosInstance.put(`/cards/move/${cardId}`, moveData);
   return response.data;

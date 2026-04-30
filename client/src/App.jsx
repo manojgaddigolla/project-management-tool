@@ -3,7 +3,7 @@ import { Route, Routes } from "react-router-dom";
 import Navbar from "./components/layout/Navbar";
 import Sidebar from "./components/layout/Sidebar";
 import Footer from "./components/layout/Footer";
-import { NotificationProvider } from "./context/NotificationContext";
+import { NotificationProvider } from "./context/NotificationContext.jsx";
 import HomePage from "./pages/HomePage";
 import RegisterPage from "./pages/RegisterPage";
 import LoginPage from "./pages/LoginPage";

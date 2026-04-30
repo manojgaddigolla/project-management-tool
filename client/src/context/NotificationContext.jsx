@@ -4,23 +4,13 @@ import { toast } from 'react-toastify';
 import axiosInstance from '../api/axios';
 import useAuthStore from '../store/authStore';
 import { NotificationContext } from './notificationContext';
+import { API_ORIGIN } from '../services/config';
 
 export const NotificationProvider = ({ children }) => {
   const [notifications, setNotifications] = useState([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const user = useAuthStore((state) => state.user);
   const socketRef = useRef(null);
-  const [prevUser, setPrevUser] = useState(user);
-
-  // Clear notifications during render when user logs out, avoiding a
-  // synchronous setState inside an effect.
-  if (prevUser !== user) {
-    setPrevUser(user);
-    if (!user) {
-      setNotifications([]);
-      setUnreadCount(0);
-    }
-  }
 
   useEffect(() => {
     if (user) {
@@ -35,7 +25,7 @@ export const NotificationProvider = ({ children }) => {
       };
       fetchNotifications();
 
-      socketRef.current = io(import.meta.env.VITE_API_URL || 'http://localhost:5000', {
+      socketRef.current = io(API_ORIGIN, {
         auth: {
           token: localStorage.getItem('token'),
         },
@@ -74,8 +64,8 @@ export const NotificationProvider = ({ children }) => {
   };
 
   const value = {
-    notifications,
-    unreadCount,
+    notifications: user ? notifications : [],
+    unreadCount: user ? unreadCount : 0,
     markAsRead,
   };
 

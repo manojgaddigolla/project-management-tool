@@ -1,11 +1,15 @@
 import api from './api';
 
+const toApiError = (error) => {
+  return error.response ? error.response.data : { msg: error.message };
+};
+
 export const register = async (userData) => {
   try {
     const response = await api.post('/users/register', userData);
     return response.data;
   } catch (error) {
-    throw error.response.data;
+    throw toApiError(error);
   }
 };
 
@@ -14,7 +18,7 @@ export const login = async (credentials) => {
     const response = await api.post('/auth/login', credentials);
     return response.data;
   } catch (error) {
-    throw error.response.data;
+    throw toApiError(error);
   }
 };
 
@@ -23,6 +27,6 @@ export const loadUser = async () => {
     const response = await api.get('/auth');
     return response.data;
   } catch (error) {
-    throw error.response.data;
+    throw toApiError(error);
   }
 };

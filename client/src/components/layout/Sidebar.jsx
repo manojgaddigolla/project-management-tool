@@ -1,11 +1,20 @@
-import React from 'react';
-import './Sidebar.css';
+import React from "react";
+import { NavLink } from "react-router-dom";
+import useAuthStore from "../../store/authStore";
+import "./Sidebar.css";
 
 const Sidebar = () => {
+  const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
+
+  if (!isAuthenticated) {
+    return null;
+  }
+
   return (
     <aside className="sidebar">
-      <p>Sidebar Content</p>
-      {/*  */}
+      <NavLink to="/dashboard" className="sidebar-link">
+        Dashboard
+      </NavLink>
     </aside>
   );
 };
