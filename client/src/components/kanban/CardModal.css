@@ -16,8 +16,10 @@
   padding: 24px;
   border-radius: 8px;
   width: 90%;
-  max-width: 768px;
-  min-height: 500px;
+  max-width: 960px;
+  max-height: 90vh;
+  overflow-y: auto;
+  min-height: 520px;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
   position: relative;
 }
@@ -59,7 +61,7 @@
 
 .modal-body {
   display: flex;
-  gap: 20px;
+  gap: 24px;
 }
 
 .modal-main-content {
@@ -75,6 +77,147 @@
   font-weight: 600;
   color: #5e6c84;
   margin-bottom: 10px;
+}
+
+.card-details-form {
+  display: grid;
+  gap: 14px;
+}
+
+.modal-title-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 12px;
+  align-items: center;
+  padding-right: 36px;
+}
+
+.modal-title-input {
+  border: 1px solid #cfd7e2;
+  border-radius: 8px;
+  color: #101828;
+  font-size: 1.35rem;
+  font-weight: 800;
+  padding: 10px 12px;
+}
+
+.danger-button {
+  border: none;
+  border-radius: 8px;
+  background: #ffeceb;
+  color: #ae2e24;
+  cursor: pointer;
+  font-weight: 800;
+  min-height: 42px;
+  padding: 0 14px;
+}
+
+.danger-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
+.details-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.details-grid label {
+  color: #44546f;
+  display: grid;
+  font-size: 0.82rem;
+  font-weight: 800;
+  gap: 6px;
+}
+
+.details-grid select,
+.details-grid input,
+.modal-description-input,
+.checklist-input-row input {
+  border: 1px solid #cfd7e2;
+  border-radius: 8px;
+  box-sizing: border-box;
+  color: #172b4d;
+  padding: 10px 12px;
+  width: 100%;
+}
+
+.modal-description-input {
+  min-height: 120px;
+  resize: vertical;
+}
+
+.checklist-section {
+  background: #ffffff;
+  border: 1px solid #dfe1e6;
+  border-radius: 8px;
+  padding: 14px;
+}
+
+.checklist-input-row {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.checklist-input-row button,
+.details-save-button {
+  border: none;
+  border-radius: 8px;
+  background: #0c66e4;
+  color: #fff;
+  cursor: pointer;
+  font-weight: 800;
+  padding: 10px 14px;
+}
+
+.checklist-list {
+  display: grid;
+  gap: 8px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.checklist-list li {
+  align-items: center;
+  display: flex;
+  gap: 10px;
+  justify-content: space-between;
+}
+
+.checklist-list label {
+  align-items: center;
+  display: flex;
+  gap: 8px;
+}
+
+.checklist-list .completed {
+  color: #5e6c84;
+  text-decoration: line-through;
+}
+
+.checklist-list button {
+  border: none;
+  background: transparent;
+  color: #ae2e24;
+  cursor: pointer;
+  font-weight: 800;
+}
+
+.empty-state-text {
+  color: #5e6c84;
+  font-size: 0.9rem;
+}
+
+.details-save-button {
+  justify-self: start;
+}
+
+.details-save-button:disabled {
+  background: #a5adba;
+  cursor: not-allowed;
 }
 
 .assigned-users-list {
@@ -132,7 +275,7 @@
   flex: 1;
   background-color: #fff;
   border: 1px solid #dfe1e6;
-  border-radius: 3px;
+  border-radius: 8px;
   padding: 8px 12px;
 }
 
@@ -162,7 +305,7 @@
   width: 100%;
   min-height: 80px;
   padding: 8px 12px;
-  border-radius: 3px;
+  border-radius: 8px;
   border: 1px solid #dfe1e6;
   font-size: 14px;
   margin-bottom: 8px;
@@ -179,7 +322,7 @@
   background-color: #0079bf;
   color: #fff;
   border: none;
-  border-radius: 3px;
+  border-radius: 8px;
   padding: 8px 16px;
   font-weight: bold;
   cursor: pointer;
@@ -233,7 +376,7 @@
   background-color: #5aac44;
   color: #fff;
   border: none;
-  border-radius: 3px;
+  border-radius: 8px;
   padding: 8px 16px;
   font-weight: bold;
   cursor: pointer;
@@ -269,5 +412,15 @@
 
   .modal-card-title {
     font-size: 20px;
+  }
+
+  .modal-title-row,
+  .details-grid {
+    grid-template-columns: 1fr;
+    padding-right: 34px;
+  }
+
+  .checklist-input-row {
+    flex-direction: column;
   }
 }

@@ -18,6 +18,12 @@ router.post(
     [
       check("title", "Title is required").not().isEmpty(),
       check("columnId", "Column ID is required").isMongoId(),
+      check("priority", "Priority is invalid")
+        .optional()
+        .isIn(["low", "medium", "high", "urgent"]),
+      check("dueDate", "Due date must be a valid date")
+        .optional({ checkFalsy: true })
+        .isISO8601(),
     ],
   ],
   createCard,
@@ -33,6 +39,13 @@ router.put(
       check("description", "Description must be a string")
         .optional()
         .isString(),
+      check("priority", "Priority is invalid")
+        .optional()
+        .isIn(["low", "medium", "high", "urgent"]),
+      check("dueDate", "Due date must be a valid date")
+        .optional({ checkFalsy: true })
+        .isISO8601(),
+      check("checklist", "Checklist must be an array").optional().isArray(),
     ],
   ],
   updateCard,

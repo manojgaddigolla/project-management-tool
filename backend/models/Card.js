@@ -13,6 +13,30 @@ const CardSchema = new mongoose.Schema(
       trim: true,
     },
 
+    priority: {
+      type: String,
+      enum: ["low", "medium", "high", "urgent"],
+      default: "medium",
+    },
+
+    dueDate: {
+      type: Date,
+    },
+
+    checklist: [
+      {
+        text: {
+          type: String,
+          required: true,
+          trim: true,
+        },
+        completed: {
+          type: Boolean,
+          default: false,
+        },
+      },
+    ],
+
     assignedTo: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
 
     column: {

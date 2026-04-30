@@ -8,6 +8,8 @@ const Column = ({ column, onCardClick, onCreateCard }) => {
   const [isAdding, setIsAdding] = useState(false);
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
+  const [priority, setPriority] = useState("medium");
+  const [dueDate, setDueDate] = useState("");
   const [isSaving, setIsSaving] = useState(false);
 
   const { setNodeRef } = useDroppable({
@@ -18,6 +20,8 @@ const Column = ({ column, onCardClick, onCreateCard }) => {
   const resetForm = () => {
     setTitle("");
     setDescription("");
+    setPriority("medium");
+    setDueDate("");
     setIsAdding(false);
   };
 
@@ -33,6 +37,8 @@ const Column = ({ column, onCardClick, onCreateCard }) => {
       await onCreateCard(column._id, {
         title: title.trim(),
         description: description.trim(),
+        priority,
+        dueDate,
       });
       resetForm();
     } finally {
@@ -81,6 +87,26 @@ const Column = ({ column, onCardClick, onCreateCard }) => {
             placeholder="Description"
             disabled={isSaving}
           />
+          <div className="add-card-row">
+            <select
+              className="add-card-select"
+              value={priority}
+              onChange={(event) => setPriority(event.target.value)}
+              disabled={isSaving}
+            >
+              <option value="low">Low priority</option>
+              <option value="medium">Medium priority</option>
+              <option value="high">High priority</option>
+              <option value="urgent">Urgent priority</option>
+            </select>
+            <input
+              type="date"
+              className="add-card-input"
+              value={dueDate}
+              onChange={(event) => setDueDate(event.target.value)}
+              disabled={isSaving}
+            />
+          </div>
           <div className="add-card-actions">
             <button type="submit" disabled={!title.trim() || isSaving}>
               {isSaving ? "Adding..." : "Add"}

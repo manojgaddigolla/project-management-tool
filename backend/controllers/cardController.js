@@ -71,7 +71,8 @@ const createCard = async (req, res) => {
     return res.status(400).json({ errors: errors.array() });
   }
 
-  const { title, description, columnId, socketId } = req.body;
+  const { title, description, columnId, priority, dueDate, socketId } =
+    req.body;
   const userId = req.user.id;
 
   try {
@@ -102,6 +103,8 @@ const createCard = async (req, res) => {
     const newCard = new Card({
       title,
       description,
+      priority,
+      dueDate,
       column: columnId,
     });
     const card = await newCard.save();
@@ -139,7 +142,7 @@ const updateCard = async (req, res) => {
     return res.status(400).json({ errors: errors.array() });
   }
 
-  const { title, description } = req.body;
+  const { title, description, priority, dueDate, checklist } = req.body;
   const cardId = req.params.id;
   const userId = req.user.id;
 
@@ -167,6 +170,20 @@ const updateCard = async (req, res) => {
     }
     if (description !== undefined) {
       card.description = description;
+    }
+    if (priority !== undefined) {
+      card.priority = priority;
+    }
+    if (dueDate !== undefined) {
+      card.dueDate = dueDate || undefined;
+    }
+    if (checklist !== undefined) {
+      card.checklist = checklist
+        .filter((item) => item.text && item.text.trim())
+        .map((item) => ({
+          text: item.text.trim(),
+          completed: Boolean(item.completed),
+        }));
     }
 
     const updatedCard = await card.save();

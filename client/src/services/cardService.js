@@ -5,6 +5,16 @@ export const createCard = async (cardData) => {
   return response.data;
 };
 
+export const updateCard = async (cardId, cardData) => {
+  const response = await axiosInstance.put(`/cards/${cardId}`, cardData);
+  return response.data;
+};
+
+export const deleteCard = async (cardId) => {
+  const response = await axiosInstance.delete(`/cards/${cardId}`);
+  return response.data;
+};
+
 export const moveCard = async (cardId, moveData) => {
   const response = await axiosInstance.put(`/cards/move/${cardId}`, moveData);
   return response.data;

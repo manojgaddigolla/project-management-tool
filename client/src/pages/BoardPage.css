@@ -64,8 +64,95 @@
   gap: 16px;
 }
 
+.board-page {
+  min-height: 100%;
+}
+
+.board-eyebrow {
+  color: #0c66e4;
+  font-size: 0.78rem;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  margin-bottom: 6px;
+  text-transform: uppercase;
+}
+
 .board-title {
   margin: 0;
+  color: #101828;
+  font-size: 2.1rem;
+}
+
+.board-description {
+  color: #5e6c84;
+  margin-top: 6px;
+  max-width: 680px;
+}
+
+.board-metrics {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+  margin-bottom: 18px;
+}
+
+.board-metric {
+  background: #ffffff;
+  border: 1px solid #dfe1e6;
+  border-radius: 8px;
+  padding: 14px 16px;
+}
+
+.board-metric span {
+  display: block;
+  color: #101828;
+  font-size: 1.55rem;
+  font-weight: 900;
+}
+
+.board-metric p {
+  color: #5e6c84;
+  font-size: 0.88rem;
+  font-weight: 700;
+}
+
+.add-column-form {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 18px;
+  max-width: 520px;
+}
+
+.add-column-form input {
+  flex: 1;
+  border: 1px solid #cfd7e2;
+  border-radius: 8px;
+  padding: 0.72rem 0.85rem;
+  background: #fff;
+}
+
+.add-column-form button {
+  border: none;
+  border-radius: 8px;
+  padding: 0 16px;
+  background: #0c66e4;
+  color: #fff;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.add-column-form button:disabled {
+  background: #a5adba;
+  cursor: not-allowed;
+}
+
+.board-columns-container {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  overflow-x: auto;
+  padding: 4px 4px 18px;
+  min-height: 520px;
 }
 
 .invite-form {
@@ -78,7 +165,7 @@
   padding: 8px 12px;
   font-size: 14px;
   border: 1px solid #ccc;
-  border-radius: 4px;
+  border-radius: 8px;
   width: 250px;
 }
 
@@ -93,15 +180,15 @@
   font-size: 14px;
   font-weight: bold;
   color: #fff;
-  background-color: #5aac44;
+  background-color: #1f845a;
   border: none;
-  border-radius: 4px;
+  border-radius: 8px;
   cursor: pointer;
   transition: background-color 0.2s ease-in-out;
 }
 
 .invite-button:hover {
-  background-color: #61bd4f;
+  background-color: #216e4e;
 }
 
 
@@ -117,7 +204,7 @@
   background-color: #172b4d;
   color: #fff;
   border: 1px solid #172b4d;
-  border-radius: 4px;
+  border-radius: 8px;
   cursor: pointer;
   transition: background-color 0.2s;
 }
@@ -156,5 +243,14 @@
   .column-container {
     height: fit-content;
     max-height: calc(100vh - 200px);
+  }
+
+  .board-metrics {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .add-column-form {
+    flex-direction: column;
+    max-width: none;
   }
 }

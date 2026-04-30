@@ -16,6 +16,8 @@ const BoardPage = () => {
     error,
     handleDragEnd,
     handleCreateCard,
+    handleCreateColumn,
+    refreshBoard,
     socketId,
     projectId,
     projectMembers,
@@ -24,7 +26,35 @@ const BoardPage = () => {
 
   const [selectedCardId, setSelectedCardId] = useState(null);
   const [inviteEmail, setInviteEmail] = useState("");
+  const [newColumnTitle, setNewColumnTitle] = useState("");
+  const [isAddingColumn, setIsAddingColumn] = useState(false);
   const [isActivityFeedVisible, setActivityFeedVisible] = useState(false);
+
+  const boardStats = useMemo(() => {
+    const columns = boardData?.columns || [];
+    const cards = columns.flatMap((column) => column.cards || []);
+    const completedCards =
+      columns
+        .find((column) => column.title.toLowerCase().includes("done"))
+        ?.cards?.length || 0;
+    const overdueCards = cards.filter((card) => {
+      if (!card.dueDate) return false;
+      return (
+        new Date(card.dueDate) < new Date() &&
+        !columns
+          .find((column) => column.cards?.some((item) => item._id === card._id))
+          ?.title.toLowerCase()
+          .includes("done")
+      );
+    }).length;
+
+    return {
+      totalCards: cards.length,
+      completedCards,
+      overdueCards,
+      members: boardData?.project?.members?.length || 0,
+    };
+  }, [boardData]);
 
   const selectedCard = useMemo(() => {
     if (!selectedCardId || !boardData?.columns) {
@@ -65,6 +95,26 @@ const BoardPage = () => {
     }
   };
 
+  const handleAddColumn = async (event) => {
+    event.preventDefault();
+
+    if (!newColumnTitle.trim()) {
+      return;
+    }
+
+    try {
+      setIsAddingColumn(true);
+      await handleCreateColumn(newColumnTitle.trim());
+      setNewColumnTitle("");
+      toast.success("Column added");
+    } catch (err) {
+      console.error("Column creation failed:", err);
+      toast.error(err.msg || "Failed to add column.");
+    } finally {
+      setIsAddingColumn(false);
+    }
+  };
+
   if (loading) {
     return <BoardSkeleton />;
   }
@@ -80,7 +130,13 @@ const BoardPage = () => {
   return (
     <div className="board-page">
       <div className="board-header">
-        <h1 className="board-title">{boardData.project?.name} Board</h1>
+        <div>
+          <p className="board-eyebrow">Workspace</p>
+          <h1 className="board-title">{boardData.project?.name}</h1>
+          {boardData.project?.description && (
+            <p className="board-description">{boardData.project.description}</p>
+          )}
+        </div>
         <div className="board-actions">
           {isOwner && (
             <form onSubmit={handleInviteSubmit} className="invite-form">
@@ -107,6 +163,41 @@ const BoardPage = () => {
         </div>
       </div>
 
+      <div className="board-metrics" aria-label="Board summary">
+        <div className="board-metric">
+          <span>{boardStats.totalCards}</span>
+          <p>Total tasks</p>
+        </div>
+        <div className="board-metric">
+          <span>{boardStats.completedCards}</span>
+          <p>Completed</p>
+        </div>
+        <div className="board-metric">
+          <span>{boardStats.overdueCards}</span>
+          <p>Overdue</p>
+        </div>
+        <div className="board-metric">
+          <span>{boardStats.members}</span>
+          <p>Members</p>
+        </div>
+      </div>
+
+      <form className="add-column-form" onSubmit={handleAddColumn}>
+        <input
+          type="text"
+          value={newColumnTitle}
+          onChange={(event) => setNewColumnTitle(event.target.value)}
+          placeholder="Add a workflow column"
+          disabled={isAddingColumn}
+        />
+        <button
+          type="submit"
+          disabled={!newColumnTitle.trim() || isAddingColumn}
+        >
+          {isAddingColumn ? "Adding..." : "Add Column"}
+        </button>
+      </form>
+
       <DndContext onDragEnd={handleDragEnd} collisionDetection={closestCorners}>
         <div className="board-columns-container">
           {boardData.columns.map((column) => (
@@ -126,6 +217,8 @@ const BoardPage = () => {
         card={selectedCard}
         socketId={socketId}
         projectMembers={projectMembers}
+        onChanged={refreshBoard}
+        onDeleted={handleCloseModal}
       />
 
       <ActivityFeed

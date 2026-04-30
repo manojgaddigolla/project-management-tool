@@ -18,6 +18,15 @@ export const createProject = async (projectData) => {
   }
 };
 
+export const createColumn = async (columnData) => {
+  try {
+    const response = await axiosInstance.post("/columns", columnData);
+    return response.data;
+  } catch (error) {
+    throw error.response ? error.response.data : error;
+  }
+};
+
 export const getBoardByProjectId = async (projectId) => {
   try {
     const response = await axiosInstance.get(`/boards/${projectId}`);

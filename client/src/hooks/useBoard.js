@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useParams } from "react-router-dom";
 import { io } from "socket.io-client";
-import { getBoardByProjectId } from "../services/projectService";
+import { createColumn, getBoardByProjectId } from "../services/projectService";
 import { createCard, moveCard } from "../services/cardService";
 import { API_ORIGIN } from "../services/config";
 import useAuthStore from "../store/authStore";
@@ -90,6 +90,17 @@ export const useBoard = () => {
     await fetchBoardData();
   };
 
+  const handleCreateColumn = async (title) => {
+    if (!boardData?._id) return;
+
+    await createColumn({
+      title,
+      boardId: boardData._id,
+      socketId: socketRef.current?.id,
+    });
+    await fetchBoardData();
+  };
+
   const handleDragEnd = async (event) => {
     const { active, over } = event;
 
@@ -155,6 +166,8 @@ export const useBoard = () => {
     error,
     handleDragEnd,
     handleCreateCard,
+    handleCreateColumn,
+    refreshBoard: fetchBoardData,
     socketId,
     projectId,
     projectMembers: boardData?.project?.members,

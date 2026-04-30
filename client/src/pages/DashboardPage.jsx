@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useMemo, useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { createProject, getProjects } from "../services/projectService";
 import "./DashboardPage.css";
@@ -11,6 +11,7 @@ const DashboardPage = () => {
     name: "",
     description: "",
   });
+  const [searchTerm, setSearchTerm] = useState("");
   const [creatingProject, setCreatingProject] = useState(false);
 
   useEffect(() => {
@@ -62,6 +63,31 @@ const DashboardPage = () => {
     }
   };
 
+  const filteredProjects = useMemo(() => {
+    const term = searchTerm.trim().toLowerCase();
+    if (!term) return projects;
+
+    return projects.filter((project) => {
+      return [project.name, project.description]
+        .filter(Boolean)
+        .some((value) => value.toLowerCase().includes(term));
+    });
+  }, [projects, searchTerm]);
+
+  const dashboardStats = useMemo(
+    () => ({
+      total: projects.length,
+      owned: projects.filter((project) => project.owner).length,
+      recent: projects.filter((project) => {
+        const created = new Date(project.createdAt);
+        const weekAgo = new Date();
+        weekAgo.setDate(weekAgo.getDate() - 7);
+        return created >= weekAgo;
+      }).length,
+    }),
+    [projects],
+  );
+
   if (loading) {
     return <div className="dashboard-loading">Loading projects...</div>;
   }
@@ -69,10 +95,36 @@ const DashboardPage = () => {
   return (
     <div className="dashboard-container">
       <div className="dashboard-header">
-        <h2 className="dashboard-title">Your Projects</h2>
+        <div>
+          <p className="dashboard-eyebrow">Project command center</p>
+          <h2 className="dashboard-title">Your Projects</h2>
+          <p className="dashboard-subtitle">
+            Create workspaces, organize delivery boards, and keep task momentum
+            visible.
+          </p>
+        </div>
       </div>
 
       {error && <div className="dashboard-error">Error: {error}</div>}
+
+      <div className="dashboard-stats">
+        <div>
+          <span>{dashboardStats.total}</span>
+          <p>Total projects</p>
+        </div>
+        <div>
+          <span>{dashboardStats.recent}</span>
+          <p>Created this week</p>
+        </div>
+        <div>
+          <span>{dashboardStats.owned}</span>
+          <p>Owned by you</p>
+        </div>
+        <div>
+          <span>{filteredProjects.length}</span>
+          <p>Matching view</p>
+        </div>
+      </div>
 
       <form className="create-project-form" onSubmit={handleCreateProject}>
         <div className="create-project-fields">
@@ -102,16 +154,30 @@ const DashboardPage = () => {
           {creatingProject ? "Creating..." : "Create Project"}
         </button>
       </form>
+
+      <div className="project-toolbar">
+        <input
+          type="search"
+          placeholder="Search projects"
+          value={searchTerm}
+          onChange={(event) => setSearchTerm(event.target.value)}
+        />
+      </div>
       
-      {projects.length > 0 ? (
+      {filteredProjects.length > 0 ? (
         <div className="project-list">
-          {projects.map((project) => (
+          {filteredProjects.map((project) => (
             <div key={project._id} className="project-card">
+              <div className="project-card-kicker">
+                Updated {new Date(project.updatedAt).toLocaleDateString()}
+              </div>
               <h3 className="project-card-title">{project.name}</h3>
-              <p className="project-card-description">{project.description}</p>
+              <p className="project-card-description">
+                {project.description || "No description added yet."}
+              </p>
               
               <Link to={`/project/${project._id}`} className="project-card-link">
-                View Board
+                Open Board
               </Link>
             </div>
           ))}
