@@ -271,6 +271,132 @@
   background-color: #253858;
 }
 
+.project-settings-panel {
+  background: #ffffff;
+  border: 1px solid #dfe1e6;
+  border-radius: 8px;
+  box-shadow: 0 14px 34px rgba(9, 30, 66, 0.1);
+  display: grid;
+  gap: 18px;
+  grid-template-columns: minmax(280px, 0.9fr) minmax(320px, 1.1fr);
+  margin-bottom: 18px;
+  padding: 18px;
+}
+
+.project-settings-form {
+  display: grid;
+  gap: 12px;
+}
+
+.project-settings-form label {
+  color: #44546f;
+  display: block;
+  font-size: 0.82rem;
+  font-weight: 900;
+  margin-bottom: 6px;
+}
+
+.project-settings-form input {
+  border: 1px solid #cfd7e2;
+  border-radius: 8px;
+  box-sizing: border-box;
+  padding: 10px 12px;
+  width: 100%;
+}
+
+.project-settings-form button {
+  align-self: end;
+  background: #0c66e4;
+  border: none;
+  border-radius: 8px;
+  color: #fff;
+  cursor: pointer;
+  font-weight: 900;
+  min-height: 42px;
+  padding: 0 14px;
+}
+
+.team-panel {
+  border-left: 1px solid #dfe1e6;
+  padding-left: 18px;
+}
+
+.team-panel-header {
+  margin-bottom: 12px;
+}
+
+.team-panel-header h2 {
+  font-size: 1.1rem;
+  margin: 0 0 4px;
+}
+
+.team-panel-header p {
+  color: #5e6c84;
+}
+
+.team-list {
+  display: grid;
+  gap: 10px;
+}
+
+.team-member {
+  align-items: center;
+  display: grid;
+  gap: 10px;
+  grid-template-columns: 38px minmax(0, 1fr) auto auto;
+}
+
+.team-avatar {
+  align-items: center;
+  background: #e9f2ff;
+  border-radius: 999px;
+  color: #0c66e4;
+  display: flex;
+  font-size: 0.82rem;
+  font-weight: 900;
+  height: 38px;
+  justify-content: center;
+  overflow: hidden;
+  width: 38px;
+}
+
+.team-avatar img {
+  height: 100%;
+  object-fit: cover;
+  width: 100%;
+}
+
+.team-member strong {
+  color: #172b4d;
+  display: block;
+}
+
+.team-member p {
+  color: #5e6c84;
+  font-size: 0.84rem;
+  overflow-wrap: anywhere;
+}
+
+.team-member span {
+  background: #f1f2f4;
+  border-radius: 999px;
+  color: #44546f;
+  font-size: 0.74rem;
+  font-weight: 900;
+  padding: 4px 8px;
+}
+
+.team-member button {
+  background: #ffeceb;
+  border: none;
+  border-radius: 8px;
+  color: #ae2e24;
+  cursor: pointer;
+  font-weight: 900;
+  min-height: 34px;
+  padding: 0 10px;
+}
+
 .board-action-button i {
   margin-right: 8px;
 }
@@ -310,6 +436,26 @@
   .add-column-form {
     flex-direction: column;
     max-width: none;
+  }
+
+  .project-settings-panel {
+    grid-template-columns: 1fr;
+  }
+
+  .team-panel {
+    border-left: none;
+    border-top: 1px solid #dfe1e6;
+    padding-left: 0;
+    padding-top: 18px;
+  }
+
+  .team-member {
+    grid-template-columns: 38px minmax(0, 1fr);
+  }
+
+  .team-member span,
+  .team-member button {
+    justify-self: start;
   }
 
   .board-toolbar {

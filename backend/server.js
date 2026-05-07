@@ -7,12 +7,15 @@ const cors = require("cors");
 const http = require("http");
 const { Server } = require("socket.io");
 const rateLimit = require("express-rate-limit");
+const mongoose = require("mongoose");
 const userRoutes = require("./routes/users");
 const authRoutes = require("./routes/auth");
 const projectRoutes = require("./routes/projects");
 const boardRoutes = require("./routes/boards");
 const columnRoutes = require("./routes/columns");
 const cardRoutes = require("./routes/cards");
+const Project = require("./models/Project");
+const { securityHeaders, sanitizeRequest } = require("./middleware/security");
 const jwt = require("jsonwebtoken");
 
 const app = express();
@@ -21,9 +24,28 @@ if (process.env.NODE_ENV !== "test") {
   connectDB();
 }
 
-app.use(cors());
+const allowedOrigins = (process.env.CORS_ORIGIN || "http://localhost:5173")
+  .split(",")
+  .map((origin) => origin.trim())
+  .filter(Boolean);
 
-app.use(express.json());
+app.use(securityHeaders);
+
+app.use(
+  cors({
+    origin(origin, callback) {
+      if (!origin || allowedOrigins.includes(origin)) {
+        return callback(null, true);
+      }
+
+      return callback(new Error("Not allowed by CORS"));
+    },
+    credentials: true,
+  }),
+);
+
+app.use(express.json({ limit: "1mb" }));
+app.use(sanitizeRequest);
 
 // General API rate limiter: 100 requests per 15 minutes per IP
 const apiLimiter = rateLimit({
@@ -46,10 +68,7 @@ const authLimiter = rateLimit({
 const httpServer = http.createServer(app);
 
 let io = new Server(httpServer, {
-  cors: {
-    origin: process.env.CORS_ORIGIN || "http://localhost:5173",
-    methods: ["GET", "POST"],
-  },
+  cors: { origin: allowedOrigins, methods: ["GET", "POST"] },
 });
 
 // Attach io to every request so route handlers can emit events
@@ -86,6 +105,7 @@ io.on("connection", (socket) => {
     if (token) {
       const decoded = jwt.verify(token, process.env.JWT_SECRET);
       const userId = decoded.user.id;
+      socket.userId = userId;
       socket.join(userId);
       console.log(
         `User ${userId} with socket ${socket.id} joined their private room.`,
@@ -95,9 +115,26 @@ io.on("connection", (socket) => {
     console.log("Socket connection not authenticated.");
   }
 
-  socket.on("joinProject", (projectId) => {
-    socket.join(projectId);
-    console.log(`Socket ${socket.id} successfully joined room: ${projectId}`);
+  socket.on("joinProject", async (projectId) => {
+    try {
+      if (!mongoose.isValidObjectId(projectId) || !socket.userId) {
+        return;
+      }
+
+      const project = await Project.findOne({
+        _id: projectId,
+        members: socket.userId,
+      });
+
+      if (!project) {
+        return;
+      }
+
+      socket.join(projectId);
+      console.log(`Socket ${socket.id} successfully joined room: ${projectId}`);
+    } catch (err) {
+      console.log("Socket failed to join project room.");
+    }
   });
 
   socket.on("disconnect", () => {

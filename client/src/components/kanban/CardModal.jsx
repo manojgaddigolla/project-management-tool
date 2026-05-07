@@ -1,10 +1,12 @@
-import React, { useState, useEffect } from "react";
+import React, { useMemo, useState, useEffect } from "react";
+import { toast } from "react-toastify";
 import {
   addComment,
   assignUsersToCard,
   deleteCard,
   updateCard,
 } from "../../services/cardService";
+import { useConfirm } from "../../context/useConfirm";
 import "./CardModal.css";
 
 const CardModal = ({
@@ -27,8 +29,21 @@ const CardModal = ({
   const [checklistText, setChecklistText] = useState("");
   const [checklist, setChecklist] = useState([]);
   const [isSavingDetails, setIsSavingDetails] = useState(false);
+  const [isSavingAssignees, setIsSavingAssignees] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [prevCard, setPrevCard] = useState(null);
+  const confirm = useConfirm();
+
+  const currentAssigneeIds = useMemo(
+    () => card?.assignedTo?.map((user) => user._id) ?? [],
+    [card],
+  );
+
+  const assignmentChanged = useMemo(() => {
+    const selected = [...selectedAssignees].sort().join(",");
+    const current = [...currentAssigneeIds].sort().join(",");
+    return selected !== current;
+  }, [currentAssigneeIds, selectedAssignees]);
 
   if (card !== prevCard) {
     setPrevCard(card);
@@ -75,9 +90,10 @@ const CardModal = ({
 
       setNewCommentText("");
       await onChanged?.();
+      toast.success("Comment added");
     } catch (err) {
       console.error("Failed to add comment:", err);
-      alert("Could not post your comment. Please try again.");
+      toast.error("Could not post your comment. Please try again.");
     }
   };
 
@@ -91,15 +107,24 @@ const CardModal = ({
 
   const handleAssigneeSave = async () => {
     if (!card) return;
+    if (!assignmentChanged) {
+      toast.info("Assignments are already up to date.");
+      return;
+    }
+
     try {
+      setIsSavingAssignees(true);
       await assignUsersToCard(card._id, {
         assignedTo: selectedAssignees,
         socketId: socketId,
       });
       await onChanged?.();
+      toast.success("Assignments updated");
     } catch (err) {
       console.error("Failed to update assignees:", err);
-      alert("Could not save assignees. Please try again.");
+      toast.error("Could not save assignees. Please try again.");
+    } finally {
+      setIsSavingAssignees(false);
     }
   };
 
@@ -122,11 +147,13 @@ const CardModal = ({
         priority: editForm.priority,
         dueDate: editForm.dueDate,
         checklist,
+        socketId,
       });
       await onChanged?.();
+      toast.success("Card details saved");
     } catch (err) {
       console.error("Failed to update card:", err);
-      alert("Could not save card details. Please try again.");
+      toast.error("Could not save card details. Please try again.");
     } finally {
       setIsSavingDetails(false);
     }
@@ -159,19 +186,23 @@ const CardModal = ({
   const handleDeleteCard = async () => {
     if (!card) return;
 
-    const shouldDelete = window.confirm(
-      "Delete this card? This cannot be undone.",
-    );
+    const shouldDelete = await confirm({
+      title: "Delete this card?",
+      message: "This removes the card, comments, checklist and assignments. This cannot be undone.",
+      confirmText: "Delete Card",
+      tone: "danger",
+    });
     if (!shouldDelete) return;
 
     try {
       setIsDeleting(true);
-      await deleteCard(card._id);
+      await deleteCard(card._id, { socketId });
       await onChanged?.();
       onDeleted?.();
+      toast.success("Card deleted");
     } catch (err) {
       console.error("Failed to delete card:", err);
-      alert("Could not delete this card. Please try again.");
+      toast.error("Could not delete this card. Please try again.");
     } finally {
       setIsDeleting(false);
     }
@@ -374,30 +405,38 @@ const CardModal = ({
                 </ul>
 
                 <div className="member-assignment-section">
-                  <h3 className="modal-section-title">Members</h3>
+                  <div className="assignment-heading">
+                    <h3 className="modal-section-title">Members</h3>
+                    <span>{selectedAssignees.length} selected</span>
+                  </div>
                   <div className="members-list">
-                    {projectMembers.map((member) => (
-                      <div key={member._id} className="member-item">
-                        <input
-                          type="checkbox"
-                          id={`member-${member._id}`}
-                          checked={selectedAssignees.includes(member._id)}
-                          onChange={() => handleAssigneeChange(member._id)}
-                        />
-                        <label htmlFor={`member-${member._id}`}>
-                          <div className="user-avatar" title={member.name}>
-                            <Avatar user={member} />
-                          </div>
-                          <span className="user-name">{member.name}</span>
-                        </label>
-                      </div>
-                    ))}
+                    {projectMembers.length > 0 ? (
+                      projectMembers.map((member) => (
+                        <div key={member._id} className="member-item">
+                          <input
+                            type="checkbox"
+                            id={`member-${member._id}`}
+                            checked={selectedAssignees.includes(member._id)}
+                            onChange={() => handleAssigneeChange(member._id)}
+                          />
+                          <label htmlFor={`member-${member._id}`}>
+                            <div className="user-avatar" title={member.name}>
+                              <Avatar user={member} />
+                            </div>
+                            <span className="user-name">{member.name}</span>
+                          </label>
+                        </div>
+                      ))
+                    ) : (
+                      <p className="empty-state-text">No project members yet.</p>
+                    )}
                   </div>
                   <button
                     onClick={handleAssigneeSave}
                     className="assignee-save-button"
+                    disabled={isSavingAssignees || !assignmentChanged}
                   >
-                    Save Assignments
+                    {isSavingAssignees ? "Saving..." : "Save Assignments"}
                   </button>
                 </div>
               </div>

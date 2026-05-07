@@ -1,6 +1,12 @@
 import React, { useMemo, useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { createProject, getProjects } from "../services/projectService";
+import {
+  createProject,
+  deleteProject,
+  getProjects,
+} from "../services/projectService";
+import useAuthStore from "../store/authStore";
+import { useConfirm } from "../context/useConfirm";
 import "./DashboardPage.css";
 
 const DashboardPage = () => {
@@ -13,6 +19,9 @@ const DashboardPage = () => {
   });
   const [searchTerm, setSearchTerm] = useState("");
   const [creatingProject, setCreatingProject] = useState(false);
+  const [deletingProjectId, setDeletingProjectId] = useState(null);
+  const user = useAuthStore((state) => state.user);
+  const confirm = useConfirm();
 
   useEffect(() => {
     const fetchProjects = async () => {
@@ -63,6 +72,29 @@ const DashboardPage = () => {
     }
   };
 
+  const handleDeleteProject = async (project) => {
+    const shouldDelete = await confirm({
+      title: `Delete "${project.name}"?`,
+      message:
+        "This removes its board, columns, cards, activity, notifications and analytics data. This cannot be undone.",
+      confirmText: "Delete Project",
+      tone: "danger",
+    });
+    if (!shouldDelete) return;
+
+    try {
+      setDeletingProjectId(project._id);
+      await deleteProject(project._id);
+      setProjects((currentProjects) =>
+        currentProjects.filter((item) => item._id !== project._id),
+      );
+    } catch (err) {
+      setError(err.msg || "Failed to delete project.");
+    } finally {
+      setDeletingProjectId(null);
+    }
+  };
+
   const filteredProjects = useMemo(() => {
     const term = searchTerm.trim().toLowerCase();
     if (!term) return projects;
@@ -77,7 +109,10 @@ const DashboardPage = () => {
   const dashboardStats = useMemo(
     () => ({
       total: projects.length,
-      owned: projects.filter((project) => project.owner).length,
+      owned: projects.filter((project) => {
+        const ownerId = project.owner?._id || project.owner;
+        return ownerId === user?._id;
+      }).length,
       recent: projects.filter((project) => {
         const created = new Date(project.createdAt);
         const weekAgo = new Date();
@@ -85,7 +120,7 @@ const DashboardPage = () => {
         return created >= weekAgo;
       }).length,
     }),
-    [projects],
+    [projects, user],
   );
 
   if (loading) {
@@ -175,10 +210,21 @@ const DashboardPage = () => {
               <p className="project-card-description">
                 {project.description || "No description added yet."}
               </p>
-              
-              <Link to={`/project/${project._id}`} className="project-card-link">
-                Open Board
-              </Link>
+              <div className="project-card-actions">
+                <Link to={`/project/${project._id}`} className="project-card-link">
+                  Open Board
+                </Link>
+                {(project.owner?._id || project.owner) === user?._id && (
+                  <button
+                    type="button"
+                    className="project-delete-button"
+                    onClick={() => handleDeleteProject(project)}
+                    disabled={deletingProjectId === project._id}
+                  >
+                    {deletingProjectId === project._id ? "Deleting..." : "Delete"}
+                  </button>
+                )}
+              </div>
             </div>
           ))}
         </div>

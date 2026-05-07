@@ -19,6 +19,52 @@
   padding: 0 5px 10px 5px;
 }
 
+.column-title-form {
+  display: grid;
+  gap: 6px;
+  grid-template-columns: minmax(0, 1fr);
+  width: 100%;
+}
+
+.column-title-form input {
+  border: 1px solid #cfd7e2;
+  border-radius: 8px;
+  padding: 7px 9px;
+}
+
+.column-title-form button,
+.column-actions button {
+  border: none;
+  border-radius: 7px;
+  cursor: pointer;
+  font-size: 0.78rem;
+  font-weight: 900;
+  padding: 6px 8px;
+}
+
+.column-title-form button[type="submit"] {
+  background: #0c66e4;
+  color: #fff;
+}
+
+.column-title-form button[type="button"],
+.column-actions button {
+  background: #ffffff;
+  color: #44546f;
+}
+
+.column-actions {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 10px;
+  padding: 0 4px;
+}
+
+.column-actions button:hover {
+  background: #e9f2ff;
+  color: #0c66e4;
+}
+
 .kanban-column-header span {
   background: #ffffff;
   border: 1px solid #dfe1e6;

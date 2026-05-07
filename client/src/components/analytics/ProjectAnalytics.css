@@ -1,0 +1,217 @@
+.analytics-shell {
+  background: #ffffff;
+  border: 1px solid #dfe1e6;
+  border-radius: 8px;
+  box-shadow: 0 18px 42px rgba(9, 30, 66, 0.1);
+  margin-bottom: 18px;
+  padding: 18px;
+}
+
+.analytics-error {
+  color: #ae2e24;
+}
+
+.analytics-header {
+  align-items: center;
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.analytics-eyebrow {
+  color: #0c66e4;
+  font-size: 0.78rem;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.analytics-header h2 {
+  font-size: 1.45rem;
+  margin: 0;
+}
+
+.completion-ring {
+  align-items: center;
+  background: #ffffff;
+  border-radius: 999px;
+  display: flex;
+  flex-direction: column;
+  height: 96px;
+  justify-content: center;
+  min-width: 96px;
+  position: relative;
+  overflow: hidden;
+}
+
+.completion-ring span {
+  color: #101828;
+  font-size: 1.35rem;
+  font-weight: 950;
+  position: relative;
+  z-index: 1;
+}
+
+.completion-ring p {
+  color: #5e6c84;
+  font-size: 0.75rem;
+  font-weight: 800;
+  position: relative;
+  z-index: 1;
+}
+
+.completion-ring-progress {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle, #ffffff 58%, transparent 60%),
+    conic-gradient(#0c66e4 var(--progress), #e9f2ff 0);
+}
+
+.analytics-kpis {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.analytics-kpis div,
+.analytics-panel {
+  background: #f8fafc;
+  border: 1px solid #dfe1e6;
+  border-radius: 8px;
+  padding: 14px;
+}
+
+.analytics-kpis span {
+  color: #101828;
+  display: block;
+  font-size: 1.5rem;
+  font-weight: 950;
+}
+
+.analytics-kpis p,
+.analytics-empty {
+  color: #5e6c84;
+  font-weight: 750;
+}
+
+.analytics-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.analytics-panel h3 {
+  color: #172b4d;
+  font-size: 1rem;
+  margin: 0 0 12px;
+}
+
+.analytics-bar-list {
+  display: grid;
+  gap: 12px;
+}
+
+.analytics-bar-label {
+  align-items: center;
+  color: #44546f;
+  display: flex;
+  font-size: 0.85rem;
+  font-weight: 850;
+  justify-content: space-between;
+  margin-bottom: 5px;
+  text-transform: capitalize;
+}
+
+.analytics-bar-track {
+  background: #e9edf5;
+  border-radius: 999px;
+  height: 10px;
+  overflow: hidden;
+}
+
+.analytics-bar-fill {
+  background: linear-gradient(90deg, #0c66e4, #579dff);
+  border-radius: inherit;
+  height: 100%;
+}
+
+.analytics-bar-fill.green {
+  background: linear-gradient(90deg, #1f845a, #4bce97);
+}
+
+.workload-list,
+.deadline-list {
+  display: grid;
+  gap: 10px;
+}
+
+.workload-item,
+.deadline-item {
+  align-items: center;
+  background: #ffffff;
+  border: 1px solid #dfe1e6;
+  border-radius: 8px;
+  display: flex;
+  justify-content: space-between;
+  padding: 10px;
+}
+
+.workload-copy {
+  flex: 1;
+  min-width: 0;
+  padding-right: 12px;
+}
+
+.workload-track {
+  background: #e9edf5;
+  border-radius: 999px;
+  height: 8px;
+  margin-top: 8px;
+  overflow: hidden;
+  width: 100%;
+}
+
+.workload-fill {
+  background: linear-gradient(90deg, #6554c0, #9f8fef);
+  border-radius: inherit;
+  height: 100%;
+}
+
+.workload-item strong,
+.deadline-item strong {
+  color: #172b4d;
+}
+
+.workload-item p,
+.deadline-item p {
+  color: #5e6c84;
+  font-size: 0.84rem;
+}
+
+.workload-item span,
+.deadline-item span {
+  background: #e9f2ff;
+  border-radius: 999px;
+  color: #0c66e4;
+  font-weight: 900;
+  padding: 4px 9px;
+}
+
+.deadline-item.overdue {
+  background: #fff7f7;
+  border-color: #fecdca;
+}
+
+.deadline-item.overdue span {
+  background: #ffeceb;
+  color: #ae2e24;
+}
+
+@media (max-width: 860px) {
+  .analytics-kpis,
+  .analytics-grid {
+    grid-template-columns: 1fr;
+  }
+}

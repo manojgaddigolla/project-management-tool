@@ -2,7 +2,11 @@ const express = require('express');
 const router = express.Router();
 const { check } = require('express-validator');
 const auth = require('../middleware/auth');
-const { createColumn } = require('../controllers/columnController');
+const {
+  createColumn,
+  updateColumn,
+  deleteColumn,
+} = require('../controllers/columnController');
 
 router.post(
   '/',
@@ -15,4 +19,23 @@ router.post(
   ],
   createColumn
 );
+
+router.put(
+  '/:id',
+  [
+    auth,
+    [
+      check('id', 'Column ID is required').isMongoId(),
+      check('title', 'Title is required').not().isEmpty(),
+    ],
+  ],
+  updateColumn
+);
+
+router.delete(
+  '/:id',
+  [auth, check('id', 'Column ID is required').isMongoId()],
+  deleteColumn
+);
+
 module.exports = router;

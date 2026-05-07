@@ -179,7 +179,14 @@
   overflow-wrap: anywhere;
 }
 
-.project-card-link {
+.project-card-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.project-card-link,
+.project-delete-button {
   display: inline-block;
   align-self: flex-start; 
   text-decoration: none;
@@ -188,11 +195,28 @@
   padding: 0.5rem 1rem;
   border-radius: 4px;
   font-size: 0.9rem;
+  font-weight: 800;
   transition: background-color 0.2s;
 }
 
 .project-card-link:hover {
   background-color: #0c66e4;
+}
+
+.project-delete-button {
+  border: none;
+  background: #ffeceb;
+  color: #ae2e24;
+  cursor: pointer;
+}
+
+.project-delete-button:hover {
+  background: #ffd5d2;
+}
+
+.project-delete-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.7;
 }
 
 .no-projects {

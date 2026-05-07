@@ -1,13 +1,20 @@
 import { useState, useEffect, useRef, useCallback } from "react";
-import { useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { io } from "socket.io-client";
-import { createColumn, getBoardByProjectId } from "../services/projectService";
+import {
+  createColumn,
+  deleteColumn,
+  getBoardByProjectId,
+  updateColumn,
+  updateProject,
+} from "../services/projectService";
 import { createCard, moveCard } from "../services/cardService";
 import { API_ORIGIN } from "../services/config";
 import useAuthStore from "../store/authStore";
 
 export const useBoard = () => {
   const { projectId } = useParams();
+  const navigate = useNavigate();
   const [boardData, setBoardData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -74,12 +81,17 @@ export const useBoard = () => {
       setBoardData(board);
     });
 
+    socket.on("projectDeleted", () => {
+      navigate("/dashboard", { replace: true });
+    });
+
     return () => {
       socket.off("boardUpdated");
+      socket.off("projectDeleted");
       socket.off("connect");
       socket.disconnect();
     };
-  }, [projectId]);
+  }, [navigate, projectId]);
 
   const handleCreateCard = async (columnId, cardData) => {
     await createCard({
@@ -96,6 +108,27 @@ export const useBoard = () => {
     await createColumn({
       title,
       boardId: boardData._id,
+      socketId: socketRef.current?.id,
+    });
+    await fetchBoardData();
+  };
+
+  const handleUpdateColumn = async (columnId, title) => {
+    await updateColumn(columnId, {
+      title,
+      socketId: socketRef.current?.id,
+    });
+    await fetchBoardData();
+  };
+
+  const handleDeleteColumn = async (columnId) => {
+    await deleteColumn(columnId);
+    await fetchBoardData();
+  };
+
+  const handleUpdateProject = async (projectData) => {
+    await updateProject(projectId, {
+      ...projectData,
       socketId: socketRef.current?.id,
     });
     await fetchBoardData();
@@ -167,6 +200,9 @@ export const useBoard = () => {
     handleDragEnd,
     handleCreateCard,
     handleCreateColumn,
+    handleUpdateColumn,
+    handleDeleteColumn,
+    handleUpdateProject,
     refreshBoard: fetchBoardData,
     socketId,
     projectId,

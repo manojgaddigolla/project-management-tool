@@ -344,6 +344,28 @@
   padding-top: 16px;
 }
 
+.assignment-heading {
+  align-items: center;
+  display: flex;
+  gap: 10px;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+
+.assignment-heading .modal-section-title {
+  margin-bottom: 0;
+}
+
+.assignment-heading span {
+  background: #e9f2ff;
+  border-radius: 999px;
+  color: #0c66e4;
+  font-size: 0.75rem;
+  font-weight: 900;
+  padding: 4px 9px;
+  white-space: nowrap;
+}
+
 .members-list {
   max-height: 200px;
   overflow-y: auto;
@@ -385,6 +407,11 @@
 
 .assignee-save-button:hover {
   background-color: #61bd4f;
+}
+
+.assignee-save-button:disabled {
+  background-color: #a5adba;
+  cursor: not-allowed;
 }
 
 @media (max-width: 768px) {

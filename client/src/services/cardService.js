@@ -10,8 +10,8 @@ export const updateCard = async (cardId, cardData) => {
   return response.data;
 };
 
-export const deleteCard = async (cardId) => {
-  const response = await axiosInstance.delete(`/cards/${cardId}`);
+export const deleteCard = async (cardId, data = {}) => {
+  const response = await axiosInstance.delete(`/cards/${cardId}`, { data });
   return response.data;
 };
 

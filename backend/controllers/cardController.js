@@ -8,6 +8,12 @@ const User = require("../models/User");
 const createActivityLog = require("../utils/activityLogger");
 const createNotification = require("../utils/notificationManager");
 
+const normalizeDueDate = (dueDate) => {
+  if (!dueDate) return undefined;
+  const parsed = new Date(dueDate);
+  return Number.isNaN(parsed.getTime()) ? undefined : parsed;
+};
+
 const getPopulatedBoard = (projectId) => {
   return Board.findOne({ project: projectId })
     .populate({
@@ -104,7 +110,7 @@ const createCard = async (req, res) => {
       title,
       description,
       priority,
-      dueDate,
+      dueDate: normalizeDueDate(dueDate),
       column: columnId,
     });
     const card = await newCard.save();
@@ -142,7 +148,8 @@ const updateCard = async (req, res) => {
     return res.status(400).json({ errors: errors.array() });
   }
 
-  const { title, description, priority, dueDate, checklist } = req.body;
+  const { title, description, priority, dueDate, checklist, socketId } =
+    req.body;
   const cardId = req.params.id;
   const userId = req.user.id;
 
@@ -153,8 +160,17 @@ const updateCard = async (req, res) => {
     }
 
     const column = await Column.findById(card.column);
+    if (!column) {
+      return res.status(404).json({ msg: "Parent column not found" });
+    }
     const board = await Board.findById(column.board);
+    if (!board) {
+      return res.status(404).json({ msg: "Board not found" });
+    }
     const project = await Project.findById(board.project);
+    if (!project) {
+      return res.status(404).json({ msg: "Project not found" });
+    }
 
     const isMember = project.members.some(
       (member) => member.toString() === userId,
@@ -175,7 +191,7 @@ const updateCard = async (req, res) => {
       card.priority = priority;
     }
     if (dueDate !== undefined) {
-      card.dueDate = dueDate || undefined;
+      card.dueDate = normalizeDueDate(dueDate);
     }
     if (checklist !== undefined) {
       card.checklist = checklist
@@ -187,6 +203,20 @@ const updateCard = async (req, res) => {
     }
 
     const updatedCard = await card.save();
+
+    const user = await User.findById(userId);
+    await createActivityLog(
+      project._id,
+      userId,
+      `${user.name} updated card '${card.title}'.`,
+      card._id,
+    );
+
+    const updatedBoard = await getPopulatedBoard(project._id);
+    req.io?.to(project._id.toString()).emit("boardUpdated", {
+      board: updatedBoard,
+      originatorSocketId: socketId,
+    });
 
     res.json(updatedCard);
   } catch (err) {
@@ -214,7 +244,13 @@ const deleteCard = async (req, res) => {
     }
 
     const board = await Board.findById(column.board);
+    if (!board) {
+      return res.status(404).json({ msg: "Board not found" });
+    }
     const project = await Project.findById(board.project);
+    if (!project) {
+      return res.status(404).json({ msg: "Project not found" });
+    }
 
     const isMember = project.members.some(
       (member) => member.toString() === userId,
@@ -229,6 +265,18 @@ const deleteCard = async (req, res) => {
 
     column.cards.pull(cardId);
     await column.save();
+
+    const user = await User.findById(userId);
+    await createActivityLog(
+      project._id,
+      userId,
+      `${user.name} deleted card '${card.title}'.`,
+    );
+
+    const updatedBoard = await getPopulatedBoard(project._id);
+    req.io?.to(project._id.toString()).emit("boardUpdated", {
+      board: updatedBoard,
+    });
 
     res.json({ msg: "Card successfully deleted" });
   } catch (err) {
@@ -413,6 +461,11 @@ const addComment = async (req, res) => {
 };
 
 const assignUser = async (req, res) => {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    return res.status(400).json({ errors: errors.array() });
+  }
+
   const { io } = req;
   const { cardId } = req.params;
   const { assignedTo = [], socketId } = req.body;
@@ -433,7 +486,13 @@ const assignUser = async (req, res) => {
       return res.status(400).json({ msg: "assignedTo must be an array" });
     }
 
-    const hasInvalidId = assignedTo.some((id) => !mongoose.isValidObjectId(id));
+    const uniqueAssigneeIds = [
+      ...new Set(assignedTo.map((id) => id.toString())),
+    ];
+
+    const hasInvalidId = uniqueAssigneeIds.some(
+      (id) => !mongoose.isValidObjectId(id),
+    );
     if (hasInvalidId) {
       return res.status(400).json({ msg: "Assignees must be valid users" });
     }
@@ -441,16 +500,16 @@ const assignUser = async (req, res) => {
     const oldAssignees = card.assignedTo.map((id) => id.toString());
 
     const memberIds = project.members.map((member) => member.toString());
-    const invalidAssignee = assignedTo.find(
+    const invalidAssignee = uniqueAssigneeIds.find(
       (id) => !memberIds.includes(id.toString()),
     );
     if (invalidAssignee) {
       return res.status(400).json({ msg: "Assignees must be project members" });
     }
 
-    const assignedUsers = await User.find({ _id: { $in: assignedTo } }).select(
-      "name",
-    );
+    const assignedUsers = await User.find({
+      _id: { $in: uniqueAssigneeIds },
+    }).select("name");
     const assignedNames = assignedUsers.map((u) => u.name).join(", ");
 
     const actionText = assignedNames
@@ -459,8 +518,8 @@ const assignUser = async (req, res) => {
 
     const updatedCard = await Card.findByIdAndUpdate(
       cardId,
-      { assignedTo: assignedTo },
-      { new: true },
+      { assignedTo: uniqueAssigneeIds },
+      { returnDocument: "after" },
     );
 
     if (!updatedCard) {
@@ -474,7 +533,7 @@ const assignUser = async (req, res) => {
     const updatedBoard = await getPopulatedBoard(projectId);
 
     // Notify newly assigned users
-    const newlyAssignedIds = (assignedTo || []).filter(
+    const newlyAssignedIds = uniqueAssigneeIds.filter(
       (id) => !oldAssignees.includes(id.toString()),
     );
 

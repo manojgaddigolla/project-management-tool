@@ -7,7 +7,11 @@ const {
   createProject,
   getProjects,
   getProjectById,
+  getProjectAnalytics,
+  updateProject,
+  deleteProject,
   inviteUserToProject,
+  removeProjectMember,
 } = require("../controllers/projectController");
 
 router.post(
@@ -23,6 +27,24 @@ router.post(
 );
 
 router.get("/", auth, getProjects);
+
+router.get("/:id/analytics", [auth, checkProjectMember], getProjectAnalytics);
+
+router.put(
+  "/:id",
+  [
+    auth,
+    [
+      check("name", "Project name is required").optional().not().isEmpty(),
+      check("description", "Description must be a string").optional().isString(),
+    ],
+  ],
+  updateProject,
+);
+
+router.delete("/:id", auth, deleteProject);
+
+router.delete("/:projectId/members/:userId", auth, removeProjectMember);
 
 router.get("/:id", [auth, checkProjectMember], getProjectById);
 

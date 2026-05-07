@@ -81,6 +81,17 @@ router.post(
   addComment,
 );
 
-router.put("/:cardId/assign", auth, assignUser);
+router.put(
+  "/:cardId/assign",
+  [
+    auth,
+    check("cardId", "Card ID is required").isMongoId(),
+    check("assignedTo", "Assignees must be an array").optional().isArray(),
+    check("assignedTo.*", "Assignees must be valid users")
+      .optional()
+      .isMongoId(),
+  ],
+  assignUser,
+);
 
 module.exports = router;

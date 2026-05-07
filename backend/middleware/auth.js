@@ -7,6 +7,10 @@ module.exports = function (req, res, next) {
     return res.status(401).json({ msg: 'No token, authorization denied' });
   }
 
+  if (!token.startsWith('Bearer ')) {
+    return res.status(401).json({ msg: 'Token format is invalid, authorization denied' });
+  }
+
   const tokenValue = token.split(' ')[1];
 
   if (!tokenValue) {

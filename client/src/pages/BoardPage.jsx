@@ -8,13 +8,19 @@ import {
   useSensors,
 } from "@dnd-kit/core";
 import { toast } from "react-toastify";
-import { inviteUserToProject } from "../services/projectService";
+import {
+  inviteUserToProject,
+  removeProjectMember,
+} from "../services/projectService";
 import { useBoard } from "../hooks/useBoard";
+import useAuthStore from "../store/authStore";
+import { useConfirm } from "../context/useConfirm";
 import Column from "../components/kanban/Column";
 import { CardPreview } from "../components/kanban/Card";
 import CardModal from "../components/kanban/CardModal";
 import ActivityFeed from "../components/kanban/ActivityFeed";
 import BoardSkeleton from "../components/kanban/BoardSkeleton";
+import ProjectAnalytics from "../components/analytics/ProjectAnalytics";
 import "./BoardPage.css";
 
 const BoardPage = () => {
@@ -25,6 +31,9 @@ const BoardPage = () => {
     handleDragEnd,
     handleCreateCard,
     handleCreateColumn,
+    handleUpdateColumn,
+    handleDeleteColumn,
+    handleUpdateProject,
     refreshBoard,
     socketId,
     projectId,
@@ -36,6 +45,8 @@ const BoardPage = () => {
   const [inviteEmail, setInviteEmail] = useState("");
   const [newColumnTitle, setNewColumnTitle] = useState("");
   const [isAddingColumn, setIsAddingColumn] = useState(false);
+  const [isSettingsOpen, setSettingsOpen] = useState(false);
+  const [isAnalyticsOpen, setAnalyticsOpen] = useState(false);
   const [isActivityFeedVisible, setActivityFeedVisible] = useState(false);
   const [activeCardId, setActiveCardId] = useState(null);
   const [filters, setFilters] = useState({
@@ -51,6 +62,8 @@ const BoardPage = () => {
       },
     }),
   );
+  const currentUser = useAuthStore((state) => state.user);
+  const confirm = useConfirm();
 
   const boardStats = useMemo(() => {
     const columns = boardData?.columns || [];
@@ -205,6 +218,44 @@ const BoardPage = () => {
     }
   };
 
+  const handleProjectUpdate = async (event) => {
+    event.preventDefault();
+    const formData = new FormData(event.currentTarget);
+    const name = formData.get("name").trim();
+    const description = formData.get("description").trim();
+
+    if (!name) {
+      toast.warn("Project name is required.");
+      return;
+    }
+
+    try {
+      await handleUpdateProject({ name, description });
+      toast.success("Project updated");
+    } catch (err) {
+      toast.error(err.msg || "Could not update project.");
+    }
+  };
+
+  const handleRemoveMember = async (member) => {
+    const shouldRemove = await confirm({
+      title: `Remove ${member.name}?`,
+      message:
+        "They will lose project access and will be removed from task assignments.",
+      confirmText: "Remove Member",
+      tone: "danger",
+    });
+    if (!shouldRemove) return;
+
+    try {
+      await removeProjectMember(projectId, member._id);
+      await refreshBoard();
+      toast.success(`${member.name} removed`);
+    } catch (err) {
+      toast.error(err.msg || "Could not remove member.");
+    }
+  };
+
   const handleFilterChange = (event) => {
     const { name, value, checked, type } = event.target;
     setFilters((currentFilters) => ({
@@ -275,6 +326,20 @@ const BoardPage = () => {
           >
             Activity
           </button>
+          {isOwner && (
+            <button
+              className="board-action-button"
+              onClick={() => setSettingsOpen((open) => !open)}
+            >
+              Settings
+            </button>
+          )}
+          <button
+            className="board-action-button"
+            onClick={() => setAnalyticsOpen((open) => !open)}
+          >
+            Analytics
+          </button>
           <button className="board-action-button" onClick={handleCopySummary}>
             Copy Summary
           </button>
@@ -299,6 +364,75 @@ const BoardPage = () => {
           <p>Members</p>
         </div>
       </div>
+
+      {isSettingsOpen && isOwner && (
+        <section className="project-settings-panel">
+          <form onSubmit={handleProjectUpdate} className="project-settings-form">
+            <div>
+              <label>Project name</label>
+              <input
+                name="name"
+                defaultValue={boardData.project?.name}
+                required
+              />
+            </div>
+            <div>
+              <label>Description</label>
+              <input
+                name="description"
+                defaultValue={boardData.project?.description || ""}
+              />
+            </div>
+            <button type="submit">Save Project</button>
+          </form>
+
+          <div className="team-panel">
+            <div className="team-panel-header">
+              <h2>Team</h2>
+              <p>{projectMembers?.length || 0} members collaborating</p>
+            </div>
+            <div className="team-list">
+              {projectMembers?.map((member) => {
+                const isProjectOwner =
+                  boardData.project?.owner?._id === member._id;
+                const isCurrentUser = currentUser?._id === member._id;
+
+                return (
+                  <div key={member._id} className="team-member">
+                    <div className="team-avatar">
+                      {member.avatar ? (
+                        <img src={member.avatar} alt={member.name} />
+                      ) : (
+                        member.name?.slice(0, 2).toUpperCase()
+                      )}
+                    </div>
+                    <div>
+                      <strong>{member.name}</strong>
+                      <p>{member.email}</p>
+                    </div>
+                    <span>{isProjectOwner ? "Owner" : "Member"}</span>
+                    {!isProjectOwner && !isCurrentUser && (
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveMember(member)}
+                      >
+                        Remove
+                      </button>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </section>
+      )}
+
+      {isAnalyticsOpen && (
+        <ProjectAnalytics
+          projectId={projectId}
+          refreshKey={`${boardStats.totalCards}-${boardStats.completedCards}-${boardStats.overdueCards}`}
+        />
+      )}
 
       <form className="add-column-form" onSubmit={handleAddColumn}>
         <input
@@ -372,6 +506,8 @@ const BoardPage = () => {
               column={column}
               onCardClick={handleOpenModal}
               onCreateCard={handleCreateCard}
+              onRenameColumn={handleUpdateColumn}
+              onDeleteColumn={handleDeleteColumn}
               dragDisabled={Boolean(isFiltering)}
             />
           ))}

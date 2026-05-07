@@ -18,9 +18,45 @@ export const createProject = async (projectData) => {
   }
 };
 
+export const updateProject = async (projectId, projectData) => {
+  try {
+    const response = await axiosInstance.put(`/projects/${projectId}`, projectData);
+    return response.data;
+  } catch (error) {
+    throw error.response ? error.response.data : error;
+  }
+};
+
+export const deleteProject = async (projectId) => {
+  try {
+    const response = await axiosInstance.delete(`/projects/${projectId}`);
+    return response.data;
+  } catch (error) {
+    throw error.response ? error.response.data : error;
+  }
+};
+
 export const createColumn = async (columnData) => {
   try {
     const response = await axiosInstance.post("/columns", columnData);
+    return response.data;
+  } catch (error) {
+    throw error.response ? error.response.data : error;
+  }
+};
+
+export const updateColumn = async (columnId, columnData) => {
+  try {
+    const response = await axiosInstance.put(`/columns/${columnId}`, columnData);
+    return response.data;
+  } catch (error) {
+    throw error.response ? error.response.data : error;
+  }
+};
+
+export const deleteColumn = async (columnId) => {
+  try {
+    const response = await axiosInstance.delete(`/columns/${columnId}`);
     return response.data;
   } catch (error) {
     throw error.response ? error.response.data : error;
@@ -40,6 +76,22 @@ export const inviteUserToProject = async (projectId, inviteData) => {
   const response = await axiosInstance.post(
     `/projects/${projectId}/invite`,
     inviteData,
+  );
+  return response.data;
+};
+
+export const getProjectAnalytics = async (projectId) => {
+  try {
+    const response = await axiosInstance.get(`/projects/${projectId}/analytics`);
+    return response.data;
+  } catch (error) {
+    throw error.response ? error.response.data : error;
+  }
+};
+
+export const removeProjectMember = async (projectId, userId) => {
+  const response = await axiosInstance.delete(
+    `/projects/${projectId}/members/${userId}`,
   );
   return response.data;
 };

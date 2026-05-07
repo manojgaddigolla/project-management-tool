@@ -2,6 +2,9 @@ const { validationResult } = require('express-validator');
 const Column = require('../models/Column');
 const Board = require('../models/Board');
 const Project = require('../models/Project'); 
+const Card = require('../models/Card');
+const User = require('../models/User');
+const createActivityLog = require('../utils/activityLogger');
 
 const getPopulatedBoard = (projectId) => {
   return Board.findOne({ project: projectId })
@@ -73,6 +76,114 @@ const createColumn = async (req, res) => {
   }
 };
 
+const updateColumn = async (req, res) => {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    return res.status(400).json({ errors: errors.array() });
+  }
+
+  const { title, socketId } = req.body;
+  const userId = req.user.id;
+
+  try {
+    const column = await Column.findById(req.params.id);
+    if (!column) {
+      return res.status(404).json({ msg: 'Column not found' });
+    }
+
+    const board = await Board.findById(column.board);
+    const project = await Project.findById(board.project);
+    const isMember = project.members.some(
+      (member) => member.toString() === userId,
+    );
+    if (!isMember) {
+      return res.status(403).json({ msg: 'Authorization denied' });
+    }
+
+    const previousTitle = column.title;
+    column.title = title;
+    await column.save();
+
+    const user = await User.findById(userId);
+    await createActivityLog(
+      project._id,
+      userId,
+      `${user.name} renamed column '${previousTitle}' to '${column.title}'.`,
+    );
+
+    const updatedBoard = await getPopulatedBoard(project._id);
+    req.io?.to(project._id.toString()).emit('boardUpdated', {
+      board: updatedBoard,
+      originatorSocketId: socketId,
+    });
+
+    res.json(column);
+  } catch (err) {
+    if (err.kind === 'ObjectId') {
+      return res.status(404).json({ msg: 'Column not found' });
+    }
+    console.error(err.message);
+    res.status(500).send('Server Error');
+  }
+};
+
+const deleteColumn = async (req, res) => {
+  const userId = req.user.id;
+
+  try {
+    const column = await Column.findById(req.params.id);
+    if (!column) {
+      return res.status(404).json({ msg: 'Column not found' });
+    }
+
+    const board = await Board.findById(column.board);
+    const project = await Project.findById(board.project);
+    const isMember = project.members.some(
+      (member) => member.toString() === userId,
+    );
+    if (!isMember) {
+      return res.status(403).json({ msg: 'Authorization denied' });
+    }
+
+    if (board.columns.length <= 1) {
+      return res.status(400).json({ msg: 'At least one column is required' });
+    }
+
+    if (column.cards.length > 0) {
+      return res
+        .status(400)
+        .json({ msg: 'Move or delete cards before deleting this column' });
+    }
+
+    await Card.deleteMany({ column: column._id });
+    board.columns.pull(column._id);
+    await board.save();
+    await Column.findByIdAndDelete(column._id);
+
+    const user = await User.findById(userId);
+    await createActivityLog(
+      project._id,
+      userId,
+      `${user.name} deleted column '${column.title}'.`,
+    );
+
+    const updatedBoard = await getPopulatedBoard(project._id);
+    req.io?.to(project._id.toString()).emit('boardUpdated', {
+      board: updatedBoard,
+    });
+
+    res.json({ msg: 'Column successfully deleted' });
+  } catch (err) {
+    if (err.kind === 'ObjectId') {
+      return res.status(404).json({ msg: 'Column not found' });
+    }
+    console.error(err.message);
+    res.status(500).send('Server Error');
+  }
+};
+
 module.exports = {
   createColumn,
+  updateColumn,
+  deleteColumn,
 };
