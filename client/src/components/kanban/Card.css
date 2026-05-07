@@ -16,9 +16,25 @@
 }
 
  .kanban-card.dragging {
-   box-shadow: 0 10px 20px rgba(0,0,0,0.19), 0 6px 6px rgba(0,0,0,0.23);
-   transform: rotate(3deg);
+   box-shadow: 0 16px 32px rgba(9, 30, 66, 0.2);
+   transform: rotate(2deg) scale(1.015);
  }
+
+.kanban-card.drag-disabled {
+  cursor: pointer;
+}
+
+.kanban-card-content {
+  display: block;
+}
+
+.drag-overlay-card .kanban-card-content {
+  background: #ffffff;
+  border: 1px solid #dfe1e6;
+  border-radius: 8px;
+  box-shadow: 0 18px 34px rgba(9, 30, 66, 0.22);
+  padding: 12px;
+}
 
 .kanban-card-title {
   margin: 10px 0;

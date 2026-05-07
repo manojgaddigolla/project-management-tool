@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, NavLink, useNavigate } from "react-router-dom";
 import useAuthStore from "../../store/authStore";
 import useNotifications from "../../hooks/useNotifications";
 import "./Navbar.css";
@@ -29,10 +29,12 @@ const Navbar = () => {
   const guestLinks = (
     <ul>
       <li>
-        <Link to="/register">Register</Link>
+        <NavLink to="/register">Register</NavLink>
       </li>
       <li>
-        <Link to="/login">Login</Link>
+        <NavLink to="/login" className="navbar-cta">
+          Login
+        </NavLink>
       </li>
     </ul>
   );
@@ -43,7 +45,7 @@ const Navbar = () => {
         <span className="navbar-user">Hello, {user ? user.name : "User"}</span>
       </li>
       <li>
-        <Link to="/dashboard">Dashboard</Link>
+        <NavLink to="/dashboard">Dashboard</NavLink>
       </li>
       <li>
         <a onClick={onLogout} href="#!">
@@ -57,14 +59,10 @@ const Navbar = () => {
   return (
     <nav className="navbar">
       <Link to="/" className="navbar-logo">
-        ProjectTool
+        <span className="navbar-logo-mark">P</span>
+        ProjecTrak
       </Link>
       <div className="navbar-links">
-        <h1>
-          <Link to="/">
-            <i className="fas fa-tasks"></i> ProjecTrak
-          </Link>
-        </h1>
         <>{isAuthenticated ? authLinks : guestLinks}</>
         {isAuthenticated && (
           <div className="notification-bell" onClick={handleBellClick}>

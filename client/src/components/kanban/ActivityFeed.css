@@ -3,14 +3,14 @@
     top: 0;
     right: 0;
     height: 100vh;
-    width: 360px;
-    background-color: #f4f5f7;
-    box-shadow: -4px 0 12px rgba(0, 0, 0, 0.15);
+    width: min(420px, 100vw);
+    background-color: #ffffff;
+    box-shadow: -18px 0 44px rgba(9, 30, 66, 0.18);
     z-index: 1050;
     display: flex;
     flex-direction: column;
     transform: translateX(100%);
-    transition: transform 0.3s ease-in-out;
+    transition: transform 0.28s ease;
 }
 
 .activity-feed-sidebar.visible {
@@ -27,7 +27,7 @@
 
 .activity-feed-title {
     font-size: 18px;
-    font-weight: 600;
+    font-weight: 800;
     margin: 0;
 }
 
@@ -49,7 +49,11 @@
 
 .activity-item {
     display: flex;
-    margin-bottom: 20px;
+    background: #f8fafc;
+    border: 1px solid #dfe1e6;
+    border-radius: 8px;
+    margin-bottom: 12px;
+    padding: 12px;
 }
 
 .activity-avatar {
@@ -77,6 +81,7 @@
     font-size: 14px;
     line-height: 1.4;
     word-break: break-word;
+    color: #172b4d;
 }
 
 .activity-content .activity-date {

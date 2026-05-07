@@ -3,7 +3,11 @@
   justify-content: space-between;
   align-items: center;
   padding: 0 2rem;
-  background-color: #172b4d; 
+  position: sticky;
+  top: 0;
+  z-index: 900;
+  background: rgba(23, 43, 77, 0.94);
+  backdrop-filter: blur(14px);
   color: #fff;
   flex-wrap: wrap; 
   gap: 1rem;
@@ -13,6 +17,7 @@
 .navbar a {
   color: #fff;
   text-decoration: none;
+  font-weight: 750;
 }
 
 .navbar ul {
@@ -30,6 +35,39 @@
 }
 
 .navbar-logo {
+  align-items: center;
+  display: inline-flex;
+  gap: 10px;
+  font-weight: 800;
+  letter-spacing: 0.01em;
+}
+
+.navbar-logo-mark {
+  align-items: center;
+  background: #ffffff;
+  border-radius: 8px;
+  color: #0c66e4;
+  display: inline-flex;
+  font-size: 0.9rem;
+  height: 32px;
+  justify-content: center;
+  width: 32px;
+}
+
+.navbar a.active,
+.navbar a:hover {
+  color: #b3d4ff;
+}
+
+.navbar-cta {
+  background: #fff;
+  border-radius: 8px;
+  color: #172b4d !important;
+  padding: 8px 12px;
+}
+
+.navbar-user {
+  color: #dfe1e6;
   font-weight: 800;
 }
 
@@ -44,6 +82,7 @@
   position: relative;
   cursor: pointer;
   font-size: 22px;
+  line-height: 1;
 }
 
 .notification-badge {
@@ -69,7 +108,7 @@
   overflow-y: auto;
   background-color: #ffffff;
   border: 1px solid #dfe1e6;
-  border-radius: 4px;
+  border-radius: 8px;
   box-shadow: 0 8px 16px -4px rgba(9,30,66,.25);
   z-index: 1010; 
   color: #172b4d;

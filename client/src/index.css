@@ -3,6 +3,12 @@
   --text-h: #101828;
   --bg: #f6f8fb;
   --border: #e5e4e7;
+  --surface: #ffffff;
+  --brand: #0c66e4;
+  --brand-strong: #0055cc;
+  --success: #1f845a;
+  --warning: #946f00;
+  --danger: #ae2e24;
   --shadow:
     rgba(0, 0, 0, 0.1) 0 10px 15px -3px, rgba(0, 0, 0, 0.05) 0 4px 6px -2px;
 
@@ -23,7 +29,9 @@
 
 body {
   margin: 0;
-  background: var(--bg);
+  background:
+    radial-gradient(circle at top left, rgba(12, 102, 228, 0.08), transparent 32rem),
+    linear-gradient(180deg, #f7f9fc 0%, #edf2f7 100%);
 }
 
 #root {
@@ -75,6 +83,29 @@ code {
 
 button,
 input,
-textarea {
+textarea,
+select {
   font: inherit;
+}
+
+button,
+a,
+input,
+textarea,
+select {
+  transition:
+    background-color 160ms ease,
+    border-color 160ms ease,
+    box-shadow 160ms ease,
+    color 160ms ease,
+    transform 160ms ease;
+}
+
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+textarea:focus-visible,
+select:focus-visible {
+  outline: 3px solid rgba(12, 102, 228, 0.22);
+  outline-offset: 2px;
 }

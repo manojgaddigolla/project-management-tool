@@ -1,9 +1,17 @@
 import React, { useMemo, useState } from "react";
-import { DndContext, closestCorners } from "@dnd-kit/core";
+import {
+  DndContext,
+  DragOverlay,
+  PointerSensor,
+  closestCorners,
+  useSensor,
+  useSensors,
+} from "@dnd-kit/core";
 import { toast } from "react-toastify";
 import { inviteUserToProject } from "../services/projectService";
 import { useBoard } from "../hooks/useBoard";
 import Column from "../components/kanban/Column";
+import { CardPreview } from "../components/kanban/Card";
 import CardModal from "../components/kanban/CardModal";
 import ActivityFeed from "../components/kanban/ActivityFeed";
 import BoardSkeleton from "../components/kanban/BoardSkeleton";
@@ -29,6 +37,20 @@ const BoardPage = () => {
   const [newColumnTitle, setNewColumnTitle] = useState("");
   const [isAddingColumn, setIsAddingColumn] = useState(false);
   const [isActivityFeedVisible, setActivityFeedVisible] = useState(false);
+  const [activeCardId, setActiveCardId] = useState(null);
+  const [filters, setFilters] = useState({
+    query: "",
+    priority: "all",
+    overdueOnly: false,
+  });
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 8,
+      },
+    }),
+  );
 
   const boardStats = useMemo(() => {
     const columns = boardData?.columns || [];
@@ -67,6 +89,54 @@ const BoardPage = () => {
         .find((card) => card._id === selectedCardId) || null
     );
   }, [boardData, selectedCardId]);
+
+  const activeCard = useMemo(() => {
+    if (!activeCardId || !boardData?.columns) return null;
+
+    return (
+      boardData.columns
+        .flatMap((column) => column.cards)
+        .find((card) => card._id === activeCardId) || null
+    );
+  }, [activeCardId, boardData]);
+
+  const isFiltering =
+    filters.query.trim() ||
+    filters.priority !== "all" ||
+    filters.overdueOnly;
+
+  const visibleColumns = useMemo(() => {
+    if (!boardData?.columns) return [];
+
+    const query = filters.query.trim().toLowerCase();
+    const doneColumnIds = boardData.columns
+      .filter((column) => column.title.toLowerCase().includes("done"))
+      .map((column) => column._id);
+
+    return boardData.columns.map((column) => {
+      const cards = column.cards.filter((card) => {
+        const matchesQuery =
+          !query ||
+          [card.title, card.description]
+            .filter(Boolean)
+            .some((value) => value.toLowerCase().includes(query));
+        const matchesPriority =
+          filters.priority === "all" || card.priority === filters.priority;
+        const isOverdue =
+          card.dueDate &&
+          new Date(card.dueDate) < new Date() &&
+          !doneColumnIds.includes(column._id);
+
+        return (
+          matchesQuery &&
+          matchesPriority &&
+          (!filters.overdueOnly || isOverdue)
+        );
+      });
+
+      return { ...column, cards };
+    });
+  }, [boardData, filters]);
 
   const handleOpenModal = (card) => {
     setSelectedCardId(card._id);
@@ -115,6 +185,51 @@ const BoardPage = () => {
     }
   };
 
+  const handleCopySummary = async () => {
+    const lines = [
+      `${boardData.project?.name} project summary`,
+      `Total tasks: ${boardStats.totalCards}`,
+      `Completed: ${boardStats.completedCards}`,
+      `Overdue: ${boardStats.overdueCards}`,
+      "",
+      ...boardData.columns.map(
+        (column) => `${column.title}: ${column.cards.length} task(s)`,
+      ),
+    ];
+
+    try {
+      await navigator.clipboard.writeText(lines.join("\n"));
+      toast.success("Project summary copied");
+    } catch {
+      toast.error("Could not copy summary.");
+    }
+  };
+
+  const handleFilterChange = (event) => {
+    const { name, value, checked, type } = event.target;
+    setFilters((currentFilters) => ({
+      ...currentFilters,
+      [name]: type === "checkbox" ? checked : value,
+    }));
+  };
+
+  const clearFilters = () => {
+    setFilters({ query: "", priority: "all", overdueOnly: false });
+  };
+
+  const handleDragStart = ({ active }) => {
+    setActiveCardId(active.id);
+  };
+
+  const handleBoardDragEnd = async (event) => {
+    await handleDragEnd(event);
+    setActiveCardId(null);
+  };
+
+  const handleDragCancel = () => {
+    setActiveCardId(null);
+  };
+
   if (loading) {
     return <BoardSkeleton />;
   }
@@ -158,7 +273,10 @@ const BoardPage = () => {
             className="board-action-button"
             onClick={() => setActivityFeedVisible(true)}
           >
-            <i className="fas fa-history"></i> Activity
+            Activity
+          </button>
+          <button className="board-action-button" onClick={handleCopySummary}>
+            Copy Summary
           </button>
         </div>
       </div>
@@ -198,17 +316,73 @@ const BoardPage = () => {
         </button>
       </form>
 
-      <DndContext onDragEnd={handleDragEnd} collisionDetection={closestCorners}>
+      <div className="board-toolbar">
+        <input
+          type="search"
+          name="query"
+          value={filters.query}
+          onChange={handleFilterChange}
+          placeholder="Search tasks"
+        />
+        <select
+          name="priority"
+          value={filters.priority}
+          onChange={handleFilterChange}
+        >
+          <option value="all">All priorities</option>
+          <option value="urgent">Urgent</option>
+          <option value="high">High</option>
+          <option value="medium">Medium</option>
+          <option value="low">Low</option>
+        </select>
+        <label className="overdue-toggle">
+          <input
+            type="checkbox"
+            name="overdueOnly"
+            checked={filters.overdueOnly}
+            onChange={handleFilterChange}
+          />
+          Overdue only
+        </label>
+        {isFiltering && (
+          <button type="button" onClick={clearFilters}>
+            Clear
+          </button>
+        )}
+      </div>
+
+      {isFiltering && (
+        <p className="filter-hint">
+          Drag-and-drop is paused while filters are active to protect task
+          ordering.
+        </p>
+      )}
+
+      <DndContext
+        sensors={sensors}
+        onDragStart={handleDragStart}
+        onDragEnd={handleBoardDragEnd}
+        onDragCancel={handleDragCancel}
+        collisionDetection={closestCorners}
+      >
         <div className="board-columns-container">
-          {boardData.columns.map((column) => (
+          {visibleColumns.map((column) => (
             <Column
               key={column._id}
               column={column}
               onCardClick={handleOpenModal}
               onCreateCard={handleCreateCard}
+              dragDisabled={Boolean(isFiltering)}
             />
           ))}
         </div>
+        <DragOverlay>
+          {activeCard ? (
+            <div className="drag-overlay-card">
+              <CardPreview card={activeCard} />
+            </div>
+          ) : null}
+        </DragOverlay>
       </DndContext>
 
       <CardModal

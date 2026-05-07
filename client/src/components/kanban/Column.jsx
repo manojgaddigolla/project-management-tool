@@ -4,7 +4,7 @@ import { useDroppable } from "@dnd-kit/core";
 import { SortableContext, verticalListSortingStrategy } from "@dnd-kit/sortable";
 import "./Column.css";
 
-const Column = ({ column, onCardClick, onCreateCard }) => {
+const Column = ({ column, onCardClick, onCreateCard, dragDisabled = false }) => {
   const [isAdding, setIsAdding] = useState(false);
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
@@ -48,7 +48,10 @@ const Column = ({ column, onCardClick, onCreateCard }) => {
 
   return (
     <div className="kanban-column">
-      <h3 className="kanban-column-title">{column.title}</h3>
+      <div className="kanban-column-header">
+        <h3 className="kanban-column-title">{column.title}</h3>
+        <span>{column.cards.length}</span>
+      </div>
 
       <SortableContext
         items={column.cards.map((c) => c._id)}
@@ -64,6 +67,7 @@ const Column = ({ column, onCardClick, onCreateCard }) => {
               card={card}
               columnId={column._id}
               onClick={() => onCardClick(card)}
+              dragDisabled={dragDisabled}
             />
           ))}
         </div>
