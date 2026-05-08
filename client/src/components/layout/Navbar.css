@@ -101,7 +101,7 @@
 
 .notification-dropdown {
   position: absolute;
-  top: 170%; 
+  top: calc(100% + 15px);
   right: 0;
   width: 380px;
   max-height: 450px;
@@ -122,10 +122,6 @@
   text-decoration: none;
   color: inherit;
   transition: background-color 0.2s;
-}
-
-.notification-item:last-child {
-  border-bottom: none;
 }
 
 .notification-item:hover {

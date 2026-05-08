@@ -22,7 +22,7 @@
 .column-title-form {
   display: grid;
   gap: 6px;
-  grid-template-columns: minmax(0, 1fr);
+  grid-template-columns: minmax(0, 1fr) auto auto;
   width: 100%;
 }
 

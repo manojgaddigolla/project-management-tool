@@ -59,7 +59,7 @@
 
 .create-project-form {
   display: flex;
-  align-items: flex-end;
+  align-items: center;
   gap: 12px;
   background: #ffffff;
   border: 1px solid #dfe1e6;

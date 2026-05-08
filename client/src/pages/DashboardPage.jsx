@@ -228,6 +228,10 @@ const DashboardPage = () => {
             </div>
           ))}
         </div>
+      ) : projects.length > 0 ? (
+        <div className="no-projects">
+          <p>No projects match your search for "{searchTerm}".</p>
+        </div>
       ) : (
         <div className="no-projects">
           <p>You haven't been added to any projects yet.</p>

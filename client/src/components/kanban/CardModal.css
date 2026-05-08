@@ -143,9 +143,24 @@
   width: 100%;
 }
 
-.modal-description-input {
+.quill-editor-wrapper {
+  background: #ffffff;
+  border-radius: 8px;
+  margin-bottom: 16px;
+}
+
+.quill-editor-wrapper .ql-container {
   min-height: 120px;
-  resize: vertical;
+  border-bottom-left-radius: 8px;
+  border-bottom-right-radius: 8px;
+  font-family: inherit;
+  font-size: 14px;
+}
+
+.quill-editor-wrapper .ql-toolbar {
+  border-top-left-radius: 8px;
+  border-top-right-radius: 8px;
+  background-color: #f4f5f7;
 }
 
 .checklist-section {

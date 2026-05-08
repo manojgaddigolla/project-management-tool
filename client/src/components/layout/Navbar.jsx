@@ -58,7 +58,7 @@ const Navbar = () => {
 
   return (
     <nav className="navbar">
-      <Link to="/" className="navbar-logo">
+      <Link to={isAuthenticated ? "/dashboard" : "/"} className="navbar-logo">
         <span className="navbar-logo-mark">P</span>
         ProjecTrak
       </Link>
@@ -80,8 +80,8 @@ const Navbar = () => {
                       className="notification-item"
                       onClick={() => setDropdownVisible(false)}
                     >
-                      <p>{n.message}</p>
-                      <small>{new Date(n.createdAt).toLocaleString()}</small>
+                      <p className="notification-message">{n.message}</p>
+                      <small className="notification-date">{new Date(n.createdAt).toLocaleString()}</small>
                     </Link>
                   ))
                 ) : (

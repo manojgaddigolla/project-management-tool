@@ -7,6 +7,9 @@ import {
   updateCard,
 } from "../../services/cardService";
 import { useConfirm } from "../../context/useConfirm";
+import ReactQuill from "react-quill";
+import DOMPurify from "dompurify";
+import "react-quill/dist/quill.snow.css";
 import "./CardModal.css";
 
 const CardModal = ({
@@ -31,7 +34,7 @@ const CardModal = ({
   const [isSavingDetails, setIsSavingDetails] = useState(false);
   const [isSavingAssignees, setIsSavingAssignees] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
-  const [prevCard, setPrevCard] = useState(null);
+  const [prevCardId, setPrevCardId] = useState(null);
   const confirm = useConfirm();
 
   const currentAssigneeIds = useMemo(
@@ -45,8 +48,8 @@ const CardModal = ({
     return selected !== current;
   }, [currentAssigneeIds, selectedAssignees]);
 
-  if (card !== prevCard) {
-    setPrevCard(card);
+  if (card?._id !== prevCardId) {
+    setPrevCardId(card?._id);
     setSelectedAssignees(card?.assignedTo?.map((user) => user._id) ?? []);
     setEditForm({
       title: card?.title || "",
@@ -278,13 +281,16 @@ const CardModal = ({
                   </div>
 
                   <h3 className="modal-section-title">Description</h3>
-                  <textarea
-                    className="modal-description-input"
-                    name="description"
-                    value={editForm.description}
-                    onChange={handleDetailsChange}
-                    placeholder="Add context, acceptance criteria, or links..."
-                  />
+                  <div className="quill-editor-wrapper">
+                    <ReactQuill
+                      theme="snow"
+                      value={editForm.description}
+                      onChange={(content) =>
+                        setEditForm({ ...editForm, description: content })
+                      }
+                      placeholder="Add context, acceptance criteria, or links..."
+                    />
+                  </div>
 
                   <div className="checklist-section">
                     <h3 className="modal-section-title">Checklist</h3>
