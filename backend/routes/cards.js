@@ -9,6 +9,7 @@ const {
   moveCard,
   addComment,
   assignUser,
+  generateSubtasks,
 } = require("../controllers/cardController");
 
 router.post(
@@ -92,6 +93,12 @@ router.put(
       .isMongoId(),
   ],
   assignUser,
+);
+
+router.post(
+  "/:cardId/ai-subtasks",
+  [auth, check("cardId", "Card ID is required").isMongoId()],
+  generateSubtasks,
 );
 
 module.exports = router;

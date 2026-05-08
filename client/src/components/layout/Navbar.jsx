@@ -7,6 +7,18 @@ import "./Navbar.css";
 const Navbar = () => {
   const { notifications, unreadCount, markAsRead } = useNotifications();  
   const [isDropdownVisible, setDropdownVisible] = useState(false);
+  const dropdownRef = React.useRef(null);
+
+  React.useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setDropdownVisible(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   const handleBellClick = () => {
     setDropdownVisible(prev => !prev);
@@ -65,13 +77,13 @@ const Navbar = () => {
       <div className="navbar-links">
         <>{isAuthenticated ? authLinks : guestLinks}</>
         {isAuthenticated && (
-          <div className="notification-bell" onClick={handleBellClick}>
+          <div className="notification-bell" ref={dropdownRef} onClick={handleBellClick}>
             <i className="fas fa-bell"></i>
             {unreadCount > 0 && (
               <span className="notification-badge">{unreadCount}</span>
             )}
             {isDropdownVisible && (
-              <div className="notification-dropdown">
+              <div className="notification-dropdown" onClick={(e) => e.stopPropagation()}>
                 {notifications.length > 0 ? (
                   notifications.map((n) => (
                     <Link

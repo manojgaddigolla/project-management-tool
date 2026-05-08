@@ -5,11 +5,12 @@ import {
   assignUsersToCard,
   deleteCard,
   updateCard,
+  generateAISubtasks,
 } from "../../services/cardService";
 import { useConfirm } from "../../context/useConfirm";
-import ReactQuill from "react-quill";
+import ReactQuill from "react-quill-new";
 import DOMPurify from "dompurify";
-import "react-quill/dist/quill.snow.css";
+import "react-quill-new/dist/quill.snow.css";
 import "./CardModal.css";
 
 const CardModal = ({
@@ -34,6 +35,7 @@ const CardModal = ({
   const [isSavingDetails, setIsSavingDetails] = useState(false);
   const [isSavingAssignees, setIsSavingAssignees] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [isGeneratingAI, setIsGeneratingAI] = useState(false);
   const [prevCardId, setPrevCardId] = useState(null);
   const confirm = useConfirm();
 
@@ -186,6 +188,22 @@ const CardModal = ({
     );
   };
 
+  const handleAIGenerate = async () => {
+    if (!card) return;
+    try {
+      setIsGeneratingAI(true);
+      const updatedCard = await generateAISubtasks(card._id, { socketId });
+      setChecklist(updatedCard.checklist);
+      await onChanged?.();
+      toast.success("AI Checklist generated");
+    } catch (err) {
+      console.error("Failed to generate AI subtasks:", err);
+      toast.error("Could not generate AI subtasks. Please try again.");
+    } finally {
+      setIsGeneratingAI(false);
+    }
+  };
+
   const handleDeleteCard = async () => {
     if (!card) return;
 
@@ -293,7 +311,29 @@ const CardModal = ({
                   </div>
 
                   <div className="checklist-section">
-                    <h3 className="modal-section-title">Checklist</h3>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "10px" }}>
+                      <h3 className="modal-section-title" style={{ marginBottom: 0 }}>Checklist</h3>
+                      <button
+                        type="button"
+                        onClick={handleAIGenerate}
+                        disabled={isGeneratingAI}
+                        style={{
+                          background: "linear-gradient(135deg, #0c66e4, #5aac44)",
+                          color: "#fff",
+                          border: "none",
+                          padding: "6px 12px",
+                          borderRadius: "6px",
+                          fontSize: "12px",
+                          fontWeight: "bold",
+                          cursor: "pointer",
+                          display: "flex",
+                          alignItems: "center",
+                          gap: "6px"
+                        }}
+                      >
+                        ✨ {isGeneratingAI ? "Analyzing..." : "AI Breakdown"}
+                      </button>
+                    </div>
                     <div className="checklist-input-row">
                       <input
                         type="text"

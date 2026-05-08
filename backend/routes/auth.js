@@ -9,7 +9,7 @@ router.get('/', auth, getAuthenticatedUser);
 
 router.post('/login', [
     check('email', 'Please include a valid email').isEmail(),
-    check('password', 'Password is required').exists(),
+    check('password', 'Password is required').isString().notEmpty(),
   ],
   loginUser );
 

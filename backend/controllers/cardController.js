@@ -532,6 +532,7 @@ const assignUser = async (req, res) => {
 
     const updatedBoard = await getPopulatedBoard(projectId);
 
+
     // Notify newly assigned users
     const newlyAssignedIds = uniqueAssigneeIds.filter(
       (id) => !oldAssignees.includes(id.toString()),
@@ -559,6 +560,116 @@ const assignUser = async (req, res) => {
   }
 };
 
+const generateSubtasks = async (req, res) => {
+  try {
+    const { cardId } = req.params;
+    const { socketId } = req.body;
+
+    const card = await Card.findById(cardId);
+    if (!card) {
+      return res.status(404).json({ msg: "Card not found" });
+    }
+
+    const column = await Column.findById(card.column);
+    if (!column) return res.status(404).json({ msg: "Column not found" });
+
+    const board = await Board.findById(column.board);
+    if (!board) return res.status(404).json({ msg: "Board not found" });
+
+    const project = await Project.findById(board.project);
+    if (!project) return res.status(404).json({ msg: "Project not found" });
+
+    if (
+      project.owner.toString() !== req.user.id &&
+      !project.members.some((m) => m.toString() === req.user.id)
+    ) {
+      return res.status(403).json({ msg: "Not authorized" });
+    }
+
+    // Smart AI Mock Logic: Analyze title and description to generate contextual subtasks
+    const textToAnalyze = (card.title + " " + (card.description || "")).toLowerCase();
+    let generatedTasks = [];
+
+    if (textToAnalyze.includes("api") || textToAnalyze.includes("backend") || textToAnalyze.includes("endpoint") || textToAnalyze.includes("server")) {
+      generatedTasks = [
+        "Design API schema and request/response payload",
+        "Implement backend controller and route logic",
+        "Add input validation middleware",
+        "Write unit tests for API endpoints",
+        "Update API documentation"
+      ];
+    } else if (textToAnalyze.includes("ui") || textToAnalyze.includes("frontend") || textToAnalyze.includes("design") || textToAnalyze.includes("component") || textToAnalyze.includes("page")) {
+      generatedTasks = [
+        "Review UI design mockups",
+        "Implement responsive React components",
+        "Apply CSS styling and design tokens",
+        "Add loading states and error boundaries",
+        "Verify cross-browser compatibility"
+      ];
+    } else if (textToAnalyze.includes("bug") || textToAnalyze.includes("fix") || textToAnalyze.includes("issue") || textToAnalyze.includes("error")) {
+      generatedTasks = [
+        "Reproduce the reported issue locally",
+        "Identify root cause in the codebase",
+        "Implement code fix",
+        "Add regression test to prevent recurrence",
+        "Deploy fix to staging for verification"
+      ];
+    } else if (textToAnalyze.includes("database") || textToAnalyze.includes("schema") || textToAnalyze.includes("model")) {
+      generatedTasks = [
+        "Draft database schema modifications",
+        "Update Mongoose models to reflect changes",
+        "Create database migration scripts",
+        "Verify query performance and indexing"
+      ];
+    } else {
+      generatedTasks = [
+        `Review requirements for: ${card.title}`,
+        "Draft implementation strategy",
+        "Execute core development tasks",
+        "Perform QA testing",
+        "Submit Pull Request for peer review"
+      ];
+    }
+
+    // Filter out duplicates that already exist in the card's checklist
+    const existingTaskTexts = new Set(card.checklist.map((item) => item.text.toLowerCase().trim()));
+    const finalChecklist = generatedTasks
+      .filter((task) => !existingTaskTexts.has(task.toLowerCase().trim()))
+      .map((text) => ({ text, completed: false }));
+
+    if (finalChecklist.length === 0) {
+      return res.status(400).json({ msg: "No new relevant subtasks could be generated or all tasks already exist." });
+    }
+
+    const updatedCard = await Card.findByIdAndUpdate(
+      cardId,
+      { $push: { checklist: { $each: finalChecklist } } },
+      { new: true, returnDocument: "after" },
+    );
+
+    const actionText = `AI Assistant generated ${finalChecklist.length} subtasks for '${card.title}'`;
+    const projectId = board.project.toString();
+
+    await createActivityLog(projectId, req.user.id, actionText, cardId);
+
+    const updatedBoard = await getPopulatedBoard(projectId);
+
+    const io = req.app.get("io");
+    if (io) {
+      const payload = {
+        board: updatedBoard,
+        originatorSocketId: socketId,
+      };
+      io.to(projectId).emit("boardUpdated", payload);
+    }
+
+    res.json(updatedCard);
+  } catch (err) {
+    console.error(err.message);
+    res.status(500).send("Server Error");
+  }
+};
+
 module.exports = {
   createCard,
   updateCard,
@@ -566,4 +677,5 @@ module.exports = {
   moveCard,
   addComment,
   assignUser,
+  generateSubtasks,
 };

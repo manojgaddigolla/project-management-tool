@@ -21,17 +21,20 @@ export const moveCard = async (cardId, moveData) => {
 };
 
 export const addComment = async (cardId, commentData) => {
-  const response = await axiosInstance.post(
-    `/cards/${cardId}/comments`,
+  const response = await axiosInstance.post(    `/cards/${cardId}/comments`,
     commentData,
   );
   return response.data;
 };
-
 export const assignUsersToCard = async (cardId, assignmentData) => {
   const response = await axiosInstance.put(
     `/cards/${cardId}/assign`,
     assignmentData,
   );
+  return response.data;
+};
+
+export const generateAISubtasks = async (cardId, payload) => {
+  const response = await axiosInstance.post(`/cards/${cardId}/ai-subtasks`, payload);
   return response.data;
 };

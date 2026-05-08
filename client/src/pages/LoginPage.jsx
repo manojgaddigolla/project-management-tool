@@ -25,6 +25,17 @@ const LoginPage = () => {
 
   const onSubmit = async (e) => {
     e.preventDefault();
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      setError("Please enter a valid email address");
+      return;
+    }
+
+    if (password.trim().length === 0) {
+      setError("Please enter your password");
+      return;
+    }
     setLoading(true);
     setError("");
 
