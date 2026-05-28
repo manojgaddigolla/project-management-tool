@@ -30,3 +30,12 @@ export const loadUser = async () => {
     throw toApiError(error);
   }
 };
+
+export const logoutApi = async () => {
+  try {
+    const response = await api.post('/auth/logout');
+    return response.data;
+  } catch (error) {
+    throw toApiError(error);
+  }
+};

@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 
 const { check } = require('express-validator');
-const { loginUser,getAuthenticatedUser } = require('../controllers/userController'); 
+const { loginUser, getAuthenticatedUser, refreshToken, logoutUser } = require('../controllers/userController'); 
 const auth = require('../middleware/auth');
 
 router.get('/', auth, getAuthenticatedUser);
@@ -12,6 +12,9 @@ router.post('/login', [
     check('password', 'Password is required').isString().notEmpty(),
   ],
   loginUser );
+
+router.post('/refresh', refreshToken);
+router.post('/logout', logoutUser);
 
 module.exports = router;
 

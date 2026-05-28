@@ -7,6 +7,7 @@ const Project = require("../models/Project");
 const User = require("../models/User");
 const createActivityLog = require("../utils/activityLogger");
 const createNotification = require("../utils/notificationManager");
+const { getPopulatedBoard } = require("../utils/boardUtils");
 
 const normalizeDueDate = (dueDate) => {
   if (!dueDate) return undefined;
@@ -14,24 +15,6 @@ const normalizeDueDate = (dueDate) => {
   return Number.isNaN(parsed.getTime()) ? undefined : parsed;
 };
 
-const getPopulatedBoard = (projectId) => {
-  return Board.findOne({ project: projectId })
-    .populate({
-      path: "columns",
-      populate: {
-        path: "cards",
-        model: "Card",
-        populate: [
-          { path: "assignedTo", select: "name avatar" },
-          { path: "comments.user", select: "name avatar" },
-        ],
-      },
-    })
-    .populate({
-      path: "project",
-      populate: { path: "owner members", select: "name avatar email" },
-    });
-};
 
 const assertProjectMemberForCard = async (cardId, userId) => {
   if (!mongoose.isValidObjectId(cardId)) {
@@ -370,13 +353,9 @@ const moveCard = async (req, res) => {
 
     const [movedCardId] = sourceColumn.cards.splice(actualSourceIndex, 1);
 
-    const insertIndex =
-      sourceColumnId === destinationColumnId &&
-      normalizedDestinationIndex > actualSourceIndex
-        ? normalizedDestinationIndex - 1
-        : normalizedDestinationIndex;
-
-    destinationColumn.cards.splice(insertIndex, 0, movedCardId);
+    // In dnd-kit style arrayMove, the destination index doesn't require a -1 adjustment 
+    // after splice because the splice natively shifts elements.
+    destinationColumn.cards.splice(normalizedDestinationIndex, 0, movedCardId);
 
     await sourceColumn.save();
     if (sourceColumnId !== destinationColumnId) {

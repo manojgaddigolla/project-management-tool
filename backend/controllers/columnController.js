@@ -5,25 +5,7 @@ const Project = require('../models/Project');
 const Card = require('../models/Card');
 const User = require('../models/User');
 const createActivityLog = require('../utils/activityLogger');
-
-const getPopulatedBoard = (projectId) => {
-  return Board.findOne({ project: projectId })
-    .populate({
-      path: 'columns',
-      populate: {
-        path: 'cards',
-        model: 'Card',
-        populate: [
-          { path: 'assignedTo', select: 'name avatar' },
-          { path: 'comments.user', select: 'name avatar' },
-        ],
-      },
-    })
-    .populate({
-      path: 'project',
-      populate: { path: 'owner members', select: 'name avatar email' },
-    });
-};
+const { getPopulatedBoard } = require('../utils/boardUtils');
 
 const createColumn = async (req, res) => {
   const errors = validationResult(req);

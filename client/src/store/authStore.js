@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import { loadUser as fetchUser } from "../services/authService";
+import { loadUser as fetchUser, logoutApi } from "../services/authService";
 
 const useAuthStore = create((set, get) => ({
   token: localStorage.getItem("token") || null,
@@ -34,7 +34,12 @@ const useAuthStore = create((set, get) => ({
     set({ user: userData });
   },
 
-  logout: () => {
+  logout: async () => {
+    try {
+      await logoutApi();
+    } catch (err) {
+      console.log(err);
+    }
     localStorage.removeItem("token");
     set({ token: null, user: null, isAuthenticated: false, loading: false });
   },

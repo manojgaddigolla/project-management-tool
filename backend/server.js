@@ -1,5 +1,10 @@
 require("dotenv").config();
 
+if (!process.env.JWT_SECRET || !process.env.MONGO_URI) {
+  console.error("FATAL ERROR: JWT_SECRET and MONGO_URI must be defined in environment variables.");
+  process.exit(1);
+}
+
 const connectDB = require("./config/db");
 
 const express = require("express");
@@ -17,6 +22,7 @@ const cardRoutes = require("./routes/cards");
 const Project = require("./models/Project");
 const { securityHeaders, sanitizeRequest } = require("./middleware/security");
 const jwt = require("jsonwebtoken");
+const cookieParser = require("cookie-parser");
 
 const app = express();
 
@@ -45,6 +51,7 @@ app.use(
 );
 
 app.use(express.json({ limit: "1mb" }));
+app.use(cookieParser());
 app.use(sanitizeRequest);
 
 // General API rate limiter: 100 requests per 15 minutes per IP

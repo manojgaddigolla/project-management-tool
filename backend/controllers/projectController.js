@@ -8,25 +8,7 @@ const Activity = require("../models/Activity");
 const Notification = require("../models/Notification");
 const createActivityLog = require('../utils/activityLogger');
 const createNotification = require('../utils/notificationManager');
-
-const getPopulatedBoard = (projectId) => {
-  return Board.findOne({ project: projectId })
-    .populate({
-      path: 'columns',
-      populate: {
-        path: 'cards',
-        model: 'Card',
-        populate: [
-          { path: 'assignedTo', select: 'name avatar' },
-          { path: 'comments.user', select: 'name avatar' },
-        ],
-      },
-    })
-    .populate({
-      path: 'project',
-      populate: { path: 'owner members', select: 'name avatar email' },
-    });
-};
+const { getPopulatedBoard } = require('../utils/boardUtils');
 
 const createProject = async (req, res) => {
   const errors = validationResult(req);
