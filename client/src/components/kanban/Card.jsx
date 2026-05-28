@@ -32,7 +32,17 @@ export const CardPreview = ({ card, className = "" }) => {
           <span>{card.comments.length} comments</span>
         )}
         {card.assignedTo?.length > 0 && (
-          <span>{card.assignedTo.length} assigned</span>
+          <div className="card-assignees">
+            {card.assignedTo.map((user) => (
+              <div key={user._id} className="card-assignee-avatar" title={user.name}>
+                {user.avatar ? (
+                  <img src={user.avatar} alt={user.name} />
+                ) : (
+                  user.name?.slice(0, 2).toUpperCase()
+                )}
+              </div>
+            ))}
+          </div>
         )}
       </div>
     </div>
