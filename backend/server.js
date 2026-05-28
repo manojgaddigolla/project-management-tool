@@ -21,6 +21,7 @@ const columnRoutes = require("./routes/columns");
 const cardRoutes = require("./routes/cards");
 const Project = require("./models/Project");
 const { securityHeaders, sanitizeRequest } = require("./middleware/security");
+const errorHandler = require("./middleware/errorHandler");
 const jwt = require("jsonwebtoken");
 const cookieParser = require("cookie-parser");
 
@@ -148,6 +149,8 @@ io.on("connection", (socket) => {
     console.log(`Client disconnected: ${socket.id}`);
   });
 });
+
+app.use(errorHandler);
 
 const PORT = process.env.PORT || 5000;
 
