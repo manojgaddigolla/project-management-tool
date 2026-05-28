@@ -7,6 +7,7 @@ import {
   getBoardByProjectId,
   updateColumn,
   updateProject,
+  moveColumn,
 } from "../services/projectService";
 import { createCard, moveCard } from "../services/cardService";
 import { API_ORIGIN } from "../services/config";
@@ -139,6 +140,38 @@ export const useBoard = () => {
 
     if (!boardData || !over || active.id === over.id) return;
 
+    const isColumnDrag = active.data.current?.type === "column";
+
+    if (isColumnDrag) {
+      const activeColumnId = active.id;
+      const overColumnId = over.id;
+
+      const sourceIndex = boardData.columns.findIndex(c => c._id === activeColumnId);
+      const destIndex = boardData.columns.findIndex(c => c._id === overColumnId);
+
+      if (sourceIndex === -1 || destIndex === -1 || sourceIndex === destIndex) return;
+
+      // Optimistic update for columns
+      const newBoardData = JSON.parse(JSON.stringify(boardData));
+      const [movedColumn] = newBoardData.columns.splice(sourceIndex, 1);
+      newBoardData.columns.splice(destIndex, 0, movedColumn);
+      setBoardData(newBoardData);
+
+      try {
+        await moveColumn(projectId, {
+          columnId: activeColumnId,
+          sourceIndex,
+          destinationIndex: destIndex,
+          socketId: socketRef.current?.id,
+        });
+      } catch (err) {
+        console.error("Failed to move column:", err);
+        await fetchBoardData();
+      }
+      return;
+    }
+
+    // Card drag logic
     const activeCardId = active.id;
     const sourceColumnId = active.data.current?.columnId;
 

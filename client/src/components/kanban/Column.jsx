@@ -1,8 +1,8 @@
 import React, { useState } from "react";
 import { toast } from "react-toastify";
 import Card from "./Card";
-import { useDroppable } from "@dnd-kit/core";
-import { SortableContext, verticalListSortingStrategy } from "@dnd-kit/sortable";
+import { useSortable, SortableContext, verticalListSortingStrategy } from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
 import { useConfirm } from "../../context/useConfirm";
 import "./Column.css";
 
@@ -24,10 +24,24 @@ const Column = ({
   const [isSaving, setIsSaving] = useState(false);
   const confirm = useConfirm();
 
-  const { setNodeRef } = useDroppable({
+  const { 
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging 
+  } = useSortable({
     id: column._id,
     data: { type: "column" },
+    disabled: dragDisabled,
   });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+  };
 
   const resetForm = () => {
     setTitle("");
@@ -102,10 +116,19 @@ const Column = ({
   };
 
   return (
-    <div className="kanban-column">
-      <div className="kanban-column-header">
+    <div 
+      className={`kanban-column ${isDragging ? "dragging" : ""}`}
+      ref={setNodeRef}
+      style={style}
+    >
+      <div 
+        className="kanban-column-header"
+        {...attributes}
+        {...(dragDisabled ? {} : listeners)}
+        style={{ cursor: dragDisabled ? 'default' : 'grab' }}
+      >
         {isEditingTitle ? (
-          <form className="column-title-form" onSubmit={handleRenameSubmit}>
+          <form className="column-title-form" onSubmit={handleRenameSubmit} onPointerDown={(e) => e.stopPropagation()}>
             <input
               value={columnTitle}
               onChange={(event) => setColumnTitle(event.target.value)}
@@ -142,10 +165,7 @@ const Column = ({
         items={column.cards.map((c) => c._id)}
         strategy={verticalListSortingStrategy}
       >
-        <div
-          className="kanban-card-list"
-          ref={setNodeRef}
-        >
+        <div className="kanban-card-list">
           {column.cards.map((card) => (
             <Card
               key={card._id}

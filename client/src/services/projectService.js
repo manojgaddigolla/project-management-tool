@@ -72,6 +72,15 @@ export const getBoardByProjectId = async (projectId) => {
   }
 };
 
+export const moveColumn = async (projectId, moveData) => {
+  try {
+    const response = await axiosInstance.put(`/boards/${projectId}/columns/move`, moveData);
+    return response.data;
+  } catch (error) {
+    throw error.response ? error.response.data : error;
+  }
+};
+
 export const inviteUserToProject = async (projectId, inviteData) => {
   const response = await axiosInstance.post(
     `/projects/${projectId}/invite`,

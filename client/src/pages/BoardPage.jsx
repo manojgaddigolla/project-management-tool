@@ -7,6 +7,7 @@ import {
   useSensor,
   useSensors,
 } from "@dnd-kit/core";
+import { SortableContext, horizontalListSortingStrategy } from "@dnd-kit/sortable";
 import { toast } from "react-toastify";
 import {
   inviteUserToProject,
@@ -49,6 +50,7 @@ const BoardPage = () => {
   const [isAnalyticsOpen, setAnalyticsOpen] = useState(false);
   const [isActivityFeedVisible, setActivityFeedVisible] = useState(false);
   const [activeCardId, setActiveCardId] = useState(null);
+  const [activeColumnId, setActiveColumnId] = useState(null);
   const [filters, setFilters] = useState({
     query: "",
     priority: "all",
@@ -112,6 +114,11 @@ const BoardPage = () => {
         .find((card) => card._id === activeCardId) || null
     );
   }, [activeCardId, boardData]);
+
+  const activeColumn = useMemo(() => {
+    if (!activeColumnId || !boardData?.columns) return null;
+    return boardData.columns.find((col) => col._id === activeColumnId) || null;
+  }, [activeColumnId, boardData]);
 
   const isFiltering =
     filters.query.trim() ||
@@ -269,16 +276,22 @@ const BoardPage = () => {
   };
 
   const handleDragStart = ({ active }) => {
+    if (active.data.current?.type === "column") {
+      setActiveColumnId(active.id);
+      return;
+    }
     setActiveCardId(active.id);
   };
 
   const handleBoardDragEnd = async (event) => {
     await handleDragEnd(event);
     setActiveCardId(null);
+    setActiveColumnId(null);
   };
 
   const handleDragCancel = () => {
     setActiveCardId(null);
+    setActiveColumnId(null);
   };
 
   if (loading) {
@@ -499,23 +512,39 @@ const BoardPage = () => {
         onDragCancel={handleDragCancel}
         collisionDetection={closestCorners}
       >
-        <div className="board-columns-container">
-          {visibleColumns.map((column) => (
-            <Column
-              key={column._id}
-              column={column}
-              onCardClick={handleOpenModal}
-              onCreateCard={handleCreateCard}
-              onRenameColumn={handleUpdateColumn}
-              onDeleteColumn={handleDeleteColumn}
-              dragDisabled={Boolean(isFiltering)}
-            />
-          ))}
-        </div>
+        <SortableContext
+          items={visibleColumns.map((c) => c._id)}
+          strategy={horizontalListSortingStrategy}
+        >
+          <div className="board-columns-container">
+            {visibleColumns.map((column) => (
+              <Column
+                key={column._id}
+                column={column}
+                onCardClick={handleOpenModal}
+                onCreateCard={handleCreateCard}
+                onRenameColumn={handleUpdateColumn}
+                onDeleteColumn={handleDeleteColumn}
+                dragDisabled={Boolean(isFiltering)}
+              />
+            ))}
+          </div>
+        </SortableContext>
         <DragOverlay>
           {activeCard ? (
             <div className="drag-overlay-card">
               <CardPreview card={activeCard} />
+            </div>
+          ) : activeColumn ? (
+            <div className="drag-overlay-column">
+              <Column
+                column={activeColumn}
+                onCardClick={() => {}}
+                onCreateCard={() => {}}
+                onRenameColumn={() => {}}
+                onDeleteColumn={() => {}}
+                dragDisabled={true}
+              />
             </div>
           ) : null}
         </DragOverlay>

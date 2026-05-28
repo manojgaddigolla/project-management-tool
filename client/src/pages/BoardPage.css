@@ -213,6 +213,12 @@
   width: 292px;
 }
 
+.drag-overlay-column {
+  opacity: 0.95;
+  transform: rotate(2deg);
+  box-shadow: 0 18px 34px rgba(9, 30, 66, 0.22);
+}
+
 .invite-form {
   display: flex;
   align-items: center;
