@@ -1,6 +1,7 @@
 import React from "react";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
+import { PREDEFINED_LABELS } from "./CardModal";
 import "./Card.css";
 
 export const CardPreview = ({ card, className = "" }) => {
@@ -11,6 +12,21 @@ export const CardPreview = ({ card, className = "" }) => {
 
   return (
     <div className={`kanban-card-content ${className}`}>
+      {card.labels?.length > 0 && (
+        <div className="kanban-card-labels">
+          {card.labels.map((labelText) => {
+            const labelDef = PREDEFINED_LABELS.find(l => l.text === labelText);
+            const color = labelDef ? labelDef.color : "#9aa0a6";
+            return (
+              <span 
+                key={labelText} 
+                className="kanban-card-label" 
+                style={{ backgroundColor: color }}
+              ></span>
+            );
+          })}
+        </div>
+      )}
       <div className="kanban-card-topline">
         <span className={`priority-pill priority-${card.priority || "medium"}`}>
           {card.priority || "medium"}

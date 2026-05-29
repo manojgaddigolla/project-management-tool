@@ -13,6 +13,15 @@ import DOMPurify from "dompurify";
 import "react-quill-new/dist/quill.snow.css";
 import "./CardModal.css";
 
+export const PREDEFINED_LABELS = [
+  { text: "bug", color: "#ef5350" },
+  { text: "feature", color: "#42a5f5" },
+  { text: "enhancement", color: "#66bb6a" },
+  { text: "blocked", color: "#ff9800" },
+  { text: "design", color: "#ab47bc" },
+  { text: "documentation", color: "#78909c" },
+];
+
 const CardModal = ({
   show,
   onClose,
@@ -30,6 +39,7 @@ const CardModal = ({
     priority: "medium",
     dueDate: "",
   });
+  const [selectedLabels, setSelectedLabels] = useState([]);
   const [checklistText, setChecklistText] = useState("");
   const [checklist, setChecklist] = useState([]);
   const [isSavingDetails, setIsSavingDetails] = useState(false);
@@ -60,6 +70,7 @@ const CardModal = ({
       dueDate: card?.dueDate ? card.dueDate.slice(0, 10) : "",
     });
     setChecklist(card?.checklist || []);
+    setSelectedLabels(card?.labels || []);
   }
 
   useEffect(() => {
@@ -152,6 +163,7 @@ const CardModal = ({
         priority: editForm.priority,
         dueDate: editForm.dueDate,
         checklist,
+        labels: selectedLabels,
         socketId,
       });
       await onChanged?.();
@@ -437,6 +449,34 @@ const CardModal = ({
               </div>
 
               <div className="modal-sidebar">
+                <div className="labels-section">
+                  <h3 className="modal-section-title">Labels</h3>
+                  <div className="labels-list">
+                    {PREDEFINED_LABELS.map((label) => (
+                      <div
+                        key={label.text}
+                        className={`label-item ${
+                          selectedLabels.includes(label.text) ? "selected" : ""
+                        }`}
+                        onClick={() => {
+                          setSelectedLabels((prev) =>
+                            prev.includes(label.text)
+                              ? prev.filter((t) => t !== label.text)
+                              : [...prev, label.text]
+                          );
+                        }}
+                        style={{
+                          backgroundColor: label.color,
+                          color: "#fff",
+                          opacity: selectedLabels.includes(label.text) ? 1 : 0.6,
+                        }}
+                      >
+                        {label.text}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
                 <h3 className="modal-section-title">Assigned To</h3>
                 <ul className="assigned-users-list">
                   {card.assignedTo?.map((user) => (

@@ -23,6 +23,13 @@ const CardSchema = new mongoose.Schema(
       type: Date,
     },
 
+    labels: [
+      {
+        type: String,
+        trim: true,
+      },
+    ],
+
     checklist: [
       {
         text: {

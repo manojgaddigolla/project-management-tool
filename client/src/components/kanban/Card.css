@@ -124,3 +124,17 @@
   height: 100%;
   object-fit: cover;
 }
+
+.kanban-card-labels {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-bottom: 8px;
+}
+
+.kanban-card-label {
+  display: block;
+  height: 8px;
+  width: 40px;
+  border-radius: 4px;
+}

@@ -91,6 +91,7 @@ const createCard = async (req, res) => {
     columnId,
     priority,
     dueDate,
+    labels,
     socketId
   } = req.body;
   const userId = req.user.id;
@@ -123,6 +124,7 @@ const createCard = async (req, res) => {
     description,
     priority,
     dueDate: normalizeDueDate(dueDate),
+    labels: labels || [],
     column: columnId
   });
   const card = await newCard.save();
@@ -150,6 +152,7 @@ const updateCard = async (req, res) => {
     priority,
     dueDate,
     checklist,
+    labels,
     socketId
   } = req.body;
   const cardId = req.params.id;
@@ -201,6 +204,9 @@ const updateCard = async (req, res) => {
       text: item.text.trim(),
       completed: Boolean(item.completed)
     }));
+  }
+  if (labels !== undefined) {
+    card.labels = labels;
   }
   const updatedCard = await card.save();
   const user = await User.findById(userId);

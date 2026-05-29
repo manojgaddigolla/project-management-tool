@@ -429,6 +429,35 @@
   cursor: not-allowed;
 }
 
+.labels-section {
+  margin-bottom: 24px;
+}
+
+.labels-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.label-item {
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  text-transform: capitalize;
+  transition: opacity 0.2s;
+  user-select: none;
+}
+
+.label-item:hover {
+  opacity: 0.9 !important;
+}
+
+.label-item.selected {
+  box-shadow: 0 0 0 2px #fff, 0 0 0 4px #0c66e4;
+}
+
 @media (max-width: 768px) {
   .modal-content {
     width: 95vw;
