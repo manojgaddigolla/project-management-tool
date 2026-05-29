@@ -25,6 +25,11 @@ const ProjectSchema = new mongoose.Schema(
         ref: 'User',
       },
     ],
+
+    isArchived: {
+      type: Boolean,
+      default: false,
+    },
   },
 
   {

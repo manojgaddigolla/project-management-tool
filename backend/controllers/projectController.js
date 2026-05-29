@@ -245,6 +245,7 @@ const updateProject = async (req, res) => {
   const {
     name,
     description,
+    isArchived,
     socketId
   } = req.body;
   const project = await Project.findById(id);
@@ -263,6 +264,9 @@ const updateProject = async (req, res) => {
   }
   if (description !== undefined) {
     project.description = description;
+  }
+  if (isArchived !== undefined) {
+    project.isArchived = isArchived;
   }
   await project.save();
   const user = await User.findById(req.user.id);

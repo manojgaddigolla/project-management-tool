@@ -37,6 +37,7 @@ router.put(
     [
       check("name", "Project name is required").optional().not().isEmpty(),
       check("description", "Description must be a string").optional().isString(),
+      check("isArchived", "isArchived must be a boolean").optional().isBoolean(),
     ],
   ],
   updateProject,

@@ -4,6 +4,7 @@ import {
   createProject,
   deleteProject,
   getProjects,
+  updateProject,
 } from "../services/projectService";
 import useAuthStore from "../store/authStore";
 import { useConfirm } from "../context/useConfirm";
@@ -25,14 +26,14 @@ const DashboardPage = () => {
 
   useEffect(() => {
     const fetchProjects = async () => {
-    try {
-      setLoading(true);
-      setError(null);
+      try {
+        setLoading(true);
+        setError(null);
 
-      const data = await getProjects();
+        const data = await getProjects();
         setProjects(data);
-    } catch (err) {
-      setError(err.msg || err.errors?.[0]?.msg || "Failed to fetch projects.");
+      } catch (err) {
+        setError(err.msg || err.errors?.[0]?.msg || "Failed to fetch projects.");
       } finally {
         setLoading(false);
       }
@@ -72,6 +73,29 @@ const DashboardPage = () => {
     }
   };
 
+  const handleToggleArchive = async (project) => {
+    const action = project.isArchived ? "Unarchive" : "Archive";
+    const shouldToggle = await confirm({
+      title: `${action} "${project.name}"?`,
+      message: project.isArchived
+        ? "This will restore the project to your active dashboard."
+        : "This will hide the project from your main view. You can restore it anytime.",
+      confirmText: action,
+      tone: project.isArchived ? "primary" : "warning",
+    });
+
+    if (!shouldToggle) return;
+
+    try {
+      const updated = await updateProject(project._id, { isArchived: !project.isArchived });
+      setProjects(currentProjects =>
+        currentProjects.map(p => p._id === project._id ? { ...p, isArchived: updated.isArchived } : p)
+      );
+    } catch (err) {
+      setError(err.msg || `Failed to ${action.toLowerCase()} project.`);
+    }
+  };
+
   const handleDeleteProject = async (project) => {
     const shouldDelete = await confirm({
       title: `Delete "${project.name}"?`,
@@ -95,29 +119,35 @@ const DashboardPage = () => {
     }
   };
 
+  const [showArchived, setShowArchived] = useState(false);
+
   const filteredProjects = useMemo(() => {
     const term = searchTerm.trim().toLowerCase();
-    if (!term) return projects;
 
-    return projects.filter((project) => {
+    // Filter by archived status first
+    const statusFiltered = projects.filter(p => !!p.isArchived === showArchived);
+
+    if (!term) return statusFiltered;
+
+    return statusFiltered.filter((project) => {
       return [project.name, project.description]
         .filter(Boolean)
         .some((value) => value.toLowerCase().includes(term));
     });
-  }, [projects, searchTerm]);
+  }, [projects, searchTerm, showArchived]);
 
   const dashboardStats = useMemo(
     () => ({
-      total: projects.length,
+      total: projects.filter(p => !p.isArchived).length,
       owned: projects.filter((project) => {
         const ownerId = project.owner?._id || project.owner;
-        return ownerId === user?._id;
+        return ownerId === user?._id && !project.isArchived;
       }).length,
       recent: projects.filter((project) => {
         const created = new Date(project.createdAt);
         const weekAgo = new Date();
         weekAgo.setDate(weekAgo.getDate() - 7);
-        return created >= weekAgo;
+        return created >= weekAgo && !project.isArchived;
       }).length,
     }),
     [projects, user],
@@ -145,7 +175,7 @@ const DashboardPage = () => {
       <div className="dashboard-stats">
         <div>
           <span>{dashboardStats.total}</span>
-          <p>Total projects</p>
+          <p>Active projects</p>
         </div>
         <div>
           <span>{dashboardStats.recent}</span>
@@ -156,8 +186,8 @@ const DashboardPage = () => {
           <p>Owned by you</p>
         </div>
         <div>
-          <span>{filteredProjects.length}</span>
-          <p>Matching view</p>
+          <span>{projects.filter(p => p.isArchived).length}</span>
+          <p>Archived projects</p>
         </div>
       </div>
 
@@ -197,12 +227,26 @@ const DashboardPage = () => {
           value={searchTerm}
           onChange={(event) => setSearchTerm(event.target.value)}
         />
+        <div className="project-tabs">
+          <button
+            className={`tab-btn ${!showArchived ? 'active' : ''}`}
+            onClick={() => setShowArchived(false)}
+          >
+            Active
+          </button>
+          <button
+            className={`tab-btn ${showArchived ? 'active' : ''}`}
+            onClick={() => setShowArchived(true)}
+          >
+            Archived
+          </button>
+        </div>
       </div>
-      
+
       {filteredProjects.length > 0 ? (
         <div className="project-list">
           {filteredProjects.map((project) => (
-            <div key={project._id} className="project-card">
+            <div key={project._id} className={`project-card ${project.isArchived ? 'archived' : ''}`}>
               <div className="project-card-kicker">
                 Updated {new Date(project.updatedAt).toLocaleDateString()}
               </div>
@@ -215,14 +259,23 @@ const DashboardPage = () => {
                   Open Board
                 </Link>
                 {(project.owner?._id || project.owner) === user?._id && (
-                  <button
-                    type="button"
-                    className="project-delete-button"
-                    onClick={() => handleDeleteProject(project)}
-                    disabled={deletingProjectId === project._id}
-                  >
-                    {deletingProjectId === project._id ? "Deleting..." : "Delete"}
-                  </button>
+                  <>
+                    <button
+                      type="button"
+                      className="project-archive-button"
+                      onClick={() => handleToggleArchive(project)}
+                    >
+                      {project.isArchived ? "Unarchive" : "Archive"}
+                    </button>
+                    <button
+                      type="button"
+                      className="project-delete-button"
+                      onClick={() => handleDeleteProject(project)}
+                      disabled={deletingProjectId === project._id}
+                    >
+                      {deletingProjectId === project._id ? "Deleting..." : "Delete"}
+                    </button>
+                  </>
                 )}
               </div>
             </div>
@@ -230,7 +283,7 @@ const DashboardPage = () => {
         </div>
       ) : projects.length > 0 ? (
         <div className="no-projects">
-          <p>No projects match your search for "{searchTerm}".</p>
+          <p>No projects match your search.</p>
         </div>
       ) : (
         <div className="no-projects">
