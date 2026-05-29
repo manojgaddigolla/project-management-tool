@@ -10,6 +10,7 @@ import RegisterPage from "./pages/RegisterPage";
 import LoginPage from "./pages/LoginPage";
 import DashboardPage from "./pages/DashboardPage";
 import ProjectBoardPage from "./pages/ProjectBoardPage";
+import ProfilePage from "./pages/ProfilePage";
 import PrivateRoute from "./components/routing/PrivateRoute";
 import useAuthStore from "./store/authStore";
 import "react-toastify/dist/ReactToastify.css";
@@ -38,6 +39,7 @@ function App() {
 
                 <Route element={<PrivateRoute />}>
                   <Route path="/dashboard" element={<DashboardPage />} />
+                  <Route path="/profile" element={<ProfilePage />} />
                   <Route
                     path="/project/:projectId"
                     element={<ProjectBoardPage />}

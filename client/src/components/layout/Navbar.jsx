@@ -60,6 +60,9 @@ const Navbar = () => {
         <NavLink to="/dashboard">Dashboard</NavLink>
       </li>
       <li>
+        <NavLink to="/profile">Profile</NavLink>
+      </li>
+      <li>
         <a onClick={onLogout} href="#!">
           <i className="fas fa-sign-out-alt"></i>{" "}
           <span className="hide-sm">Logout</span>

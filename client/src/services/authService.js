@@ -39,3 +39,12 @@ export const logoutApi = async () => {
     throw toApiError(error);
   }
 };
+
+export const updateProfile = async (profileData) => {
+  try {
+    const response = await api.put('/users/profile', profileData);
+    return response.data;
+  } catch (error) {
+    throw toApiError(error);
+  }
+};

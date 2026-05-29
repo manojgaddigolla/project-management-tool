@@ -147,10 +147,42 @@ const getAuthenticatedUser = async (req, res) => {
   }
   res.json(user);
 };
+
+const updateUserProfile = async (req, res) => {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    return res.status(400).json({ errors: errors.array() });
+  }
+
+  const { name, email, avatar } = req.body;
+  const user = await User.findById(req.user.id);
+
+  if (!user) {
+    return res.status(404).json({ msg: "User not found" });
+  }
+
+  if (email && email !== user.email) {
+    const existingUser = await User.findOne({ email });
+    if (existingUser) {
+      return res.status(400).json({ errors: [{ msg: "Email is already in use" }] });
+    }
+    user.email = email;
+  }
+
+  if (name) user.name = name;
+  if (avatar !== undefined) user.avatar = avatar;
+
+  await user.save();
+  
+  const updatedUser = await User.findById(req.user.id).select("-password");
+  res.json(updatedUser);
+};
+
 module.exports = {
   registerUser,
   loginUser,
   refreshToken,
   logoutUser,
-  getAuthenticatedUser
+  getAuthenticatedUser,
+  updateUserProfile
 };
