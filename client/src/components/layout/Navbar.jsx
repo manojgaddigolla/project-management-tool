@@ -60,9 +60,6 @@ const Navbar = () => {
         <NavLink to="/dashboard">Dashboard</NavLink>
       </li>
       <li>
-        <NavLink to="/profile">Profile</NavLink>
-      </li>
-      <li>
         <a onClick={onLogout} href="#!">
           <i className="fas fa-sign-out-alt"></i>{" "}
           <span className="hide-sm">Logout</span>
@@ -80,30 +77,35 @@ const Navbar = () => {
       <div className="navbar-links">
         <>{isAuthenticated ? authLinks : guestLinks}</>
         {isAuthenticated && (
-          <div className="notification-bell" ref={dropdownRef} onClick={handleBellClick}>
-            <i className="fas fa-bell"></i>
-            {unreadCount > 0 && (
-              <span className="notification-badge">{unreadCount}</span>
-            )}
-            {isDropdownVisible && (
-              <div className="notification-dropdown" onClick={(e) => e.stopPropagation()}>
-                {notifications.length > 0 ? (
-                  notifications.map((n) => (
-                    <Link
-                      to={n.link || "#"}
-                      key={n._id}
-                      className="notification-item"
-                      onClick={() => setDropdownVisible(false)}
-                    >
-                      <p className="notification-message">{n.message}</p>
-                      <small className="notification-date">{new Date(n.createdAt).toLocaleString()}</small>
-                    </Link>
-                  ))
-                ) : (
-                  <div className="notification-item">No new notifications</div>
-                )}
-              </div>
-            )}
+          <div className="navbar-icons">
+            <NavLink to="/profile" className="profile-icon" title="Profile">
+              <i className="fas fa-user-circle"></i>
+            </NavLink>
+            <div className="notification-bell" ref={dropdownRef} onClick={handleBellClick}>
+              <i className="fas fa-bell"></i>
+              {unreadCount > 0 && (
+                <span className="notification-badge">{unreadCount}</span>
+              )}
+              {isDropdownVisible && (
+                <div className="notification-dropdown" onClick={(e) => e.stopPropagation()}>
+                  {notifications.length > 0 ? (
+                    notifications.map((n) => (
+                      <Link
+                        to={n.link || "#"}
+                        key={n._id}
+                        className="notification-item"
+                        onClick={() => setDropdownVisible(false)}
+                      >
+                        <p className="notification-message">{n.message}</p>
+                        <small className="notification-date">{new Date(n.createdAt).toLocaleString()}</small>
+                      </Link>
+                    ))
+                  ) : (
+                    <div className="notification-item">No new notifications</div>
+                  )}
+                </div>
+              )}
+            </div>
           </div>
         )}
       </div>

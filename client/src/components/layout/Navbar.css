@@ -78,6 +78,17 @@
   flex-wrap: wrap;
 }
 
+.navbar-icons {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.profile-icon {
+  font-size: 22px;
+  line-height: 1;
+}
+
 .notification-bell {
   position: relative;
   cursor: pointer;
