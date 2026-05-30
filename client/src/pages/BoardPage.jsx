@@ -9,6 +9,7 @@ import {
 } from "@dnd-kit/core";
 import { SortableContext, horizontalListSortingStrategy } from "@dnd-kit/sortable";
 import { toast } from "react-toastify";
+import { useSearchParams } from "react-router-dom";
 import {
   inviteUserToProject,
   removeProjectMember,
@@ -56,6 +57,15 @@ const BoardPage = () => {
     priority: "all",
     overdueOnly: false,
   });
+
+  const [searchParams, setSearchParams] = useSearchParams();
+
+  React.useEffect(() => {
+    const cardId = searchParams.get("card");
+    if (cardId && !selectedCardId && !loading && boardData) {
+      setSelectedCardId(cardId);
+    }
+  }, [searchParams, loading, boardData, selectedCardId]);
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -164,6 +174,10 @@ const BoardPage = () => {
 
   const handleCloseModal = () => {
     setSelectedCardId(null);
+    if (searchParams.has("card")) {
+      searchParams.delete("card");
+      setSearchParams(searchParams);
+    }
   };
 
   const handleInviteSubmit = async (e) => {

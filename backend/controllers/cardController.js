@@ -486,7 +486,7 @@ const assignUser = async (req, res) => {
   for (const assigneeId of newlyAssignedIds) {
     if (assigneeId.toString() !== req.user.id) {
       const message = `${assigner.name} assigned you to the card '${card.title}'`;
-      const link = `/project/${projectId}/board?card=${cardId}`;
+      const link = `/project/${projectId}?card=${cardId}`;
       await createNotification(io, assigneeId, message, projectId, link);
     }
   }

@@ -44,6 +44,10 @@ function App() {
                     path="/project/:projectId"
                     element={<ProjectBoardPage />}
                   />
+                  <Route
+                    path="/project/:projectId/board"
+                    element={<ProjectBoardPage />}
+                  />
                 </Route>
               </Routes>
             </main>
