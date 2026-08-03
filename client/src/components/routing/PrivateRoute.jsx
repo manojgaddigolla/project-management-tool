@@ -1,16 +1,18 @@
 import React from "react";
 import { Navigate, Outlet } from "react-router-dom";
-import useAuthStore from "../../store/authStore";
+import { Show } from "@clerk/react";
 
 const PrivateRoute = () => {
-  const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
-  const loading = useAuthStore((state) => state.loading);
-
-  if (loading) {
-    return <div>Loading...</div>;
-  }
-
-  return isAuthenticated ? <Outlet /> : <Navigate to="/login" replace />;
+  return (
+    <>
+      <Show when="signed-in">
+        <Outlet />
+      </Show>
+      <Show when="signed-out">
+        <Navigate to="/" replace />
+      </Show>
+    </>
+  );
 };
 
 export default PrivateRoute;

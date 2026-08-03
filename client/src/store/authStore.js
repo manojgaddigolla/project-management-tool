@@ -1,32 +1,19 @@
 import { create } from "zustand";
-import { loadUser as fetchUser, logoutApi } from "../services/authService";
+import api from "../services/api";
 
 const useAuthStore = create((set, get) => ({
-  token: localStorage.getItem("token") || null,
-
   user: null,
-
-  isAuthenticated: !!localStorage.getItem("token"),
-
+  isAuthenticated: false,
   loading: false,
 
-  setToken: (token) => {
-    localStorage.setItem("token", token);
-    set({ token: token, isAuthenticated: true });
-  },
-
-  loadUser: async () => {
-    if (!get().token) {
-      return set({ loading: false });
-    }
-
+  syncUser: async () => {
     set({ loading: true });
     try {
-      const userData = await fetchUser();
-      set({ user: userData, isAuthenticated: true, loading: false });
-    } catch {
-      get().logout();
-      set({ loading: false });
+      const { data } = await api.post("/users/sync");
+      set({ user: data, isAuthenticated: true, loading: false });
+    } catch (err) {
+      console.error("Sync error:", err);
+      set({ user: null, isAuthenticated: false, loading: false });
     }
   },
 
@@ -34,14 +21,8 @@ const useAuthStore = create((set, get) => ({
     set({ user: userData });
   },
 
-  logout: async () => {
-    try {
-      await logoutApi();
-    } catch (err) {
-      console.log(err);
-    }
-    localStorage.removeItem("token");
-    set({ token: null, user: null, isAuthenticated: false, loading: false });
+  logout: () => {
+    set({ user: null, isAuthenticated: false, loading: false });
   },
 }));
 

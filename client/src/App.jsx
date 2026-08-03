@@ -1,28 +1,34 @@
 import React, { useEffect } from "react";
 import { Route, Routes } from "react-router-dom";
+import { useAuth, SignIn, SignUp } from "@clerk/react";
+import useAuthStore from "./store/authStore";
 import Navbar from "./components/layout/Navbar";
 import Sidebar from "./components/layout/Sidebar";
 import Footer from "./components/layout/Footer";
 import { NotificationProvider } from "./context/NotificationContext.jsx";
 import { ConfirmDialogProvider } from "./context/ConfirmDialogContext.jsx";
 import HomePage from "./pages/HomePage";
-import RegisterPage from "./pages/RegisterPage";
-import LoginPage from "./pages/LoginPage";
 import DashboardPage from "./pages/DashboardPage";
 import ProjectBoardPage from "./pages/ProjectBoardPage";
-import ProfilePage from "./pages/ProfilePage";
 import PrivateRoute from "./components/routing/PrivateRoute";
-import useAuthStore from "./store/authStore";
 import "react-toastify/dist/ReactToastify.css";
 import { ToastContainer } from "react-toastify";
 import "./App.css";
 
 function App() {
-  const loadUser = useAuthStore((state) => state.loadUser);
+  const { isSignedIn, isLoaded } = useAuth();
+  const syncUser = useAuthStore((state) => state.syncUser);
+  const logout = useAuthStore((state) => state.logout);
 
   useEffect(() => {
-    loadUser();
-  }, [loadUser]);
+    if (isLoaded) {
+      if (isSignedIn) {
+        syncUser();
+      } else {
+        logout();
+      }
+    }
+  }, [isLoaded, isSignedIn, syncUser, logout]);
 
   return (
     <NotificationProvider>
@@ -34,12 +40,10 @@ function App() {
             <main className="page-content">
               <Routes>
                 <Route path="/" element={<HomePage />} />
-                <Route path="/register" element={<RegisterPage />} />
-                <Route path="/login" element={<LoginPage />} />
-
+                <Route path="/login" element={<div style={{display: 'flex', justifyContent: 'center', margin: '40px'}}><SignIn routing="path" path="/login" /></div>} />
+                <Route path="/register" element={<div style={{display: 'flex', justifyContent: 'center', margin: '40px'}}><SignUp routing="path" path="/register" /></div>} />
                 <Route element={<PrivateRoute />}>
                   <Route path="/dashboard" element={<DashboardPage />} />
-                  <Route path="/profile" element={<ProfilePage />} />
                   <Route
                     path="/project/:projectId"
                     element={<ProjectBoardPage />}

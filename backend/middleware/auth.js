@@ -1,29 +1,29 @@
-const jwt = require('jsonwebtoken');
+const { ClerkExpressRequireAuth } = require('@clerk/clerk-sdk-node');
+const User = require('../models/User');
 
-module.exports = function (req, res, next) {
-  const token = req.header('Authorization');
+const clerkAuth = ClerkExpressRequireAuth();
 
-  if (!token) {
-    return res.status(401).json({ msg: 'No token, authorization denied' });
-  }
-
-  if (!token.startsWith('Bearer ')) {
-    return res.status(401).json({ msg: 'Token format is invalid, authorization denied' });
-  }
-
-  const tokenValue = token.split(' ')[1];
-
-  if (!tokenValue) {
-      return res.status(401).json({ msg: 'Token format is invalid, authorization denied' });
-  }
-
-  try {
-    const decoded = jwt.verify(tokenValue, process.env.JWT_SECRET);
-
-    req.user = decoded.user;
-
-    next();
-  } catch (err) {
-    return res.status(401).json({ msg: 'Token is not valid' });
-  }
+module.exports = function(req, res, next) {
+  clerkAuth(req, res, async (err) => {
+    if (err) {
+      return res.status(401).json({ msg: "Token is not valid" });
+    }
+    
+    try {
+      if (!req.auth || !req.auth.userId) {
+        return res.status(401).json({ msg: "Unauthorized" });
+      }
+      
+      const user = await User.findOne({ clerkId: req.auth.userId });
+      if (user) {
+        req.user = { id: user._id.toString() };
+      } else if (req.originalUrl !== '/api/users/sync') {
+        return res.status(401).json({ msg: "User not synced" });
+      }
+      
+      next();
+    } catch (error) {
+      res.status(500).json({ msg: "Server Error in Auth Middleware" });
+    }
+  });
 };

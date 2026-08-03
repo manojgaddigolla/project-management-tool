@@ -1,6 +1,6 @@
 import React, { useState } from "react";
-import { Link, NavLink, useNavigate } from "react-router-dom";
-import useAuthStore from "../../store/authStore";
+import { Link, NavLink } from "react-router-dom";
+import { Show, SignInButton, SignUpButton, UserButton, useAuth } from "@clerk/react";
 import useNotifications from "../../hooks/useNotifications";
 import "./Navbar.css";
 
@@ -8,6 +8,7 @@ const Navbar = () => {
   const { notifications, unreadCount, markAsRead } = useNotifications();  
   const [isDropdownVisible, setDropdownVisible] = useState(false);
   const dropdownRef = React.useRef(null);
+  const { isSignedIn } = useAuth();
 
   React.useEffect(() => {
     const handleClickOutside = (event) => {
@@ -27,60 +28,38 @@ const Navbar = () => {
       markAsRead();
     }
   };
-  
-  const navigate = useNavigate();
-  const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
-  const user = useAuthStore((state) => state.user);
-  const logout = useAuthStore((state) => state.logout);
-
-  const onLogout = () => {
-    logout();
-    navigate("/");
-  };
-
-  const guestLinks = (
-    <ul>
-      <li>
-        <NavLink to="/register">Register</NavLink>
-      </li>
-      <li>
-        <NavLink to="/login" className="navbar-cta">
-          Login
-        </NavLink>
-      </li>
-    </ul>
-  );
-
-  const authLinks = (
-    <ul>
-      <li>
-        <span className="navbar-user">Hello, {user ? user.name : "User"}</span>
-      </li>
-      <li>
-        <NavLink to="/dashboard">Dashboard</NavLink>
-      </li>
-      <li>
-        <a onClick={onLogout} href="#!">
-          <i className="fas fa-sign-out-alt"></i>{" "}
-          <span className="hide-sm">Logout</span>
-        </a>
-      </li>
-    </ul>
-  );
 
   return (
     <nav className="navbar">
-      <Link to={isAuthenticated ? "/dashboard" : "/"} className="navbar-logo">
+      <Link to={isSignedIn ? "/dashboard" : "/"} className="navbar-logo">
         <span className="navbar-logo-mark">P</span>
         ProjecTrak
       </Link>
+      
       <div className="navbar-links">
-        <>{isAuthenticated ? authLinks : guestLinks}</>
-        {isAuthenticated && (
+        <Show when="signed-out">
+          <ul>
+            <li>
+              <SignUpButton mode="modal">
+                <button className="navbar-cta-outline" style={{ background: "transparent", border: "1px solid #fff", color: "#fff", padding: "8px 12px", borderRadius: "8px", cursor: "pointer", fontWeight: "750" }}>Register</button>
+              </SignUpButton>
+            </li>
+            <li>
+              <SignInButton mode="modal">
+                <button className="navbar-cta" style={{ border: "none", cursor: "pointer", fontWeight: "750" }}>Login</button>
+              </SignInButton>
+            </li>
+          </ul>
+        </Show>
+
+        <Show when="signed-in">
+          <ul>
+            <li>
+              <NavLink to="/dashboard">Dashboard</NavLink>
+            </li>
+          </ul>
           <div className="navbar-icons">
-            <NavLink to="/profile" className="profile-icon" title="Profile">
-              <i className="fas fa-user-circle"></i>
-            </NavLink>
+            <UserButton />
             <div className="notification-bell" ref={dropdownRef} onClick={handleBellClick}>
               <i className="fas fa-bell"></i>
               {unreadCount > 0 && (
@@ -107,7 +86,7 @@ const Navbar = () => {
               )}
             </div>
           </div>
-        )}
+        </Show>
       </div>
     </nav>
   );

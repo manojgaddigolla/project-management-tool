@@ -1,7 +1,7 @@
 require("dotenv").config();
 
-if (!process.env.JWT_SECRET || !process.env.MONGO_URI) {
-  console.error("FATAL ERROR: JWT_SECRET and MONGO_URI must be defined in environment variables.");
+if (!process.env.CLERK_SECRET_KEY || !process.env.MONGO_URI) {
+  console.error("FATAL ERROR: CLERK_SECRET_KEY and MONGO_URI must be defined in environment variables.");
   process.exit(1);
 }
 
@@ -14,7 +14,6 @@ const { Server } = require("socket.io");
 const rateLimit = require("express-rate-limit");
 const mongoose = require("mongoose");
 const userRoutes = require("./routes/users");
-const authRoutes = require("./routes/auth");
 const projectRoutes = require("./routes/projects");
 const boardRoutes = require("./routes/boards");
 const columnRoutes = require("./routes/columns");
@@ -22,8 +21,9 @@ const cardRoutes = require("./routes/cards");
 const Project = require("./models/Project");
 const { securityHeaders, sanitizeRequest } = require("./middleware/security");
 const errorHandler = require("./middleware/errorHandler");
-const jwt = require("jsonwebtoken");
 const cookieParser = require("cookie-parser");
+const { clerkClient } = require("@clerk/clerk-sdk-node");
+const User = require("./models/User");
 
 const app = express();
 
@@ -79,6 +79,7 @@ let io = new Server(httpServer, {
   cors: { origin: allowedOrigins, methods: ["GET", "POST"] },
 });
 
+
 // Attach io to every request so route handlers can emit events
 app.use((req, res, next) => {
   req.io = io;
@@ -86,8 +87,6 @@ app.use((req, res, next) => {
 });
 
 app.use("/api/users", authLimiter, userRoutes);
-
-app.use("/api/auth", authLimiter, authRoutes);
 
 app.use("/api/projects", apiLimiter, projectRoutes);
 
@@ -108,20 +107,25 @@ app.get("/api/health", (req, res) => {
 io.on("connection", (socket) => {
   console.log(`New client connected: ${socket.id}`);
 
-  try {
-    const token = socket.handshake.auth.token;
-    if (token) {
-      const decoded = jwt.verify(token, process.env.JWT_SECRET);
-      const userId = decoded.user.id;
-      socket.userId = userId;
-      socket.join(userId);
-      console.log(
-        `User ${userId} with socket ${socket.id} joined their private room.`,
-      );
+  socket.use(async (packet, next) => {
+    try {
+      const token = socket.handshake.auth.token;
+      if (token) {
+        const decoded = await clerkClient.verifyToken(token, {
+          secretKey: process.env.CLERK_SECRET_KEY,
+        });
+        const user = await User.findOne({ clerkId: decoded.sub });
+        if (user) {
+          socket.userId = user._id.toString();
+          socket.join(socket.userId);
+        }
+      }
+      next();
+    } catch (err) {
+      console.log("Socket connection not authenticated.");
+      next(); // Optionally drop unauthenticated requests
     }
-  } catch (err) {
-    console.log("Socket connection not authenticated.");
-  }
+  });
 
   socket.on("joinProject", async (projectId) => {
     try {
