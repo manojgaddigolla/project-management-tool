@@ -67,21 +67,34 @@ const Navbar = () => {
               )}
               {isDropdownVisible && (
                 <div className="notification-dropdown" onClick={(e) => e.stopPropagation()}>
-                  {notifications.length > 0 ? (
-                    notifications.map((n) => (
-                      <Link
-                        to={n.link || "#"}
-                        key={n._id}
-                        className="notification-item"
-                        onClick={() => setDropdownVisible(false)}
-                      >
-                        <p className="notification-message">{n.message}</p>
-                        <small className="notification-date">{new Date(n.createdAt).toLocaleString()}</small>
-                      </Link>
-                    ))
-                  ) : (
-                    <div className="notification-item">No new notifications</div>
-                  )}
+                  <div className="notification-header">
+                    <h4>Notifications</h4>
+                  </div>
+                  <div className="notification-list">
+                    {notifications.length > 0 ? (
+                      notifications.map((n) => (
+                        <Link
+                          to={n.link || "#"}
+                          key={n._id}
+                          className="notification-item"
+                          onClick={() => setDropdownVisible(false)}
+                        >
+                          <div className="notification-icon">
+                            <i className="fas fa-bell"></i>
+                          </div>
+                          <div className="notification-content">
+                            <p className="notification-message">{n.message}</p>
+                            <small className="notification-date">{new Date(n.createdAt).toLocaleString()}</small>
+                          </div>
+                        </Link>
+                      ))
+                    ) : (
+                      <div className="notification-empty">
+                        <i className="fas fa-bell-slash"></i>
+                        <p>No new notifications</p>
+                      </div>
+                    )}
+                  </div>
                 </div>
               )}
             </div>

@@ -113,32 +113,110 @@
 .notification-dropdown {
   position: absolute;
   top: calc(100% + 15px);
-  right: 0;
+  right: -10px;
   width: 380px;
   max-height: 450px;
-  overflow-y: auto;
   background-color: #ffffff;
   border: 1px solid #dfe1e6;
-  border-radius: 8px;
-  box-shadow: 0 8px 16px -4px rgba(9,30,66,.25);
+  border-radius: 12px;
+  box-shadow: 0 12px 24px -6px rgba(9,30,66,.25), 0 0 0 1px rgba(9,30,66,.08);
   z-index: 1010; 
   color: #172b4d;
   text-align: left;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  cursor: default;
 }
 
-.navbar a.notification-item {
-  display: block;
-  padding: 12px 16px;
+.notification-dropdown::before {
+  content: "";
+  position: absolute;
+  top: -6px;
+  right: 18px;
+  width: 12px;
+  height: 12px;
+  background-color: #ffffff;
+  border-top: 1px solid #dfe1e6;
+  border-left: 1px solid #dfe1e6;
+  transform: rotate(45deg);
+  z-index: 0;
+}
+
+.notification-header {
+  padding: 16px;
+  border-bottom: 1px solid #ebecf0;
+  background-color: #f4f5f7;
+  position: relative;
+  z-index: 1;
+}
+
+.notification-header h4 {
+  margin: 0;
+  font-size: 16px;
+  color: #172b4d;
+  font-weight: 700;
+}
+
+.notification-list {
+  max-height: 350px;
+  overflow-y: auto;
+  position: relative;
+  z-index: 1;
+  background-color: #ffffff;
+}
+
+.notification-empty {
+  padding: 40px 20px;
+  text-align: center;
+  color: #5e6c84;
+}
+
+.notification-empty i {
+  font-size: 32px;
+  margin-bottom: 12px;
+  opacity: 0.5;
+}
+
+.notification-empty p {
+  margin: 0;
+  font-size: 14px;
+}
+
+.notification-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 14px 16px;
   border-bottom: 1px solid #f0f0f0;
   text-decoration: none;
-  color: #172b4d;
+  color: #172b4d !important;
   font-weight: normal;
   transition: background-color 0.2s;
+  cursor: pointer;
 }
 
-.navbar a.notification-item:hover {
-  background-color: #f4f5f7; 
-  color: #172b4d;
+.notification-item:hover {
+  background-color: #e9f2ff; 
+}
+
+.notification-icon {
+  background-color: #deebff;
+  color: #0c66e4;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  font-size: 14px;
+}
+
+.notification-content {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
 }
 
 .notification-message {
