@@ -1,7 +1,7 @@
 import { create } from "zustand";
 import api from "../services/api";
 
-const useAuthStore = create((set, get) => ({
+const useAuthStore = create((set) => ({
   user: null,
   isAuthenticated: false,
   loading: false,

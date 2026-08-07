@@ -33,35 +33,24 @@ const setupTestEnvironment = async () => {
   const owner = await new User({
     name: "Owner",
     email: "owner@test.com",
-    password: "password",
+    clerkId: "mock_clerk_owner",
   }).save();
   
   const member = await new User({
     name: "Member",
     email: "member@test.com",
-    password: "password",
+    clerkId: "mock_clerk_member",
   }).save();
 
   const outsider = await new User({
     name: "Outsider",
     email: "outsider@test.com",
-    password: "password",
+    clerkId: "mock_clerk_outsider",
   }).save();
 
-  const loginRes = await request(app)
-    .post("/api/auth/login")
-    .send({ email: "owner@test.com", password: "password" });
-  const ownerToken = loginRes.body.token;
-
-  const loginResMember = await request(app)
-    .post("/api/auth/login")
-    .send({ email: "member@test.com", password: "password" });
-  const memberToken = loginResMember.body.token;
-
-  const loginResOutsider = await request(app)
-    .post("/api/auth/login")
-    .send({ email: "outsider@test.com", password: "password" });
-  const outsiderToken = loginResOutsider.body.token;
+  const ownerToken = "mock_clerk_owner";
+  const memberToken = "mock_clerk_member";
+  const outsiderToken = "mock_clerk_outsider";
 
   const project = await new Project({
     name: "Test Project",

@@ -43,14 +43,10 @@ describe("POST /api/projects - Project Creation", () => {
     const user = await new User({
       name: "Test User",
       email: "test@example.com",
-      password: "password123",
+      clerkId: "mock_clerk_123",
     }).save();
 
-    const loginRes = await request(app)
-      .post("/api/auth/login")
-      .send({ email: "test@example.com", password: "password123" });
-
-    const token = loginRes.body.token;
+    const token = "mock_clerk_123";
 
     const projectData = {
       name: "My Authorized Project",
@@ -79,13 +75,10 @@ describe("PUT /api/cards/move/:id - Card Movement", () => {
     const user = await new User({
       name: "Card Mover",
       email: "mover@test.com",
-      password: "password",
+      clerkId: "mock_clerk_mover",
     }).save();
     userId = user._id;
-    const loginRes = await request(app)
-      .post("/api/auth/login")
-      .send({ email: "mover@test.com", password: "password" });
-    token = loginRes.body.token;
+    token = "mock_clerk_mover";
 
     const project = await new Project({
       name: "Move Test Project",
@@ -149,23 +142,20 @@ describe("Assignments and project analytics", () => {
     owner = await new User({
       name: "Analytics Owner",
       email: "owner@test.com",
-      password: "password",
+      clerkId: "mock_clerk_owner",
     }).save();
     teammate = await new User({
       name: "Delivery Teammate",
       email: "teammate@test.com",
-      password: "password",
+      clerkId: "mock_clerk_teammate",
     }).save();
     outsider = await new User({
       name: "Outside User",
       email: "outsider@test.com",
-      password: "password",
+      clerkId: "mock_clerk_outsider",
     }).save();
 
-    const loginRes = await request(app)
-      .post("/api/auth/login")
-      .send({ email: "owner@test.com", password: "password" });
-    token = loginRes.body.token;
+    token = "mock_clerk_owner";
 
     project = await new Project({
       name: "Analytics Project",

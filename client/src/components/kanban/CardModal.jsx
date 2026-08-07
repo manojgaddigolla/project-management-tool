@@ -11,16 +11,8 @@ import { useConfirm } from "../../context/useConfirm";
 import ReactQuill from "react-quill-new";
 import DOMPurify from "dompurify";
 import "react-quill-new/dist/quill.snow.css";
+import { PREDEFINED_LABELS } from "../../utils/constants";
 import "./CardModal.css";
-
-export const PREDEFINED_LABELS = [
-  { text: "bug", color: "#ef5350" },
-  { text: "feature", color: "#42a5f5" },
-  { text: "enhancement", color: "#66bb6a" },
-  { text: "blocked", color: "#ff9800" },
-  { text: "design", color: "#ab47bc" },
-  { text: "documentation", color: "#78909c" },
-];
 
 const CardModal = ({
   show,

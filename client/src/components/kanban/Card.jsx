@@ -1,7 +1,7 @@
 import React from "react";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { PREDEFINED_LABELS } from "./CardModal";
+import { PREDEFINED_LABELS } from "../../utils/constants";
 import "./Card.css";
 
 export const CardPreview = ({ card, className = "" }) => {

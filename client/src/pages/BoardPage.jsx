@@ -63,6 +63,7 @@ const BoardPage = () => {
   React.useEffect(() => {
     const cardId = searchParams.get("card");
     if (cardId && !selectedCardId && !loading && boardData) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setSelectedCardId(cardId);
     }
   }, [searchParams, loading, boardData, selectedCardId]);
