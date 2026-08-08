@@ -49,6 +49,7 @@ const BoardPage = () => {
   const [isAddingColumn, setIsAddingColumn] = useState(false);
   const [isSettingsOpen, setSettingsOpen] = useState(false);
   const [isAnalyticsOpen, setAnalyticsOpen] = useState(false);
+  const [isSummaryOpen, setSummaryOpen] = useState(false);
   const [isActivityFeedVisible, setActivityFeedVisible] = useState(false);
   const [activeCardId, setActiveCardId] = useState(null);
   const [activeColumnId, setActiveColumnId] = useState(null);
@@ -354,23 +355,38 @@ const BoardPage = () => {
           >
             Activity
           </button>
+          <button
+            className="board-action-button"
+            onClick={() => setAnalyticsOpen((open) => !open)}
+          >
+            {isAnalyticsOpen ? (
+              <>Hide Analytics <i className="fa-solid fa-chevron-up" style={{ marginLeft: "6px" }}></i></>
+            ) : (
+              <>Analytics <i className="fa-solid fa-chevron-down" style={{ marginLeft: "6px" }}></i></>
+            )}
+          </button>
+          <button
+            className="board-action-button"
+            onClick={() => setSummaryOpen((open) => !open)}
+          >
+            {isSummaryOpen ? (
+              <>Hide Summary <i className="fa-solid fa-chevron-up" style={{ marginLeft: "6px" }}></i></>
+            ) : (
+              <>Show Summary <i className="fa-solid fa-chevron-down" style={{ marginLeft: "6px" }}></i></>
+            )}
+          </button>
           {isOwner && (
             <button
               className="board-action-button"
               onClick={() => setSettingsOpen((open) => !open)}
             >
-              Settings
+              {isSettingsOpen ? (
+                <>Hide Info <i className="fa-solid fa-chevron-up" style={{ marginLeft: "6px" }}></i></>
+              ) : (
+                <>Info <i className="fa-solid fa-chevron-down" style={{ marginLeft: "6px" }}></i></>
+              )}
             </button>
           )}
-          <button
-            className="board-action-button"
-            onClick={() => setAnalyticsOpen((open) => !open)}
-          >
-            Analytics
-          </button>
-          <button className="board-action-button" onClick={handleCopySummary}>
-            Copy Summary
-          </button>
         </div>
       </div>
 
@@ -392,6 +408,63 @@ const BoardPage = () => {
           <p>Members</p>
         </div>
       </div>
+
+      {isSummaryOpen && (
+        <section className="project-settings-panel" style={{ display: 'block' }}>
+          <div style={{ marginBottom: "16px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+            <h2 style={{ margin: 0, color: "var(--text-h)", fontSize: "1.2rem" }}>Project Summary</h2>
+            <button 
+              className="board-action-button" 
+              onClick={() => setSummaryOpen(false)}
+              style={{ border: "none", background: "transparent", padding: "4px 8px", boxShadow: "none" }}
+            >
+              <i className="fa-solid fa-xmark"></i>
+            </button>
+          </div>
+          <div style={{ background: "#f4f5f7", color: "#44546f", border: "1px solid #dfe1e6", padding: "16px", borderRadius: "var(--radius-sm)", overflowX: "auto" }}>
+            <pre style={{ margin: 0, fontFamily: "inherit", fontSize: "0.95rem", whiteSpace: "pre-wrap", wordWrap: "break-word" }}>
+              {boardData.project?.name} project summary
+              {"\n"}Total tasks: {boardStats.totalCards}
+              {"\n"}Completed: {boardStats.completedCards}
+              {"\n"}Overdue: {boardStats.overdueCards}
+              {"\n"}
+              {boardData.columns.map((column) => `\n${column.title}: ${column.cards.length} task(s)`)}
+            </pre>
+          </div>
+          <div style={{ display: "flex", gap: "12px", marginTop: "24px" }}>
+            <button className="board-action-button" onClick={handleCopySummary} style={{ background: "var(--brand)", color: "#fff", border: "none" }}>
+              <i className="fa-solid fa-copy" style={{ marginRight: "6px" }}></i> Copy
+            </button>
+            <button className="board-action-button" onClick={() => {
+              if (navigator.share) {
+                const text = `${boardData.project?.name} project summary\nTotal tasks: ${boardStats.totalCards}\nCompleted: ${boardStats.completedCards}\nOverdue: ${boardStats.overdueCards}\n\n${boardData.columns.map((column) => `${column.title}: ${column.cards.length} task(s)`).join('\n')}`;
+                navigator.share({
+                  title: `${boardData.project?.name} Summary`,
+                  text: text,
+                }).catch(console.error);
+              } else {
+                toast.info("Sharing is not supported on this browser.");
+              }
+            }}>
+              <i className="fa-solid fa-share-nodes" style={{ marginRight: "6px" }}></i> Share
+            </button>
+            <button className="board-action-button" onClick={() => {
+              const text = `${boardData.project?.name} project summary\nTotal tasks: ${boardStats.totalCards}\nCompleted: ${boardStats.completedCards}\nOverdue: ${boardStats.overdueCards}\n\n${boardData.columns.map((column) => `${column.title}: ${column.cards.length} task(s)`).join('\n')}`;
+              const blob = new Blob([text], { type: "text/plain" });
+              const url = URL.createObjectURL(blob);
+              const a = document.createElement("a");
+              a.href = url;
+              a.download = `${(boardData.project?.name || "Project").replace(/\s+/g, '_')}_Summary.txt`;
+              document.body.appendChild(a);
+              a.click();
+              document.body.removeChild(a);
+              URL.revokeObjectURL(url);
+            }}>
+              <i className="fa-solid fa-download" style={{ marginRight: "6px" }}></i> Download
+            </button>
+          </div>
+        </section>
+      )}
 
       {isSettingsOpen && isOwner && (
         <section className="project-settings-panel">

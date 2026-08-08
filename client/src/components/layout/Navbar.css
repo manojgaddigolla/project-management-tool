@@ -6,24 +6,28 @@
   position: sticky;
   top: 0;
   z-index: 900;
-  background: rgba(23, 43, 77, 0.94);
-  backdrop-filter: blur(14px);
-  color: #fff;
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-bottom: 1px solid rgba(9, 30, 66, 0.08);
+  color: var(--text-h);
   flex-wrap: wrap; 
   gap: 1rem;
   min-height: 64px;
 }
 
 .navbar a {
-  color: #fff;
+  color: var(--text-h);
   text-decoration: none;
-  font-weight: 750;
+  font-weight: 600;
+  font-size: 0.95rem;
+  transition: color 0.2s;
 }
 
 .navbar ul {
   display: flex;
   align-items: center;
-  gap: 14px;
+  gap: 16px;
   list-style: none;
   padding: 0;
   margin: 0;
@@ -38,37 +42,66 @@
   align-items: center;
   display: inline-flex;
   gap: 10px;
-  font-weight: 800;
-  letter-spacing: 0.01em;
+  font-weight: 800 !important;
+  font-size: 1.15rem !important;
+  letter-spacing: -0.02em;
 }
 
 .navbar-logo-mark {
   align-items: center;
-  background: #ffffff;
-  border-radius: 8px;
-  color: #0c66e4;
+  background: var(--brand);
+  border-radius: var(--radius-sm);
+  color: #ffffff;
   display: inline-flex;
-  font-size: 0.9rem;
+  font-size: 1rem;
   height: 32px;
   justify-content: center;
   width: 32px;
+  box-shadow: var(--shadow-sm);
 }
 
 .navbar a.active,
 .navbar a:hover {
-  color: #b3d4ff;
+  color: var(--brand);
+}
+
+.navbar-cta-outline {
+  background: transparent !important;
+  border: 1px solid #dfe1e6 !important;
+  color: var(--text-h) !important;
+  padding: 8px 16px !important;
+  border-radius: var(--radius-sm) !important;
+  cursor: pointer;
+  font-weight: 600 !important;
+  font-size: 0.95rem !important;
+  transition: all 0.2s ease !important;
+}
+
+.navbar-cta-outline:hover {
+  background: #f4f5f7 !important;
+  border-color: #c1c7d0 !important;
 }
 
 .navbar-cta {
-  background: #fff;
-  border-radius: 8px;
-  color: #172b4d !important;
-  padding: 8px 12px;
+  background: var(--brand) !important;
+  color: #fff !important;
+  padding: 8px 16px !important;
+  border-radius: var(--radius-sm) !important;
+  cursor: pointer;
+  font-weight: 600 !important;
+  font-size: 0.95rem !important;
+  border: none !important;
+  transition: background-color 0.2s ease !important;
+  box-shadow: var(--shadow-sm) !important;
+}
+
+.navbar-cta:hover {
+  background: var(--brand-strong) !important;
 }
 
 .navbar-user {
-  color: #dfe1e6;
-  font-weight: 800;
+  color: var(--text-h);
+  font-weight: 700;
 }
 
 .navbar-links {
@@ -87,27 +120,36 @@
 .profile-icon {
   font-size: 22px;
   line-height: 1;
+  color: #44546f;
 }
 
 .notification-bell {
   position: relative;
   cursor: pointer;
-  font-size: 22px;
+  font-size: 20px;
   line-height: 1;
+  color: #44546f;
+  padding: 6px;
+  border-radius: 50%;
+  transition: background-color 0.2s;
+}
+
+.notification-bell:hover {
+  background-color: #091e4214;
 }
 
 .notification-badge {
   position: absolute;
-  top: -5px;
-  right: -10px;
-  background-color: #e74c3c; 
+  top: 2px;
+  right: 2px;
+  background-color: var(--danger); 
   color: white;
   border-radius: 50%;
-  padding: 2px 6px;
-  font-size: 11px;
+  padding: 2px 5px;
+  font-size: 10px;
   font-weight: bold;
   line-height: 1;
-  border: 1px solid #172b4d;
+  border: 1px solid var(--surface);
 }
 
 .notification-dropdown {

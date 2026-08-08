@@ -41,12 +41,12 @@ const Navbar = () => {
           <ul>
             <li>
               <SignUpButton mode="modal">
-                <button className="navbar-cta-outline" style={{ background: "transparent", border: "1px solid #fff", color: "#fff", padding: "8px 12px", borderRadius: "8px", cursor: "pointer", fontWeight: "750" }}>Register</button>
+                <button className="navbar-cta-outline">Register</button>
               </SignUpButton>
             </li>
             <li>
               <SignInButton mode="modal">
-                <button className="navbar-cta" style={{ border: "none", cursor: "pointer", fontWeight: "750" }}>Login</button>
+                <button className="navbar-cta">Login</button>
               </SignInButton>
             </li>
           </ul>
