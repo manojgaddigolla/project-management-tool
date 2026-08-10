@@ -39,7 +39,7 @@
 }
 
 .home-hero-copy p {
-  color: #44546f;
+  color: var(--text);
   font-size: 1.15rem;
   max-width: 540px;
   line-height: 1.6;
@@ -68,7 +68,7 @@
 
 .primary-home-action {
   background: var(--brand);
-  color: #fff;
+  color: var(--surface);
   box-shadow: var(--shadow-sm);
 }
 
@@ -81,19 +81,19 @@
 .secondary-home-action {
   color: var(--text-h);
   background: var(--surface);
-  border: 1px solid #cfd7e2;
+  border: 1px solid var(--border);
   box-shadow: var(--shadow-sm);
 }
 
 .secondary-home-action:hover {
-  background: #f4f5f7;
+  background: var(--bg);
   border-color: #b3bac5;
 }
 
 .home-hero-media {
   position: relative;
   background: var(--surface);
-  border: 1px solid #dfe1e6;
+  border: 1px solid var(--border);
   border-radius: var(--radius-lg);
   padding: 8px;
   box-shadow: var(--shadow-xl);
@@ -126,7 +126,7 @@
 }
 
 .use-case-section > p {
-  color: #44546f;
+  color: var(--text);
   font-size: 1.1rem;
   max-width: 600px;
   margin: 0 auto 48px;
@@ -141,7 +141,7 @@
 
 .feature-grid article {
   background: var(--surface);
-  border: 1px solid #dfe1e6;
+  border: 1px solid var(--border);
   border-radius: var(--radius-md);
   padding: 32px;
   box-shadow: var(--shadow-sm);
@@ -161,14 +161,14 @@
   justify-content: center;
   width: 42px;
   height: 42px;
-  background: #f4f5f7;
+  background: var(--bg);
   color: var(--text-h);
   font-family: var(--heading);
   font-weight: 700;
   font-size: 1.1rem;
   border-radius: var(--radius-sm);
   margin-bottom: 20px;
-  border: 1px solid #dfe1e6;
+  border: 1px solid var(--border);
 }
 
 .feature-grid h3 {
@@ -178,7 +178,7 @@
 }
 
 .feature-grid p {
-  color: #44546f;
+  color: var(--text);
   line-height: 1.6;
   font-size: 0.95rem;
 }

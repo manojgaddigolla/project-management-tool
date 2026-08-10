@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { Link, NavLink } from "react-router-dom";
 import { Show, SignInButton, SignUpButton, UserButton, useAuth } from "@clerk/react";
 import useNotifications from "../../hooks/useNotifications";
+import useThemeStore from "../../store/themeStore";
 import "./Navbar.css";
 
 const Navbar = () => {
@@ -9,6 +10,7 @@ const Navbar = () => {
   const [isDropdownVisible, setDropdownVisible] = useState(false);
   const dropdownRef = React.useRef(null);
   const { isSignedIn } = useAuth();
+  const { theme, toggleTheme } = useThemeStore();
 
   React.useEffect(() => {
     const handleClickOutside = (event) => {
@@ -37,6 +39,10 @@ const Navbar = () => {
       </Link>
       
       <div className="navbar-links">
+        <button className="theme-toggle-btn" onClick={toggleTheme} title="Toggle Dark Mode">
+          {theme === 'dark' ? <i className="fas fa-sun"></i> : <i className="fas fa-moon"></i>}
+        </button>
+
         <Show when="signed-out">
           <ul>
             <li>

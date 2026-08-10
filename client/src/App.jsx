@@ -2,6 +2,7 @@ import React, { useEffect } from "react";
 import { Route, Routes } from "react-router-dom";
 import { useAuth, SignIn, SignUp } from "@clerk/react";
 import useAuthStore from "./store/authStore";
+import useThemeStore from "./store/themeStore";
 import Navbar from "./components/layout/Navbar";
 import Sidebar from "./components/layout/Sidebar";
 import Footer from "./components/layout/Footer";
@@ -19,6 +20,7 @@ function App() {
   const { isSignedIn, isLoaded } = useAuth();
   const syncUser = useAuthStore((state) => state.syncUser);
   const logout = useAuthStore((state) => state.logout);
+  const theme = useThemeStore((state) => state.theme); // initialize theme store
 
   useEffect(() => {
     if (isLoaded) {

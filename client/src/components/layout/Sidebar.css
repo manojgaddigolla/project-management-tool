@@ -72,6 +72,30 @@
   text-align: center;
 }
 
+[data-theme="dark"] .sidebar {
+  background-color: rgba(30, 41, 59, 0.82);
+  border-right-color: var(--border);
+}
+
+[data-theme="dark"] .sidebar-toggle-btn {
+  color: var(--text);
+}
+
+[data-theme="dark"] .sidebar-toggle-btn:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+  color: var(--text-h);
+}
+
+[data-theme="dark"] .sidebar-link {
+  color: var(--text-h);
+}
+
+[data-theme="dark"] .sidebar-link.active,
+[data-theme="dark"] .sidebar-link:hover {
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--brand-strong);
+}
+
 @media (max-width: 768px) {
   .sidebar {
     display: none;

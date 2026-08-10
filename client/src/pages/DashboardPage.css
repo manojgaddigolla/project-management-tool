@@ -29,7 +29,7 @@
 }
 
 .dashboard-subtitle {
-  color: #44546f;
+  color: var(--text);
   max-width: 680px;
   font-size: 1.1rem;
 }
@@ -43,7 +43,7 @@
 
 .dashboard-stats div {
   background: var(--surface);
-  border: 1px solid #dfe1e6;
+  border: 1px solid var(--border);
   border-radius: var(--radius-md);
   padding: 24px;
   box-shadow: var(--shadow-sm);
@@ -64,7 +64,7 @@
 }
 
 .dashboard-stats p {
-  color: #44546f;
+  color: var(--text);
   font-weight: 600;
   font-size: 0.95rem;
   margin: 0;
@@ -75,7 +75,7 @@
   align-items: center;
   gap: 16px;
   background: var(--surface);
-  border: 1px solid #dfe1e6;
+  border: 1px solid var(--border);
   border-radius: var(--radius-md);
   padding: 24px;
   margin-bottom: 32px;
@@ -91,7 +91,7 @@
 
 .create-project-fields input {
   width: 100%;
-  border: 1px solid #cfd7e2;
+  border: 1px solid var(--border);
   border-radius: var(--radius-sm);
   padding: 10px 14px;
   box-sizing: border-box;
@@ -109,7 +109,7 @@
   padding: 10px 20px;
   font-size: 0.95rem;
   font-weight: 600;
-  color: #fff;
+  color: var(--surface);
   background-color: var(--brand);
   border: none;
   border-radius: var(--radius-sm);
@@ -131,7 +131,7 @@
 .dashboard-error {
   text-align: center;
   font-size: 1.1rem;
-  color: #44546f;
+  color: var(--text);
   margin: 2rem 0;
   padding: 24px;
 }
@@ -153,10 +153,10 @@
 
 .project-toolbar input {
   width: min(100%, 320px);
-  border: 1px solid #cfd7e2;
+  border: 1px solid var(--border);
   border-radius: var(--radius-sm);
   padding: 10px 14px;
-  background: #fff;
+  background: var(--surface);
   font-size: 0.95rem;
   transition: border-color 0.2s, box-shadow 0.2s;
 }
@@ -175,7 +175,7 @@
 
 .project-card {
   background: var(--surface);
-  border: 1px solid #dfe1e6;
+  border: 1px solid var(--border);
   border-radius: var(--radius-md);
   padding: 24px;
   box-shadow: var(--shadow-sm);
@@ -191,7 +191,7 @@
 }
 
 .project-card-kicker {
-  color: #44546f;
+  color: var(--text);
   font-size: 0.75rem;
   font-weight: 700;
   margin-bottom: 12px;
@@ -207,7 +207,7 @@
 
 .project-card-description {
   margin: 0 0 24px 0;
-  color: #44546f;
+  color: var(--text);
   font-size: 0.95rem;
   line-height: 1.6;
   flex-grow: 1;
@@ -239,7 +239,7 @@
 
 .project-card-link {
   background-color: var(--text-h);
-  color: #fff;
+  color: var(--surface);
 }
 
 .project-card-link:hover {
@@ -247,13 +247,13 @@
 }
 
 .project-archive-button {
-  border: 1px solid #cfd7e2;
+  border: 1px solid var(--border);
   background: var(--surface);
-  color: #44546f;
+  color: var(--text);
 }
 
 .project-archive-button:hover {
-  background: #f4f5f7;
+  background: var(--bg);
   color: var(--text-h);
 }
 
@@ -275,17 +275,17 @@
 .project-tabs {
   display: flex;
   gap: 4px;
-  background: #f4f5f7;
+  background: var(--bg);
   padding: 4px;
   border-radius: var(--radius-sm);
-  border: 1px solid #dfe1e6;
+  border: 1px solid var(--border);
 }
 
 .tab-btn {
   padding: 6px 14px;
   border: none;
   background: transparent;
-  color: #44546f;
+  color: var(--text);
   font-weight: 600;
   font-size: 0.9rem;
   border-radius: 4px;
@@ -313,8 +313,8 @@
   padding: 64px 24px;
   background: var(--surface);
   border-radius: var(--radius-md);
-  border: 1px dashed #cfd7e2;
-  color: #44546f;
+  border: 1px dashed var(--border);
+  color: var(--text);
   font-size: 1.1rem;
 }
 
