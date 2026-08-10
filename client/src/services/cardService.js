@@ -38,3 +38,17 @@ export const generateAISubtasks = async (cardId, payload) => {
   const response = await axiosInstance.post(`/cards/${cardId}/ai-subtasks`, payload);
   return response.data;
 };
+
+export const uploadAttachment = async (cardId, formData) => {
+  const response = await axiosInstance.post(`/cards/${cardId}/attachments`, formData, {
+    headers: {
+      'Content-Type': 'multipart/form-data'
+    }
+  });
+  return response.data;
+};
+
+export const deleteAttachment = async (cardId, attachmentId) => {
+  const response = await axiosInstance.delete(`/cards/${cardId}/attachments/${attachmentId}`);
+  return response.data;
+};

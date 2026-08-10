@@ -1,3 +1,5 @@
+const fs = require("fs");
+const path = require("path");
 const {
   validationResult
 } = require("express-validator");
@@ -578,6 +580,86 @@ const generateSubtasks = async (req, res) => {
   }
   res.json(updatedCard);
 };
+const addAttachment = async (req, res) => {
+  if (!req.file) {
+    return res.status(400).json({ msg: "No file uploaded" });
+  }
+
+  const { cardId } = req.params;
+  const context = await assertProjectMemberForCard(cardId, req.user.id);
+  if (context.error) {
+    // If error, we should delete the uploaded file to prevent orphan files
+    fs.unlink(req.file.path, (err) => {
+      if (err) console.error("Failed to delete orphan file:", err);
+    });
+    return res.status(context.error.status).json({ msg: context.error.msg });
+  }
+
+  const { card, board } = context;
+
+  const newAttachment = {
+    filename: req.file.filename,
+    originalName: req.file.originalname,
+    path: `/uploads/${req.file.filename}`,
+    mimetype: req.file.mimetype,
+    size: req.file.size,
+  };
+
+  card.attachments.push(newAttachment);
+  await card.save();
+
+  const user = await User.findById(req.user.id);
+  const actionText = `${user.name} attached file '${req.file.originalname}' to card '${card.title}'`;
+  const projectId = board.project.toString();
+  await createActivityLog(projectId, req.user.id, actionText, cardId);
+
+  const updatedBoard = await getPopulatedBoard(projectId);
+  const io = req.app.get("io") || req.io;
+  if (io) {
+    io.to(projectId).emit("boardUpdated", { board: updatedBoard });
+  }
+
+  res.status(201).json(card.attachments);
+};
+
+const deleteAttachment = async (req, res) => {
+  const { cardId, attachmentId } = req.params;
+  const context = await assertProjectMemberForCard(cardId, req.user.id);
+  
+  if (context.error) {
+    return res.status(context.error.status).json({ msg: context.error.msg });
+  }
+
+  const { card, board } = context;
+
+  const attachment = card.attachments.id(attachmentId);
+  if (!attachment) {
+    return res.status(404).json({ msg: "Attachment not found" });
+  }
+
+  // Delete file from disk
+  const filePath = path.join(__dirname, "..", "uploads", attachment.filename);
+  fs.unlink(filePath, (err) => {
+    if (err) console.error("Failed to delete file from disk:", err);
+  });
+
+  attachment.deleteOne();
+  await card.save();
+
+  const user = await User.findById(req.user.id);
+  const actionText = `${user.name} removed attachment '${attachment.originalName}' from card '${card.title}'`;
+  const projectId = board.project.toString();
+  await createActivityLog(projectId, req.user.id, actionText, cardId);
+
+  const updatedBoard = await getPopulatedBoard(projectId);
+  const io = req.app.get("io") || req.io;
+  if (io) {
+    io.to(projectId).emit("boardUpdated", { board: updatedBoard });
+  }
+
+  res.json({ msg: "Attachment deleted", attachments: card.attachments });
+};
+
 module.exports = {
   createCard,
   updateCard,
@@ -585,5 +667,7 @@ module.exports = {
   moveCard,
   addComment,
   assignUser,
-  generateSubtasks
+  generateSubtasks,
+  addAttachment,
+  deleteAttachment
 };

@@ -10,7 +10,22 @@ const {
   addComment,
   assignUser,
   generateSubtasks,
+  addAttachment,
+  deleteAttachment,
 } = require("../controllers/cardController");
+const multer = require("multer");
+const path = require("path");
+
+const storage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    cb(null, "uploads/");
+  },
+  filename: function (req, file, cb) {
+    const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9);
+    cb(null, uniqueSuffix + "-" + file.originalname);
+  },
+});
+const upload = multer({ storage: storage });
 
 router.post(
   "/",
@@ -99,6 +114,18 @@ router.post(
   "/:cardId/ai-subtasks",
   [auth, check("cardId", "Card ID is required").isMongoId()],
   generateSubtasks,
+);
+
+router.post(
+  "/:cardId/attachments",
+  [auth, upload.single("file")],
+  addAttachment,
+);
+
+router.delete(
+  "/:cardId/attachments/:attachmentId",
+  auth,
+  deleteAttachment,
 );
 
 module.exports = router;

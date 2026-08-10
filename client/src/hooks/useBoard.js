@@ -25,15 +25,12 @@ export const useBoard = () => {
 
   const fetchBoardData = useCallback(async () => {
     try {
-      setLoading(true);
       const data = await getBoardByProjectId(projectId);
       setBoardData(data);
       setError(null);
     } catch (err) {
       setError(err?.msg || "Failed to fetch board data.");
       console.error(err);
-    } finally {
-      setLoading(false);
     }
   }, [projectId]);
 

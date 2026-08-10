@@ -13,6 +13,7 @@ const http = require("http");
 const { Server } = require("socket.io");
 const rateLimit = require("express-rate-limit");
 const mongoose = require("mongoose");
+const path = require("path");
 const userRoutes = require("./routes/users");
 const projectRoutes = require("./routes/projects");
 const boardRoutes = require("./routes/boards");
@@ -54,6 +55,7 @@ app.use(
 app.use(express.json({ limit: "1mb" }));
 app.use(cookieParser());
 app.use(sanitizeRequest);
+app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
 // General API rate limiter: 100 requests per 15 minutes per IP
 const apiLimiter = rateLimit({

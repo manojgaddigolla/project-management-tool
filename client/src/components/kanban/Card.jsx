@@ -41,13 +41,16 @@ export const CardPreview = ({ card, className = "" }) => {
       </div>
       <p className="kanban-card-title">{card.title}</p>
       <div className="kanban-card-meta">
+        {card.attachments?.length > 0 && (
+          <span><span style={{ fontSize: "1.2em", marginRight: "2px" }}>📎</span> {card.attachments.length}</span>
+        )}
         {checklistTotal > 0 && (
           <span>
-            {checklistDone}/{checklistTotal} checklist
+            <span style={{ fontSize: "1.2em", marginRight: "2px" }}>☑️</span> {checklistDone}/{checklistTotal}
           </span>
         )}
         {card.comments?.length > 0 && (
-          <span>{card.comments.length} comments</span>
+          <span><span style={{ fontSize: "1.2em", marginRight: "2px" }}>💬</span> {card.comments.length}</span>
         )}
         {card.assignedTo?.length > 0 && (
           <div className="card-assignees">

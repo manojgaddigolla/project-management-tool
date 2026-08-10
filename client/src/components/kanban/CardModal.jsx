@@ -6,6 +6,8 @@ import {
   deleteCard,
   updateCard,
   generateAISubtasks,
+  uploadAttachment,
+  deleteAttachment,
 } from "../../services/cardService";
 import { useConfirm } from "../../context/useConfirm";
 import ReactQuill from "react-quill-new";
@@ -38,6 +40,7 @@ const CardModal = ({
   const [isSavingAssignees, setIsSavingAssignees] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [isGeneratingAI, setIsGeneratingAI] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
   const [prevCardId, setPrevCardId] = useState(null);
   const confirm = useConfirm();
 
@@ -65,484 +68,623 @@ const CardModal = ({
     setSelectedLabels(card?.labels || []);
   }
 
-  useEffect(() => {
-    const handleEsc = (event) => {
-      if (event.key === "Escape") {
-        onClose();
-      }
-    };
-    if (show) {
-      window.addEventListener("keydown", handleEsc);
-    }
-    return () => {
-      window.removeEventListener("keydown", handleEsc);
-    };
-  }, [show, onClose]);
 
-  if (!show) {
-    return null;
-  }
 
-  const handleCommentSubmit = async (e) => {
-    e.preventDefault();
+        useEffect(() => {
+          const handleEsc = (event) => {
+            if (event.key === "Escape") {
+              onClose();
+            }
+          };
+          if (show) {
+            window.addEventListener("keydown", handleEsc);
+          }
+          return () => {
+            window.removeEventListener("keydown", handleEsc);
+          };
+        }, [show, onClose]);
 
-    if (!newCommentText.trim()) {
-      return;
-    }
+        if (!show) {
+          return null;
+        }
 
-    try {
-      await addComment(card._id, {
-        text: newCommentText,
-        socketId: socketId,
-      });
+        const handleCommentSubmit = async (e) => {
+          e.preventDefault();
 
-      setNewCommentText("");
-      await onChanged?.();
-      toast.success("Comment added");
-    } catch (err) {
-      console.error("Failed to add comment:", err);
-      toast.error("Could not post your comment. Please try again.");
-    }
-  };
+          const plainText = newCommentText.replace(/(<([^>]+)>)/gi, "").trim();
+          if (!plainText) {
+            toast.warn("Comment cannot be empty.");
+            return;
+          }
 
-  const handleAssigneeChange = (memberId) => {
-    setSelectedAssignees((prev) =>
-      prev.includes(memberId)
-        ? prev.filter((id) => id !== memberId)
-        : [...prev, memberId],
-    );
-  };
+          try {
+            await addComment(card._id, {
+              text: newCommentText,
+              socketId: socketId,
+            });
 
-  const handleAssigneeSave = async () => {
-    if (!card) return;
-    if (!assignmentChanged) {
-      toast.info("Assignments are already up to date.");
-      return;
-    }
+            setNewCommentText("");
+            await onChanged?.();
+            toast.success("Comment added");
+          } catch (err) {
+            console.error("Failed to add comment:", err);
+            toast.error("Could not post your comment. Please try again.");
+          }
+        };
 
-    try {
-      setIsSavingAssignees(true);
-      await assignUsersToCard(card._id, {
-        assignedTo: selectedAssignees,
-        socketId: socketId,
-      });
-      await onChanged?.();
-      toast.success("Assignments updated");
-    } catch (err) {
-      console.error("Failed to update assignees:", err);
-      toast.error("Could not save assignees. Please try again.");
-    } finally {
-      setIsSavingAssignees(false);
-    }
-  };
+        const handleAssigneeChange = (memberId) => {
+          setSelectedAssignees((prev) =>
+            prev.includes(memberId)
+              ? prev.filter((id) => id !== memberId)
+              : [...prev, memberId],
+          );
+        };
 
-  const handleDetailsChange = (event) => {
-    setEditForm({
-      ...editForm,
-      [event.target.name]: event.target.value,
-    });
-  };
+        const handleAssigneeSave = async () => {
+          if (!card) return;
+          if (!assignmentChanged) {
+            toast.info("Assignments are already up to date.");
+            return;
+          }
 
-  const handleDetailsSave = async (event) => {
-    event.preventDefault();
-    if (!card || !editForm.title.trim()) return;
+          try {
+            setIsSavingAssignees(true);
+            await assignUsersToCard(card._id, {
+              assignedTo: selectedAssignees,
+              socketId: socketId,
+            });
+            await onChanged?.();
+            toast.success("Assignments updated");
+          } catch (err) {
+            console.error("Failed to update assignees:", err);
+            toast.error("Could not save assignees. Please try again.");
+          } finally {
+            setIsSavingAssignees(false);
+          }
+        };
 
-    try {
-      setIsSavingDetails(true);
-      await updateCard(card._id, {
-        title: editForm.title.trim(),
-        description: editForm.description.trim(),
-        priority: editForm.priority,
-        dueDate: editForm.dueDate,
-        checklist,
-        labels: selectedLabels,
-        socketId,
-      });
-      await onChanged?.();
-      toast.success("Card details saved");
-    } catch (err) {
-      console.error("Failed to update card:", err);
-      toast.error("Could not save card details. Please try again.");
-    } finally {
-      setIsSavingDetails(false);
-    }
-  };
+        const handleDetailsChange = (event) => {
+          setEditForm({
+            ...editForm,
+            [event.target.name]: event.target.value,
+          });
+        };
 
-  const handleAddChecklistItem = () => {
-    if (!checklistText.trim()) return;
+        const handleDetailsSave = async (event) => {
+          event.preventDefault();
+          if (!card || !editForm.title.trim()) return;
 
-    setChecklist((items) => [
-      ...items,
-      { text: checklistText.trim(), completed: false },
-    ]);
-    setChecklistText("");
-  };
+          try {
+            setIsSavingDetails(true);
+            await updateCard(card._id, {
+              title: editForm.title.trim(),
+              description: editForm.description.trim(),
+              priority: editForm.priority,
+              dueDate: editForm.dueDate,
+              checklist,
+              labels: selectedLabels,
+              socketId,
+            });
+            await onChanged?.();
+            toast.success("Card details saved");
+            onClose(); // Automatically close the modal after saving
+          } catch (err) {
+            console.error("Failed to update card:", err);
+            toast.error("Could not save card details. Please try again.");
+          } finally {
+            setIsSavingDetails(false);
+          }
+        };
 
-  const handleChecklistToggle = (index) => {
-    setChecklist((items) =>
-      items.map((item, itemIndex) =>
-        itemIndex === index ? { ...item, completed: !item.completed } : item,
-      ),
-    );
-  };
+        const handleAddChecklistItem = () => {
+          if (!checklistText.trim()) return;
 
-  const handleChecklistRemove = (index) => {
-    setChecklist((items) =>
-      items.filter((item, itemIndex) => itemIndex !== index),
-    );
-  };
+          setChecklist((items) => [
+            ...items,
+            { text: checklistText.trim(), completed: false },
+          ]);
+          setChecklistText("");
+        };
 
-  const handleAIGenerate = async () => {
-    if (!card) return;
-    try {
-      setIsGeneratingAI(true);
-      const updatedCard = await generateAISubtasks(card._id, { socketId });
-      setChecklist(updatedCard.checklist);
-      await onChanged?.();
-      toast.success("AI Checklist generated");
-    } catch (err) {
-      console.error("Failed to generate AI subtasks:", err);
-      toast.error("Could not generate AI subtasks. Please try again.");
-    } finally {
-      setIsGeneratingAI(false);
-    }
-  };
+        const handleChecklistToggle = (index) => {
+          setChecklist((items) =>
+            items.map((item, itemIndex) =>
+              itemIndex === index ? { ...item, completed: !item.completed } : item,
+            ),
+          );
+        };
 
-  const handleDeleteCard = async () => {
-    if (!card) return;
+        const handleChecklistRemove = (index) => {
+          setChecklist((items) =>
+            items.filter((item, itemIndex) => itemIndex !== index),
+          );
+        };
 
-    const shouldDelete = await confirm({
-      title: "Delete this card?",
-      message: "This removes the card, comments, checklist and assignments. This cannot be undone.",
-      confirmText: "Delete Card",
-      tone: "danger",
-    });
-    if (!shouldDelete) return;
+        const handleAIGenerate = async () => {
+          if (!card) return;
+          try {
+            setIsGeneratingAI(true);
+            const updatedCard = await generateAISubtasks(card._id, { socketId });
+            setChecklist(updatedCard.checklist);
+            await onChanged?.();
+            toast.success("AI Checklist generated");
+          } catch (err) {
+            console.error("Failed to generate AI subtasks:", err);
+            toast.error("Could not generate AI subtasks. Please try again.");
+          } finally {
+            setIsGeneratingAI(false);
+          }
+        };
 
-    try {
-      setIsDeleting(true);
-      await deleteCard(card._id, { socketId });
-      await onChanged?.();
-      onDeleted?.();
-      toast.success("Card deleted");
-    } catch (err) {
-      console.error("Failed to delete card:", err);
-      toast.error("Could not delete this card. Please try again.");
-    } finally {
-      setIsDeleting(false);
-    }
-  };
+        const handleDeleteCard = async () => {
+          if (!card) return;
 
-  const Avatar = ({ user }) => {
-    if (user.avatar) {
-      return <img src={user.avatar} alt={user.name} />;
-    }
-    const initials = user.name
-      .split(" ")
-      .map((n) => n[0])
-      .join("")
-      .substring(0, 2);
-    return <span>{initials}</span>;
-  };
+          const shouldDelete = await confirm({
+            title: "Delete this card?",
+            message: "This removes the card, comments, checklist and assignments. This cannot be undone.",
+            confirmText: "Delete Card",
+            tone: "danger",
+          });
+          if (!shouldDelete) return;
 
-  return (
-    <div className="modal-backdrop" onClick={onClose}>
-      <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-        <button onClick={onClose} className="modal-close-button">
-          &times;
-        </button>
+          try {
+            setIsDeleting(true);
+            await deleteCard(card._id, { socketId });
+            await onChanged?.();
+            onDeleted?.();
+            toast.success("Card deleted");
+          } catch (err) {
+            console.error("Failed to delete card:", err);
+            toast.error("Could not delete this card. Please try again.");
+          } finally {
+            setIsDeleting(false);
+          }
+        };
 
-        {!card ? (
-          <div>Loading...</div>
-        ) : (
-          <>
-            <div className="modal-body">
-              <div className="modal-main-content">
-                <form className="card-details-form" onSubmit={handleDetailsSave}>
-                  <div className="modal-title-row">
-                    <input
-                      className="modal-title-input"
-                      name="title"
-                      value={editForm.title}
-                      onChange={handleDetailsChange}
-                      required
-                    />
-                    <button
-                      type="button"
-                      className="danger-button"
-                      onClick={handleDeleteCard}
-                      disabled={isDeleting}
-                    >
-                      {isDeleting ? "Deleting..." : "Delete"}
-                    </button>
-                  </div>
+        const handleFileUpload = async (event) => {
+          const file = event.target.files[0];
+          if (!file || !card) return;
 
-                  <div className="details-grid">
-                    <label>
-                      Priority
-                      <select
-                        name="priority"
-                        value={editForm.priority}
-                        onChange={handleDetailsChange}
-                      >
-                        <option value="low">Low</option>
-                        <option value="medium">Medium</option>
-                        <option value="high">High</option>
-                        <option value="urgent">Urgent</option>
-                      </select>
-                    </label>
-                    <label>
-                      Due date
-                      <input
-                        type="date"
-                        name="dueDate"
-                        value={editForm.dueDate}
-                        onChange={handleDetailsChange}
-                      />
-                    </label>
-                  </div>
+          const formData = new FormData();
+          formData.append("file", file);
+          formData.append("socketId", socketId || "");
 
-                  <h3 className="modal-section-title">Description</h3>
-                  <div className="quill-editor-wrapper">
-                    <ReactQuill
-                      theme="snow"
-                      value={editForm.description}
-                      onChange={(content) =>
-                        setEditForm({ ...editForm, description: content })
-                      }
-                      placeholder="Add context, acceptance criteria, or links..."
-                    />
-                  </div>
+          try {
+            setIsUploading(true);
+            await uploadAttachment(card._id, formData);
+            await onChanged?.();
+            toast.success("File uploaded");
+          } catch (err) {
+            console.error("Failed to upload file:", err);
+            toast.error("Could not upload file. Please try again.");
+          } finally {
+            setIsUploading(false);
+            // reset file input
+            event.target.value = "";
+          }
+        };
 
-                  <div className="checklist-section">
-                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "10px" }}>
-                      <h3 className="modal-section-title" style={{ marginBottom: 0 }}>Checklist</h3>
-                      <button
-                        type="button"
-                        onClick={handleAIGenerate}
-                        disabled={isGeneratingAI}
-                        style={{
-                          background: "linear-gradient(135deg, #0c66e4, #5aac44)",
-                          color: "#fff",
-                          border: "none",
-                          padding: "6px 12px",
-                          borderRadius: "6px",
-                          fontSize: "12px",
-                          fontWeight: "bold",
-                          cursor: "pointer",
-                          display: "flex",
-                          alignItems: "center",
-                          gap: "6px"
-                        }}
-                      >
-                        ✨ {isGeneratingAI ? "Analyzing..." : "AI Breakdown"}
-                      </button>
-                    </div>
-                    <div className="checklist-input-row">
-                      <input
-                        type="text"
-                        value={checklistText}
-                        onChange={(event) =>
-                          setChecklistText(event.target.value)
-                        }
-                        placeholder="Add checklist item"
-                      />
-                      <button type="button" onClick={handleAddChecklistItem}>
-                        Add
-                      </button>
-                    </div>
-                    <ul className="checklist-list">
-                      {checklist.map((item, index) => (
-                        <li key={`${item.text}-${index}`}>
-                          <label>
-                            <input
-                              type="checkbox"
-                              checked={item.completed}
-                              onChange={() => handleChecklistToggle(index)}
-                            />
-                            <span
-                              className={item.completed ? "completed" : ""}
-                            >
-                              {item.text}
-                            </span>
-                          </label>
+        const handleDeleteAttachment = async (attachmentId) => {
+          if (!card) return;
+          const shouldDelete = await confirm({
+            title: "Delete attachment?",
+            message: "This will permanently remove the file. This cannot be undone.",
+            confirmText: "Delete",
+            tone: "danger",
+          });
+          if (!shouldDelete) return;
+
+          try {
+            await deleteAttachment(card._id, attachmentId);
+            await onChanged?.();
+            toast.success("Attachment deleted");
+          } catch (err) {
+            console.error("Failed to delete attachment:", err);
+            toast.error("Could not delete attachment. Please try again.");
+          }
+        };
+
+        const handleDownload = async (file) => {
+          try {
+            const response = await fetch(`http://localhost:5000${file.path}`);
+            const blob = await response.blob();
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement("a");
+            a.style.display = "none";
+            a.href = url;
+            a.download = file.originalName;
+            document.body.appendChild(a);
+            a.click();
+            window.URL.revokeObjectURL(url);
+          } catch (err) {
+            console.error("Failed to download file:", err);
+            toast.error("Failed to download file.");
+          }
+        };
+
+        const Avatar = ({ user }) => {
+          if (user.avatar) {
+            return <img src={user.avatar} alt={user.name} />;
+          }
+          const initials = user.name
+            .split(" ")
+            .map((n) => n[0])
+            .join("")
+            .substring(0, 2);
+          return <span>{initials}</span>;
+        };
+
+        return (
+          <div className="modal-backdrop" onClick={onClose}>
+            <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+              <button onClick={onClose} className="modal-close-button">
+                &times;
+              </button>
+
+              {!card ? (
+                <div>Loading...</div>
+              ) : (
+                <>
+                  <div className="modal-body">
+                    <div className="modal-main-content">
+                      <form className="card-details-form" onSubmit={handleDetailsSave}>
+                        <div className="modal-title-row">
+                          <input
+                            className="modal-title-input"
+                            name="title"
+                            value={editForm.title}
+                            onChange={handleDetailsChange}
+                            required
+                          />
                           <button
                             type="button"
-                            onClick={() => handleChecklistRemove(index)}
-                            aria-label={`Remove ${item.text}`}
+                            className="danger-button"
+                            onClick={handleDeleteCard}
+                            disabled={isDeleting}
                           >
-                            Remove
+                            {isDeleting ? "Deleting..." : "Delete"}
                           </button>
-                        </li>
-                      ))}
-                      {checklist.length === 0 && (
-                        <p className="empty-state-text">
-                          No checklist items yet.
-                        </p>
-                      )}
-                    </ul>
-                  </div>
-
-                  <button
-                    type="submit"
-                    className="details-save-button"
-                    disabled={isSavingDetails || !editForm.title.trim()}
-                  >
-                    {isSavingDetails ? "Saving..." : "Save Card Details"}
-                  </button>
-                </form>
-
-                <div className="comments-section">
-                  <h3 className="modal-section-title">Comments</h3>
-
-                  <form onSubmit={handleCommentSubmit} className="comment-form">
-                    <div className="quill-editor-wrapper comment-quill">
-                      <ReactQuill
-                        theme="snow"
-                        value={newCommentText}
-                        onChange={setNewCommentText}
-                        placeholder="Write a comment..."
-                        modules={{
-                          toolbar: [
-                            ['bold', 'italic', 'underline', 'strike'],
-                            [{ 'list': 'ordered'}, { 'list': 'bullet' }],
-                            ['link', 'code-block'],
-                            ['clean']
-                          ]
-                        }}
-                      />
-                    </div>
-                    <button
-                      type="submit"
-                      className="comment-submit-button"
-                      disabled={!newCommentText || newCommentText === '<p><br></p>'}
-                    >
-                      Save
-                    </button>
-                  </form>
-
-                  <ul className="comments-list">
-                    {card.comments?.map((comment) => (
-                      <li key={comment._id} className="comment-item">
-                        <div className="user-avatar">
-                          <Avatar
-                            user={{
-                              name: comment.name,
-                              avatar: comment.avatar,
-                            }}
-                          />
                         </div>
-                        <div className="comment-body">
-                          <div>
-                            <span className="comment-author">
-                              {comment.name}
-                            </span>
-                            <span className="comment-date">
-                              {new Date(comment.date).toLocaleString()}
-                            </span>
-                          </div>
-                          <div 
-                            className="comment-text ql-editor"
-                            style={{ padding: 0 }}
-                            dangerouslySetInnerHTML={{
-                              __html: DOMPurify.sanitize(comment.text),
-                            }}
-                          />
-                        </div>
-                      </li>
-                    ))}
-                    {card.comments?.length === 0 && <p>No comments yet.</p>}
-                  </ul>
-                </div>
-              </div>
 
-              <div className="modal-sidebar">
-                <div className="labels-section">
-                  <h3 className="modal-section-title">Labels</h3>
-                  <div className="labels-list">
-                    {PREDEFINED_LABELS.map((label) => (
-                      <div
-                        key={label.text}
-                        className={`label-item ${
-                          selectedLabels.includes(label.text) ? "selected" : ""
-                        }`}
-                        onClick={() => {
-                          setSelectedLabels((prev) =>
-                            prev.includes(label.text)
-                              ? prev.filter((t) => t !== label.text)
-                              : [...prev, label.text]
-                          );
-                        }}
-                        style={{
-                          backgroundColor: label.color,
-                          color: "#fff",
-                          opacity: selectedLabels.includes(label.text) ? 1 : 0.6,
-                        }}
-                      >
-                        {selectedLabels.includes(label.text) && (
-                          <span style={{ marginRight: "4px", fontWeight: "bold" }}>✓</span>
-                        )}
-                        {label.text}
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                <h3 className="modal-section-title">Assigned To</h3>
-                <ul className="assigned-users-list">
-                  {card.assignedTo?.map((user) => (
-                    <li key={user._id} className="assigned-user">
-                      <div className="user-avatar" title={user.name}>
-                        <Avatar user={user} />
-                      </div>
-                      <span className="user-name">{user.name}</span>
-                    </li>
-                  ))}
-                  {card.assignedTo?.length === 0 && <p>No one assigned.</p>}
-                </ul>
-
-                <div className="member-assignment-section">
-                  <div className="assignment-heading">
-                    <h3 className="modal-section-title">Members</h3>
-                    <span>{selectedAssignees.length} selected</span>
-                  </div>
-                  <div className="members-list">
-                    {projectMembers.length > 0 ? (
-                      projectMembers.map((member) => (
-                        <div key={member._id} className="member-item">
-                          <input
-                            type="checkbox"
-                            id={`member-${member._id}`}
-                            checked={selectedAssignees.includes(member._id)}
-                            onChange={() => handleAssigneeChange(member._id)}
-                          />
-                          <label htmlFor={`member-${member._id}`}>
-                            <div className="user-avatar" title={member.name}>
-                              <Avatar user={member} />
-                            </div>
-                            <span className="user-name">{member.name}</span>
+                        <div className="details-grid">
+                          <label>
+                            Priority
+                            <select
+                              name="priority"
+                              value={editForm.priority}
+                              onChange={handleDetailsChange}
+                            >
+                              <option value="low">Low</option>
+                              <option value="medium">Medium</option>
+                              <option value="high">High</option>
+                              <option value="urgent">Urgent</option>
+                            </select>
+                          </label>
+                          <label>
+                            Due date
+                            <input
+                              type="date"
+                              name="dueDate"
+                              value={editForm.dueDate}
+                              onChange={handleDetailsChange}
+                            />
                           </label>
                         </div>
-                      ))
-                    ) : (
-                      <p className="empty-state-text">No project members yet.</p>
-                    )}
-                  </div>
-                  <button
-                    onClick={handleAssigneeSave}
-                    className="assignee-save-button"
-                    disabled={isSavingAssignees || !assignmentChanged}
-                  >
-                    {isSavingAssignees ? "Saving..." : "Save Assignments"}
-                  </button>
-                </div>
-              </div>
-            </div>
-          </>
-        )}
-      </div>
-    </div>
-  );
-};
 
-export default CardModal;
+                        <h3 className="modal-section-title">Description</h3>
+                        <div className="quill-editor-wrapper">
+                          <ReactQuill
+                            theme="snow"
+                            value={editForm.description}
+                            onChange={(content) =>
+                              setEditForm({ ...editForm, description: content })
+                            }
+                            placeholder="Add context, acceptance criteria, or links..."
+                          />
+                        </div>
+
+                        <div className="checklist-section">
+                          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "10px" }}>
+                            <h3 className="modal-section-title" style={{ marginBottom: 0 }}>Checklist</h3>
+                            <button
+                              type="button"
+                              onClick={handleAIGenerate}
+                              disabled={isGeneratingAI}
+                              style={{
+                                background: "linear-gradient(135deg, #0c66e4, #5aac44)",
+                                color: "#fff",
+                                border: "none",
+                                padding: "6px 12px",
+                                borderRadius: "6px",
+                                fontSize: "12px",
+                                fontWeight: "bold",
+                                cursor: "pointer",
+                                display: "flex",
+                                alignItems: "center",
+                                gap: "6px"
+                              }}
+                            >
+                              ✨ {isGeneratingAI ? "Analyzing..." : "AI Breakdown"}
+                            </button>
+                          </div>
+                          <div className="checklist-input-row">
+                            <input
+                              type="text"
+                              value={checklistText}
+                              onChange={(event) =>
+                                setChecklistText(event.target.value)
+                              }
+                              placeholder="Add checklist item"
+                            />
+                            <button type="button" onClick={handleAddChecklistItem}>
+                              Add
+                            </button>
+                          </div>
+                          <ul className="checklist-list">
+                            {checklist.map((item, index) => (
+                              <li key={`${item.text}-${index}`}>
+                                <label>
+                                  <input
+                                    type="checkbox"
+                                    checked={item.completed}
+                                    onChange={() => handleChecklistToggle(index)}
+                                  />
+                                  <span
+                                    className={item.completed ? "completed" : ""}
+                                  >
+                                    {item.text}
+                                  </span>
+                                </label>
+                                <button
+                                  type="button"
+                                  onClick={() => handleChecklistRemove(index)}
+                                  aria-label={`Remove ${item.text}`}
+                                >
+                                  Remove
+                                </button>
+                              </li>
+                            ))}
+                            {checklist.length === 0 && (
+                              <p className="empty-state-text">
+                                No checklist items yet.
+                              </p>
+                            )}
+                          </ul>
+                        </div>
+
+                        <div className="attachments-section">
+                          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "10px" }}>
+                            <h3 className="modal-section-title" style={{ marginBottom: 0 }}>Attachments</h3>
+                            <label className="attachment-upload-btn">
+                              {isUploading ? "Uploading..." : "Add Attachment"}
+                              <input
+                                type="file"
+                                onChange={handleFileUpload}
+                                disabled={isUploading}
+                                style={{ display: "none" }}
+                              />
+                            </label>
+                          </div>
+
+                          <ul className="attachments-list">
+                            {card.attachments?.map((file) => {
+                              const extension = file.originalName.split('.').pop().toLowerCase();
+                              const viewableExtensions = ['pdf', 'png', 'jpg', 'jpeg', 'gif', 'webp', 'svg', 'txt', 'csv', 'json', 'md'];
+                              const isViewable = viewableExtensions.includes(extension);
+
+                              return (
+                                <li key={file._id} className="attachment-item">
+                                  <span className="attachment-link" style={{ flex: 1, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", marginRight: "12px", color: "var(--text-h)" }}>
+                                    <i className="fa-solid fa-paperclip" style={{ marginRight: "6px", color: "var(--text)" }}></i>
+                                    {file.originalName} <span className="attachment-size">({Math.round(file.size / 1024)} KB)</span>
+                                  </span>
+                                  <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
+                                    {isViewable && (
+                                      <a
+                                        href={`http://localhost:5000${file.path}`}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="attachment-action-icon"
+                                        title="View file"
+                                        style={{ color: "var(--text)", textDecoration: "none", fontSize: "16px", padding: "4px", transition: "color 0.2s" }}
+                                        onMouseEnter={(e) => e.target.style.color = "var(--brand)"}
+                                        onMouseLeave={(e) => e.target.style.color = "var(--text)"}
+                                      >
+                                        <i className="fa-regular fa-eye" style={{ pointerEvents: "none" }}></i>
+                                      </a>
+                                    )}
+                                    <button
+                                      type="button"
+                                      className="attachment-action-icon"
+                                      onClick={() => handleDownload(file)}
+                                      title="Download file"
+                                      style={{ background: "none", border: "none", color: "var(--text)", cursor: "pointer", fontSize: "16px", padding: "4px", transition: "color 0.2s" }}
+                                      onMouseEnter={(e) => e.target.style.color = "var(--brand)"}
+                                      onMouseLeave={(e) => e.target.style.color = "var(--text)"}
+                                    >
+                                      <i className="fa-solid fa-download" style={{ pointerEvents: "none" }}></i>
+                                    </button>
+                                    <button
+                                      type="button"
+                                      className="attachment-action-icon"
+                                      onClick={() => handleDeleteAttachment(file._id)}
+                                      title="Delete file"
+                                      style={{ background: "none", border: "none", color: "var(--text)", cursor: "pointer", fontSize: "16px", padding: "4px", transition: "color 0.2s" }}
+                                      onMouseEnter={(e) => e.target.style.color = "var(--danger)"}
+                                      onMouseLeave={(e) => e.target.style.color = "var(--text)"}
+                                    >
+                                      <i className="fa-solid fa-trash-can" style={{ pointerEvents: "none" }}></i>
+                                    </button>
+                                  </div>
+                                </li>
+                              );
+                            })}
+                            {(!card.attachments || card.attachments.length === 0) && (
+                              <p className="empty-state-text">No attachments yet.</p>
+                            )}
+                          </ul>
+                        </div>
+
+                        <button
+                          type="submit"
+                          className="details-save-button"
+                          disabled={isSavingDetails || !editForm.title.trim()}
+                        >
+                          {isSavingDetails ? "Saving..." : "Save Card Details"}
+                        </button>
+                      </form>
+
+                      <div className="comments-section">
+                        <h3 className="modal-section-title">Comments</h3>
+
+                        <form onSubmit={handleCommentSubmit} className="comment-form">
+                          <div className="quill-editor-wrapper comment-quill">
+                            <ReactQuill
+                              theme="snow"
+                              value={newCommentText}
+                              onChange={setNewCommentText}
+                              placeholder="Write a comment..."
+                              modules={{
+                                toolbar: [
+                                  ['bold', 'italic', 'underline', 'strike'],
+                                  [{ 'list': 'ordered' }, { 'list': 'bullet' }],
+                                  ['link', 'code-block'],
+                                  ['clean']
+                                ]
+                              }}
+                            />
+                          </div>
+                          <button
+                            type="submit"
+                            className="comment-submit-button"
+                            disabled={!newCommentText || newCommentText === '<p><br></p>'}
+                          >
+                            Post Comment
+                          </button>
+                        </form>
+
+                        <ul className="comments-list">
+                          {card.comments?.map((comment) => (
+                            <li key={comment._id} className="comment-item">
+                              <div className="user-avatar">
+                                <Avatar
+                                  user={{
+                                    name: comment.name,
+                                    avatar: comment.avatar,
+                                  }}
+                                />
+                              </div>
+                              <div className="comment-body">
+                                <div>
+                                  <span className="comment-author">
+                                    {comment.name}
+                                  </span>
+                                  <span className="comment-date">
+                                    {new Date(comment.date).toLocaleString()}
+                                  </span>
+                                </div>
+                                <div
+                                  className="comment-text ql-editor"
+                                  style={{ padding: 0 }}
+                                  dangerouslySetInnerHTML={{
+                                    __html: DOMPurify.sanitize(comment.text),
+                                  }}
+                                />
+                              </div>
+                            </li>
+                          ))}
+                          {card.comments?.length === 0 && <p>No comments yet.</p>}
+                        </ul>
+                      </div>
+                    </div>
+
+                    <div className="modal-sidebar">
+                      <div className="labels-section">
+                        <h3 className="modal-section-title">Labels</h3>
+                        <div className="labels-list">
+                          {PREDEFINED_LABELS.map((label) => (
+                            <div
+                              key={label.text}
+                              className={`label-item ${selectedLabels.includes(label.text) ? "selected" : ""
+                                }`}
+                              onClick={() => {
+                                setSelectedLabels((prev) =>
+                                  prev.includes(label.text)
+                                    ? prev.filter((t) => t !== label.text)
+                                    : [...prev, label.text]
+                                );
+                              }}
+                              style={{
+                                backgroundColor: label.color,
+                                color: "#fff",
+                                opacity: selectedLabels.includes(label.text) ? 1 : 0.6,
+                              }}
+                            >
+                              {selectedLabels.includes(label.text) && (
+                                <span style={{ marginRight: "4px", fontWeight: "bold" }}>✓</span>
+                              )}
+                              {label.text}
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+
+                      <h3 className="modal-section-title">Assigned To</h3>
+                      <ul className="assigned-users-list">
+                        {card.assignedTo?.map((user) => (
+                          <li key={user._id} className="assigned-user">
+                            <div className="user-avatar" title={user.name}>
+                              <Avatar user={user} />
+                            </div>
+                            <span className="user-name">{user.name}</span>
+                          </li>
+                        ))}
+                        {card.assignedTo?.length === 0 && <p>No one assigned.</p>}
+                      </ul>
+
+                      <div className="member-assignment-section">
+                        <div className="assignment-heading">
+                          <h3 className="modal-section-title">Members</h3>
+                          <span>{selectedAssignees.length} selected</span>
+                        </div>
+                        <div className="members-list">
+                          {projectMembers.length > 0 ? (
+                            projectMembers.map((member) => (
+                              <div key={member._id} className="member-item">
+                                <input
+                                  type="checkbox"
+                                  id={`member-${member._id}`}
+                                  checked={selectedAssignees.includes(member._id)}
+                                  onChange={() => handleAssigneeChange(member._id)}
+                                />
+                                <label htmlFor={`member-${member._id}`}>
+                                  <div className="user-avatar" title={member.name}>
+                                    <Avatar user={member} />
+                                  </div>
+                                  <span className="user-name">{member.name}</span>
+                                </label>
+                              </div>
+                            ))
+                          ) : (
+                            <p className="empty-state-text">No project members yet.</p>
+                          )}
+                        </div>
+                        <button
+                          onClick={handleAssigneeSave}
+                          className="assignee-save-button"
+                          disabled={isSavingAssignees || !assignmentChanged}
+                        >
+                          {isSavingAssignees ? "Saving..." : "Save Assignments"}
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </>
+              )}
+            </div>
+          </div>
+        );
+      };
+
+
+      export default CardModal;
