@@ -1,4 +1,4 @@
-.modal-backdrop {
+﻿.modal-backdrop {
   position: fixed;
   top: 0;
   left: 0;
@@ -306,35 +306,36 @@
 }
 
 .comment-text {
-  margin-top: 4px;
+  margin-top: 8px;
   font-size: 14px;
-  white-space: pre-wrap;
+  white-space: normal;
   word-break: break-word;
+}
+
+.comment-text p {
+  margin-bottom: 0.5em;
+}
+
+.comment-text p:last-child {
+  margin-bottom: 0;
+}
+
+.comment-text ul,
+.comment-text ol {
+  padding-left: 20px;
+  margin-bottom: 0.5em;
 }
 
 .comment-form {
   margin-bottom: 20px;
 }
 
-.comment-textarea {
-  width: 100%;
+.comment-quill .ql-container {
   min-height: 80px;
-  padding: 8px 12px;
-  border-radius: 8px;
-  border: 1px solid #dfe1e6;
-  font-size: 14px;
-  margin-bottom: 8px;
-  box-sizing: border-box;
-}
-
-.comment-textarea:focus {
-  outline: none;
-  border-color: #4c9aff;
-  box-shadow: 0 0 0 1px #4c9aff;
 }
 
 .comment-submit-button {
-  background-color: #0079bf;
+  background-color: #0c66e4;
   color: #fff;
   border: none;
   border-radius: 8px;
@@ -345,7 +346,7 @@
 }
 
 .comment-submit-button:hover {
-  background-color: #026aa7;
+  background-color: #0052cc;
 }
 
 .comment-submit-button:disabled {
@@ -440,6 +441,8 @@
 }
 
 .label-item {
+  display: flex;
+  align-items: center;
   padding: 4px 10px;
   border-radius: 12px;
   font-size: 12px;

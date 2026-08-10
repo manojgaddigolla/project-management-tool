@@ -396,16 +396,26 @@ const CardModal = ({
                   <h3 className="modal-section-title">Comments</h3>
 
                   <form onSubmit={handleCommentSubmit} className="comment-form">
-                    <textarea
-                      className="comment-textarea"
-                      placeholder="Write a comment..."
-                      value={newCommentText}
-                      onChange={(e) => setNewCommentText(e.target.value)}
-                    ></textarea>
+                    <div className="quill-editor-wrapper comment-quill">
+                      <ReactQuill
+                        theme="snow"
+                        value={newCommentText}
+                        onChange={setNewCommentText}
+                        placeholder="Write a comment..."
+                        modules={{
+                          toolbar: [
+                            ['bold', 'italic', 'underline', 'strike'],
+                            [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+                            ['link', 'code-block'],
+                            ['clean']
+                          ]
+                        }}
+                      />
+                    </div>
                     <button
                       type="submit"
                       className="comment-submit-button"
-                      disabled={!newCommentText.trim()}
+                      disabled={!newCommentText || newCommentText === '<p><br></p>'}
                     >
                       Save
                     </button>
@@ -431,7 +441,13 @@ const CardModal = ({
                               {new Date(comment.date).toLocaleString()}
                             </span>
                           </div>
-                          <div className="comment-text">{comment.text}</div>
+                          <div 
+                            className="comment-text ql-editor"
+                            style={{ padding: 0 }}
+                            dangerouslySetInnerHTML={{
+                              __html: DOMPurify.sanitize(comment.text),
+                            }}
+                          />
                         </div>
                       </li>
                     ))}
@@ -463,6 +479,9 @@ const CardModal = ({
                           opacity: selectedLabels.includes(label.text) ? 1 : 0.6,
                         }}
                       >
+                        {selectedLabels.includes(label.text) && (
+                          <span style={{ marginRight: "4px", fontWeight: "bold" }}>✓</span>
+                        )}
                         {label.text}
                       </div>
                     ))}

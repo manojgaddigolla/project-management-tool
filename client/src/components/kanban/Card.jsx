@@ -22,7 +22,9 @@ export const CardPreview = ({ card, className = "" }) => {
                 key={labelText} 
                 className="kanban-card-label" 
                 style={{ backgroundColor: color }}
-              ></span>
+              >
+                {labelText}
+              </span>
             );
           })}
         </div>
