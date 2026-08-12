@@ -1,6 +1,7 @@
 .kanban-column {
-  min-width: 320px;
-  width: 320px;
+  min-width: 300px;
+  flex: 1;
+  max-width: calc(100vw - 32px);
   background-color: var(--bg); 
   border-radius: var(--radius-md);
   padding: 12px;
@@ -59,23 +60,18 @@
   background: var(--brand-strong);
 }
 
-.column-title-form button[type="button"],
-.column-actions button {
+.column-title-form button[type="button"] {
   background: transparent;
   color: var(--text);
 }
 
-.column-actions {
+.column-header-right {
   display: flex;
-  gap: 4px;
+  align-items: center;
+  gap: 8px;
 }
 
-.column-actions button:hover {
-  background: #091e4214;
-  color: var(--text-h);
-}
-
-.kanban-column-header span {
+.card-count-pill {
   background: #091e420f;
   border-radius: 999px;
   color: var(--text);
@@ -86,11 +82,60 @@
   text-align: center;
 }
 
+[data-theme="dark"] .card-count-pill {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.column-actions-inline {
+  display: flex;
+  gap: 2px;
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+
+.kanban-column-header:hover .column-actions-inline {
+  opacity: 1;
+}
+
+.column-actions-inline button {
+  background: transparent;
+  border: none;
+  border-radius: 4px;
+  color: var(--text);
+  cursor: pointer;
+  padding: 4px;
+  font-size: 1rem;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 0.2s, color 0.2s;
+}
+
+.column-actions-inline button:hover {
+  background: rgba(9, 30, 66, 0.08);
+  color: var(--text-h);
+}
+
+[data-theme="dark"] .column-actions-inline button:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.column-actions-inline button.danger-icon:hover {
+  color: var(--danger);
+  background: rgba(248, 81, 73, 0.1);
+}
+
 .kanban-column-title {
   font-size: 1rem;
   font-weight: 600;
   color: var(--text-h);
   margin: 0;
+  flex: 1;
+  margin-right: 8px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .kanban-card-list {

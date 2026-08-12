@@ -10,19 +10,22 @@
   --warning: #946f00;
   --danger: #ae2e24;
   --shadow-sm: 0 1px 2px rgba(9, 30, 66, 0.08);
-  --shadow-md: 0 4px 8px -2px rgba(9, 30, 66, 0.08), 0 0 1px rgba(9, 30, 66, 0.31);
-  --shadow-lg: 0 12px 24px -6px rgba(9, 30, 66, 0.25), 0 0 1px rgba(9, 30, 66, 0.31);
-  --shadow-xl: 0 20px 32px -8px rgba(9, 30, 66, 0.25), 0 0 1px rgba(9, 30, 66, 0.31);
+  --shadow-md: 0 8px 16px -4px rgba(9, 30, 66, 0.08), 0 0 1px rgba(9, 30, 66, 0.31);
+  --shadow-lg: 0 16px 32px -8px rgba(9, 30, 66, 0.15), 0 0 1px rgba(9, 30, 66, 0.31);
+  --shadow-xl: 0 24px 48px -12px rgba(9, 30, 66, 0.25), 0 0 1px rgba(9, 30, 66, 0.31);
   --radius-sm: 6px;
-  --radius-md: 10px;
+  --radius-md: 12px;
   --radius-lg: 16px;
+  --glass-bg: rgba(255, 255, 255, 0.75);
+  --glass-border: rgba(255, 255, 255, 0.4);
+  --glass-blur: blur(16px);
 
   /* Typography */
   --sans: 'Inter', system-ui, 'Segoe UI', Roboto, sans-serif;
   --heading: 'Outfit', 'Inter', system-ui, 'Segoe UI', Roboto, sans-serif;
   --mono: ui-monospace, Consolas, monospace;
 
-  font: 16px/1.5 var(--sans);
+  font: 16px/1.6 var(--sans);
   letter-spacing: -0.01em;
   color-scheme: light;
   color: var(--text);
@@ -45,10 +48,27 @@
   --warning: #d29922;
   --danger: #f85149;
   --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4);
-  --shadow-md: 0 4px 8px -2px rgba(0, 0, 0, 0.4), 0 0 1px rgba(0, 0, 0, 0.6);
-  --shadow-lg: 0 12px 24px -6px rgba(0, 0, 0, 0.4), 0 0 1px rgba(0, 0, 0, 0.6);
-  --shadow-xl: 0 20px 32px -8px rgba(0, 0, 0, 0.4), 0 0 1px rgba(0, 0, 0, 0.6);
+  --shadow-md: 0 8px 16px -4px rgba(0, 0, 0, 0.4), 0 0 1px rgba(0, 0, 0, 0.6);
+  --shadow-lg: 0 16px 32px -8px rgba(0, 0, 0, 0.4), 0 0 1px rgba(0, 0, 0, 0.6);
+  --shadow-xl: 0 24px 48px -12px rgba(0, 0, 0, 0.5), 0 0 1px rgba(0, 0, 0, 0.6);
   --bg-gradient: none;
+  --glass-bg: rgba(22, 27, 34, 0.75);
+  --glass-border: rgba(48, 54, 61, 0.5);
+}
+
+[data-theme="dark"] ::placeholder {
+  color: #6e7681;
+}
+
+[data-theme="dark"] input[type="date"],
+[data-theme="dark"] input[type="time"] {
+  color-scheme: dark;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
 }
 
 body {
@@ -56,6 +76,7 @@ body {
   background-color: var(--bg);
   background-image: var(--bg-gradient, radial-gradient(circle at 15% 50%, rgba(12, 102, 228, 0.03), transparent 25%), radial-gradient(circle at 85% 30%, rgba(31, 132, 90, 0.03), transparent 25%));
   min-height: 100vh;
+  overflow-x: hidden;
 }
 
 #root {

@@ -18,6 +18,10 @@ const moveColumn = async (req, res) => {
   const { projectId } = req.params;
   const { columnId, sourceIndex, destinationIndex } = req.body;
 
+  if (req.projectRole === "viewer") {
+    return res.status(403).json({ msg: "Viewers cannot move columns" });
+  }
+
   if (sourceIndex === destinationIndex) {
     return res.json({ msg: "No movement required" });
   }

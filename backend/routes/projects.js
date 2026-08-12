@@ -12,6 +12,7 @@ const {
   deleteProject,
   inviteUserToProject,
   removeProjectMember,
+  updateMemberRole,
 } = require("../controllers/projectController");
 
 router.post(
@@ -25,6 +26,13 @@ router.post(
   [auth, [check("email", "Please include a valid email").isEmail()]],
   inviteUserToProject,
 );
+
+router.put(
+  "/:projectId/members/:userId/role",
+  auth,
+  updateMemberRole,
+);
+
 
 router.get("/", auth, getProjects);
 

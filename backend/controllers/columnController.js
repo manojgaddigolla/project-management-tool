@@ -10,6 +10,7 @@ const createActivityLog = require('../utils/activityLogger');
 const {
   getPopulatedBoard
 } = require('../utils/boardUtils');
+const { canModify } = require('../utils/roleUtils');
 const createColumn = async (req, res) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
@@ -40,6 +41,9 @@ const createColumn = async (req, res) => {
     return res.status(403).json({
       msg: 'Authorization denied'
     });
+  }
+  if (!canModify(project, userId)) {
+    return res.status(403).json({ msg: "Viewers cannot perform this action" });
   }
   const newColumn = new Column({
     title,
@@ -81,6 +85,9 @@ const updateColumn = async (req, res) => {
       msg: 'Authorization denied'
     });
   }
+  if (!canModify(project, userId)) {
+    return res.status(403).json({ msg: "Viewers cannot perform this action" });
+  }
   const previousTitle = column.title;
   column.title = title;
   await column.save();
@@ -108,6 +115,9 @@ const deleteColumn = async (req, res) => {
     return res.status(403).json({
       msg: 'Authorization denied'
     });
+  }
+  if (!canModify(project, userId)) {
+    return res.status(403).json({ msg: "Viewers cannot perform this action" });
   }
   if (board.columns.length <= 1) {
     return res.status(400).json({

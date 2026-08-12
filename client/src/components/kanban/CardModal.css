@@ -4,24 +4,39 @@
   left: 0;
   width: 100vw;
   height: 100vh;
-  background-color: rgba(0, 0, 0, 0.6);
+  background-color: rgba(9, 30, 66, 0.54);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
   display: flex;
   justify-content: center;
   align-items: center;
   z-index: 1000;
+  animation: fadeIn 0.2s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
 
 .modal-content {
-  background-color: var(--bg);
-  padding: 24px;
-  border-radius: 8px;
+  background-color: var(--surface);
+  padding: 32px;
+  border-radius: var(--radius-lg);
   width: 90%;
   max-width: 960px;
   max-height: 90vh;
   overflow-y: auto;
   min-height: 520px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+  box-shadow: var(--shadow-xl);
+  border: 1px solid var(--border);
   position: relative;
+  animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(20px) scale(0.98); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
 }
 
 .modal-close-button {
@@ -629,6 +644,11 @@
   color: var(--brand);
 }
 
+[data-theme="dark"] .ql-editor.ql-blank::before {
+  color: #6e7681;
+  font-style: normal;
+}
+
 [data-theme="dark"] .danger-button {
   background: rgba(248, 81, 73, 0.1);
   color: var(--danger);
@@ -636,4 +656,48 @@
 
 [data-theme="dark"] .danger-button:hover {
   background: rgba(248, 81, 73, 0.2);
+}
+
+.ai-generate-btn {
+  background: linear-gradient(135deg, #e0f2fe, #dcfce7);
+  color: #0369a1;
+  border: 1px solid #bae6fd;
+  padding: 6px 12px;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.2s ease;
+  box-shadow: 0 1px 2px rgba(14, 165, 233, 0.1);
+}
+
+.ai-generate-btn:hover {
+  background: linear-gradient(135deg, #bae6fd, #bbf7d0);
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(14, 165, 233, 0.15);
+}
+
+.ai-generate-btn:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.ai-sparkles {
+  font-size: 14px;
+}
+
+[data-theme="dark"] .ai-generate-btn {
+  background: linear-gradient(135deg, rgba(14, 165, 233, 0.1), rgba(34, 197, 94, 0.1));
+  color: #7dd3fc;
+  border-color: rgba(14, 165, 233, 0.2);
+  box-shadow: none;
+}
+
+[data-theme="dark"] .ai-generate-btn:hover {
+  background: linear-gradient(135deg, rgba(14, 165, 233, 0.15), rgba(34, 197, 94, 0.15));
+  border-color: rgba(14, 165, 233, 0.3);
 }

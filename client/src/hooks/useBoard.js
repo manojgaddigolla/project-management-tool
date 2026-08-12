@@ -8,6 +8,7 @@ import {
   updateColumn,
   updateProject,
   moveColumn,
+  updateProjectMemberRole,
 } from "../services/projectService";
 import { createCard, moveCard } from "../services/cardService";
 import { API_ORIGIN } from "../services/config";
@@ -132,6 +133,11 @@ export const useBoard = () => {
     await fetchBoardData();
   };
 
+  const handleUpdateRole = async (userId, role) => {
+    await updateProjectMemberRole(projectId, userId, role);
+    await fetchBoardData();
+  };
+
   const handleDragEnd = async (event) => {
     const { active, over } = event;
 
@@ -222,6 +228,13 @@ export const useBoard = () => {
 
   const isOwner =
     boardData?.project?.owner?._id?.toString() === user?._id?.toString();
+    
+  let projectRole = "editor"; // fallback
+  if (isOwner) {
+    projectRole = "admin";
+  } else if (boardData?.project?.roles && user?._id) {
+    projectRole = boardData.project.roles[user._id] || "editor";
+  }
 
   return {
     boardData,
@@ -233,10 +246,12 @@ export const useBoard = () => {
     handleUpdateColumn,
     handleDeleteColumn,
     handleUpdateProject,
+    handleUpdateRole,
     refreshBoard: fetchBoardData,
     socketId,
     projectId,
     projectMembers: boardData?.project?.members,
     isOwner,
+    projectRole,
   };
 };

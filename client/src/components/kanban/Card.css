@@ -11,14 +11,14 @@
 }
 
 .kanban-card:hover {
-  transform: translateY(-1px);
-  box-shadow: var(--shadow-sm);
-  border-color: #cce0ff;
+  transform: translateY(-2px) scale(1.01);
+  box-shadow: var(--shadow-md);
+  border-color: rgba(12, 102, 228, 0.3);
 }
 
 .kanban-card.dragging {
-  box-shadow: var(--shadow-lg);
-  transform: rotate(3deg) scale(1.02);
+  box-shadow: var(--shadow-xl);
+  transform: rotate(4deg) scale(1.04);
   cursor: grabbing;
 }
 

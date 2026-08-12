@@ -19,6 +19,12 @@ const normalizeDueDate = dueDate => {
   const parsed = new Date(dueDate);
   return Number.isNaN(parsed.getTime()) ? undefined : parsed;
 };
+
+const canModify = (project, userId) => {
+  if (project.owner.toString() === userId) return true;
+  const role = project.roles && project.roles.get(userId);
+  return role !== "viewer";
+};
 const assertProjectMemberForCard = async (cardId, userId) => {
   if (!mongoose.isValidObjectId(cardId)) {
     return {
@@ -121,6 +127,9 @@ const createCard = async (req, res) => {
       msg: "User is not a member of this project"
     });
   }
+  if (!canModify(project, userId)) {
+    return res.status(403).json({ msg: "Viewers cannot perform this action" });
+  }
   const newCard = new Card({
     title,
     description,
@@ -189,6 +198,9 @@ const updateCard = async (req, res) => {
       msg: "User is not authorized to update this card"
     });
   }
+  if (!canModify(project, userId)) {
+    return res.status(403).json({ msg: "Viewers cannot perform this action" });
+  }
   if (title !== undefined) {
     card.title = title;
   }
@@ -252,6 +264,9 @@ const deleteCard = async (req, res) => {
     return res.status(403).json({
       msg: "User is not authorized to delete this card"
     });
+  }
+  if (!canModify(project, userId)) {
+    return res.status(403).json({ msg: "Viewers cannot perform this action" });
   }
   await Card.findByIdAndDelete(cardId);
   column.cards.pull(cardId);
@@ -319,6 +334,9 @@ const moveCard = async (req, res) => {
       msg: "User is not authorized to move this card"
     });
   }
+  if (!canModify(project, userId)) {
+    return res.status(403).json({ msg: "Viewers cannot perform this action" });
+  }
   const fromColumnName = sourceColumn.title;
   const toColumnName = destinationColumn.title;
   const projectId = board.project.toString();
@@ -381,8 +399,12 @@ const addComment = async (req, res) => {
   }
   const {
     card,
-    board
+    board,
+    project
   } = context;
+  if (!canModify(project, req.user.id)) {
+    return res.status(403).json({ msg: "Viewers cannot perform this action" });
+  }
   const user = await User.findById(req.user.id).select("-password");
   if (!user) {
     return res.status(404).json({
@@ -436,6 +458,9 @@ const assignUser = async (req, res) => {
     board,
     project
   } = context;
+  if (!canModify(project, req.user.id)) {
+    return res.status(403).json({ msg: "Viewers cannot perform this action" });
+  }
   const assigner = await User.findById(req.user.id);
   if (!assigner) {
     return res.status(404).json({
@@ -529,6 +554,9 @@ const generateSubtasks = async (req, res) => {
       msg: "Not authorized"
     });
   }
+  if (!canModify(project, req.user.id)) {
+    return res.status(403).json({ msg: "Viewers cannot perform this action" });
+  }
 
   // Smart AI Mock Logic: Analyze title and description to generate contextual subtasks
   const textToAnalyze = (card.title + " " + (card.description || "")).toLowerCase();
@@ -595,7 +623,11 @@ const addAttachment = async (req, res) => {
     return res.status(context.error.status).json({ msg: context.error.msg });
   }
 
-  const { card, board } = context;
+  const { card, board, project } = context;
+  if (!canModify(project, req.user.id)) {
+    fs.unlink(req.file.path, () => {});
+    return res.status(403).json({ msg: "Viewers cannot perform this action" });
+  }
 
   const newAttachment = {
     filename: req.file.filename,
@@ -630,7 +662,10 @@ const deleteAttachment = async (req, res) => {
     return res.status(context.error.status).json({ msg: context.error.msg });
   }
 
-  const { card, board } = context;
+  const { card, board, project } = context;
+  if (!canModify(project, req.user.id)) {
+    return res.status(403).json({ msg: "Viewers cannot perform this action" });
+  }
 
   const attachment = card.attachments.id(attachmentId);
   if (!attachment) {

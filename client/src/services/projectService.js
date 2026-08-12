@@ -104,3 +104,11 @@ export const removeProjectMember = async (projectId, userId) => {
   );
   return response.data;
 };
+
+export const updateProjectMemberRole = async (projectId, userId, role) => {
+  const response = await axiosInstance.put(
+    `/projects/${projectId}/members/${userId}/role`,
+    { role }
+  );
+  return response.data;
+};

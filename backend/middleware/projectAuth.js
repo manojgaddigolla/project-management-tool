@@ -27,6 +27,15 @@ const checkProjectMember = async (req, res, next) => {
 
     req.project = project;
 
+    let role = "editor";
+    if (project.roles && project.roles.get(userId)) {
+      role = project.roles.get(userId);
+    }
+    if (project.owner.toString() === userId) {
+      role = "admin";
+    }
+    req.projectRole = role;
+
     next();
   } catch (err) {
     if (err.kind === "ObjectId") {

@@ -13,6 +13,7 @@ const Column = ({
   onRenameColumn,
   onDeleteColumn,
   dragDisabled = false,
+  isViewer = false,
 }) => {
   const [isAdding, setIsAdding] = useState(false);
   const [isEditingTitle, setIsEditingTitle] = useState(false);
@@ -146,20 +147,20 @@ const Column = ({
             </button>
           </form>
         ) : (
-          <h3 className="kanban-column-title">{column.title}</h3>
+          <>
+            <h3 className="kanban-column-title">{column.title}</h3>
+            <div className="column-header-right" onPointerDown={(e) => e.stopPropagation()}>
+              <span className="card-count-pill">{column.cards.length}</span>
+              {!isViewer && (
+                <div className="column-actions-inline">
+                  <button type="button" onClick={() => setIsEditingTitle(true)} title="Rename">✎</button>
+                  <button type="button" className="danger-icon" onClick={handleDeleteColumn} title="Delete">🗑</button>
+                </div>
+              )}
+            </div>
+          </>
         )}
-        <span>{column.cards.length}</span>
       </div>
-      {!isEditingTitle && (
-        <div className="column-actions">
-          <button type="button" onClick={() => setIsEditingTitle(true)}>
-            Rename
-          </button>
-          <button type="button" onClick={handleDeleteColumn}>
-            Delete
-          </button>
-        </div>
-      )}
 
       <SortableContext
         items={column.cards.map((c) => c._id)}
@@ -225,11 +226,11 @@ const Column = ({
             </button>
           </div>
         </form>
-      ) : (
+      ) : !isViewer ? (
         <button className="add-card-button" onClick={() => setIsAdding(true)}>
           + Add card
         </button>
-      )}
+      ) : null}
     </div>
   );
 };

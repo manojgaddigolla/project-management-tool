@@ -30,7 +30,8 @@ const createProject = async (req, res) => {
     name,
     description,
     owner: req.user.id,
-    members: [req.user.id]
+    members: [req.user.id],
+    roles: { [req.user.id]: "admin" }
   });
   project = await newProject.save();
   const newBoard = new Board({
@@ -373,6 +374,7 @@ const inviteUserToProject = async (req, res) => {
     });
   }
   project.members.push(userToInvite._id);
+  project.roles.set(userToInvite._id.toString(), req.body.role || "editor");
   await project.save();
   const inviter = await User.findById(req.user.id);
   const actionText = `${inviter.name} invited ${userToInvite.name} (${userToInvite.email}) to the project.`;
@@ -460,6 +462,40 @@ const removeProjectMember = async (req, res) => {
   });
   res.json(updatedBoard.project);
 };
+
+const updateMemberRole = async (req, res) => {
+  const { projectId, userId } = req.params;
+  const { role } = req.body;
+  const project = await Project.findById(projectId);
+  if (!project) return res.status(404).json({ msg: "Project not found" });
+  
+  const isOwner = project.owner.toString() === req.user.id;
+  const isCallerAdmin = project.roles.get(req.user.id) === "admin";
+  
+  if (!isOwner && !isCallerAdmin) {
+    return res.status(403).json({ msg: "Only admins can manage roles" });
+  }
+  
+  if (project.owner.toString() === userId) {
+    return res.status(400).json({ msg: "Cannot change the owner's role" });
+  }
+  
+  if (!['admin', 'editor', 'viewer'].includes(role)) {
+    return res.status(400).json({ msg: "Invalid role" });
+  }
+
+  if (!project.members.some(id => id.toString() === userId)) {
+    return res.status(404).json({ msg: "Member not found" });
+  }
+
+  project.roles.set(userId, role);
+  await project.save();
+  
+  const updatedBoard = await getPopulatedBoard(projectId);
+  req.io?.to(projectId).emit("boardUpdated", { board: updatedBoard });
+  res.json(updatedBoard.project);
+};
+
 module.exports = {
   createProject,
   getProjects,
@@ -468,5 +504,6 @@ module.exports = {
   updateProject,
   deleteProject,
   inviteUserToProject,
-  removeProjectMember
+  removeProjectMember,
+  updateMemberRole
 };

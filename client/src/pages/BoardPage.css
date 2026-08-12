@@ -57,10 +57,9 @@
 
 .board-header {
   display: flex;
-  justify-content: space-between;
-  align-items: center;
+  flex-direction: column;
+  align-items: flex-start;
   margin-bottom: 24px;
-  flex-wrap: wrap;
   gap: 16px;
 }
 
@@ -253,38 +252,52 @@
 .invite-form {
   display: flex;
   align-items: center;
-  gap: 8px;
-}
-
-.invite-input {
-  padding: 10px 14px;
-  font-size: 0.95rem;
+  background: var(--surface);
   border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  width: 260px;
+  border-radius: 999px;
+  padding: 4px 4px 4px 16px;
+  box-shadow: var(--shadow-sm);
   transition: border-color 0.2s, box-shadow 0.2s;
 }
 
-.invite-input:focus {
-  outline: none;
+.invite-form:focus-within {
   border-color: var(--brand);
   box-shadow: 0 0 0 2px rgba(12, 102, 228, 0.15);
 }
 
+.invite-input {
+  padding: 8px 0;
+  font-size: 0.95rem;
+  border: none;
+  background: transparent;
+  width: 200px;
+  outline: none !important;
+}
+
+select.invite-input {
+  width: auto;
+  border-left: 1px solid var(--border);
+  border-right: none;
+  padding-left: 12px;
+  margin-right: 8px;
+  cursor: pointer;
+}
+
 .invite-button {
-  padding: 10px 18px;
+  padding: 8px 20px;
   font-size: 0.95rem;
   font-weight: 600;
   color: var(--surface);
-  background-color: var(--success);
+  background-color: var(--brand);
   border: none;
-  border-radius: var(--radius-sm);
+  border-radius: 999px;
   cursor: pointer;
-  transition: background-color 0.2s;
+  transition: background-color 0.2s, transform 0.1s;
 }
 
 .invite-button:hover {
-  background-color: #176543;
+  background-color: var(--brand-strong);
+  transform: scale(1.02);
 }
 
 
@@ -292,6 +305,7 @@
   display: flex;
   align-items: center;
   gap: 12px;
+  flex-wrap: wrap;
 }
 
 .board-action-button {
@@ -514,8 +528,15 @@
   }
 
   .team-member span,
+  .team-member select,
   .team-member button {
     justify-self: start;
+    margin-left: 52px; /* Align with text */
+    grid-column: 1 / -1;
+  }
+  
+  .team-member button {
+    margin-top: 4px;
   }
 
   .board-toolbar {

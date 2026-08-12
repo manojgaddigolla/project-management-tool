@@ -105,5 +105,4 @@ const Card = ({ card, columnId, onClick, dragDisabled = false }) => {
     </div>
   );
 };
-
 export default React.memo(Card);

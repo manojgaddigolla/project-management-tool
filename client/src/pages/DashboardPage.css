@@ -73,53 +73,56 @@
 .create-project-form {
   display: flex;
   align-items: center;
-  gap: 16px;
   background: var(--surface);
   border: 1px solid var(--border);
-  border-radius: var(--radius-md);
-  padding: 24px;
+  border-radius: 999px;
+  padding: 4px 4px 4px 20px;
   margin-bottom: 32px;
   box-shadow: var(--shadow-sm);
+  transition: border-color 0.2s, box-shadow 0.2s;
+  max-width: 800px;
+}
+
+.create-project-form:focus-within {
+  border-color: var(--brand);
+  box-shadow: 0 0 0 2px rgba(12, 102, 228, 0.15);
 }
 
 .create-project-fields {
-  display: grid;
-  grid-template-columns: minmax(200px, 280px) minmax(240px, 1fr);
-  gap: 16px;
+  display: flex;
+  gap: 0;
   flex: 1;
 }
 
 .create-project-fields input {
-  width: 100%;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  padding: 10px 14px;
-  box-sizing: border-box;
-  font-size: 0.95rem;
-  transition: border-color 0.2s, box-shadow 0.2s;
+  flex: 1;
+  border: none;
+  background: transparent;
+  padding: 12px 14px;
+  font-size: 1rem;
+  outline: none !important;
 }
 
-.create-project-fields input:focus {
-  border-color: var(--brand);
-  outline: none;
-  box-shadow: 0 0 0 3px rgba(12, 102, 228, 0.15);
+.create-project-fields input[name="description"] {
+  border-left: 1px solid var(--border);
 }
 
 .create-project-btn {
-  padding: 10px 20px;
-  font-size: 0.95rem;
+  padding: 12px 24px;
+  font-size: 1rem;
   font-weight: 600;
   color: var(--surface);
   background-color: var(--brand);
   border: none;
-  border-radius: var(--radius-sm);
+  border-radius: 999px;
   cursor: pointer;
-  transition: background-color 0.2s ease;
+  transition: background-color 0.2s ease, transform 0.1s;
   white-space: nowrap;
 }
 
 .create-project-btn:hover {
   background-color: var(--brand-strong);
+  transform: scale(1.02);
 }
 
 .create-project-btn:disabled {
@@ -185,9 +188,9 @@
 }
 
 .project-card:hover {
-  transform: translateY(-2px);
-  box-shadow: var(--shadow-md);
-  border-color: #cce0ff;
+  transform: translateY(-4px) scale(1.01);
+  box-shadow: var(--shadow-lg);
+  border-color: rgba(12, 102, 228, 0.3);
 }
 
 .project-card-kicker {

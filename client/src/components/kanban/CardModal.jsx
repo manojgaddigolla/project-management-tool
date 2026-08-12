@@ -24,6 +24,7 @@ const CardModal = ({
   projectMembers = [],
   onChanged,
   onDeleted,
+  isViewer = false,
 }) => {
   const [newCommentText, setNewCommentText] = useState("");
   const [selectedAssignees, setSelectedAssignees] = useState([]);
@@ -135,6 +136,7 @@ const CardModal = ({
             });
             await onChanged?.();
             toast.success("Assignments updated");
+            onClose();
           } catch (err) {
             console.error("Failed to update assignees:", err);
             toast.error("Could not save assignees. Please try again.");
@@ -335,15 +337,18 @@ const CardModal = ({
                             value={editForm.title}
                             onChange={handleDetailsChange}
                             required
+                            disabled={isViewer}
                           />
-                          <button
-                            type="button"
-                            className="danger-button"
-                            onClick={handleDeleteCard}
-                            disabled={isDeleting}
-                          >
-                            {isDeleting ? "Deleting..." : "Delete"}
-                          </button>
+                          {!isViewer && (
+                            <button
+                              type="button"
+                              className="danger-button"
+                              onClick={handleDeleteCard}
+                              disabled={isDeleting}
+                            >
+                              {isDeleting ? "Deleting..." : "Delete"}
+                            </button>
+                          )}
                         </div>
 
                         <div className="details-grid">
@@ -353,6 +358,7 @@ const CardModal = ({
                               name="priority"
                               value={editForm.priority}
                               onChange={handleDetailsChange}
+                              disabled={isViewer}
                             >
                               <option value="low">Low</option>
                               <option value="medium">Medium</option>
@@ -367,6 +373,7 @@ const CardModal = ({
                               name="dueDate"
                               value={editForm.dueDate}
                               onChange={handleDetailsChange}
+                              disabled={isViewer}
                             />
                           </label>
                         </div>
@@ -379,47 +386,40 @@ const CardModal = ({
                             onChange={(content) =>
                               setEditForm({ ...editForm, description: content })
                             }
-                            placeholder="Add context, acceptance criteria, or links..."
+                            placeholder={isViewer ? "" : "Add context, acceptance criteria, or links..."}
+                            readOnly={isViewer}
                           />
                         </div>
 
                         <div className="checklist-section">
-                          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "10px" }}>
+                          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "10px", flexWrap: "wrap", gap: "8px" }}>
                             <h3 className="modal-section-title" style={{ marginBottom: 0 }}>Checklist</h3>
-                            <button
-                              type="button"
-                              onClick={handleAIGenerate}
-                              disabled={isGeneratingAI}
-                              style={{
-                                background: "linear-gradient(135deg, #0c66e4, #5aac44)",
-                                color: "#fff",
-                                border: "none",
-                                padding: "6px 12px",
-                                borderRadius: "6px",
-                                fontSize: "12px",
-                                fontWeight: "bold",
-                                cursor: "pointer",
-                                display: "flex",
-                                alignItems: "center",
-                                gap: "6px"
-                              }}
-                            >
-                              ✨ {isGeneratingAI ? "Analyzing..." : "AI Breakdown"}
-                            </button>
+                            {!isViewer && (
+                              <button
+                                type="button"
+                                onClick={handleAIGenerate}
+                                disabled={isGeneratingAI}
+                                className="ai-generate-btn"
+                              >
+                                <span className="ai-sparkles">✨</span> {isGeneratingAI ? "Analyzing..." : "AI Breakdown"}
+                              </button>
+                            )}
                           </div>
-                          <div className="checklist-input-row">
-                            <input
-                              type="text"
-                              value={checklistText}
-                              onChange={(event) =>
-                                setChecklistText(event.target.value)
-                              }
-                              placeholder="Add checklist item"
-                            />
-                            <button type="button" onClick={handleAddChecklistItem}>
-                              Add
-                            </button>
-                          </div>
+                          {!isViewer && (
+                            <div className="checklist-input-row">
+                              <input
+                                type="text"
+                                value={checklistText}
+                                onChange={(event) =>
+                                  setChecklistText(event.target.value)
+                                }
+                                placeholder="Add checklist item"
+                              />
+                              <button type="button" onClick={handleAddChecklistItem}>
+                                Add
+                              </button>
+                            </div>
+                          )}
                           <ul className="checklist-list">
                             {checklist.map((item, index) => (
                               <li key={`${item.text}-${index}`}>
@@ -428,6 +428,7 @@ const CardModal = ({
                                     type="checkbox"
                                     checked={item.completed}
                                     onChange={() => handleChecklistToggle(index)}
+                                    disabled={isViewer}
                                   />
                                   <span
                                     className={item.completed ? "completed" : ""}
@@ -435,13 +436,15 @@ const CardModal = ({
                                     {item.text}
                                   </span>
                                 </label>
-                                <button
-                                  type="button"
-                                  onClick={() => handleChecklistRemove(index)}
-                                  aria-label={`Remove ${item.text}`}
-                                >
-                                  Remove
-                                </button>
+                                {!isViewer && (
+                                  <button
+                                    type="button"
+                                    onClick={() => handleChecklistRemove(index)}
+                                    aria-label={`Remove ${item.text}`}
+                                  >
+                                    Remove
+                                  </button>
+                                )}
                               </li>
                             ))}
                             {checklist.length === 0 && (
@@ -453,17 +456,19 @@ const CardModal = ({
                         </div>
 
                         <div className="attachments-section">
-                          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "10px" }}>
+                          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "10px", flexWrap: "wrap", gap: "8px" }}>
                             <h3 className="modal-section-title" style={{ marginBottom: 0 }}>Attachments</h3>
-                            <label className="attachment-upload-btn">
-                              {isUploading ? "Uploading..." : "Add Attachment"}
-                              <input
-                                type="file"
-                                onChange={handleFileUpload}
-                                disabled={isUploading}
-                                style={{ display: "none" }}
-                              />
-                            </label>
+                            {!isViewer && (
+                              <label className="attachment-upload-btn">
+                                {isUploading ? "Uploading..." : "Add Attachment"}
+                                <input
+                                  type="file"
+                                  onChange={handleFileUpload}
+                                  disabled={isUploading}
+                                  style={{ display: "none" }}
+                                />
+                              </label>
+                            )}
                           </div>
 
                           <ul className="attachments-list">
@@ -504,17 +509,19 @@ const CardModal = ({
                                     >
                                       <i className="fa-solid fa-download" style={{ pointerEvents: "none" }}></i>
                                     </button>
-                                    <button
-                                      type="button"
-                                      className="attachment-action-icon"
-                                      onClick={() => handleDeleteAttachment(file._id)}
-                                      title="Delete file"
-                                      style={{ background: "none", border: "none", color: "var(--text)", cursor: "pointer", fontSize: "16px", padding: "4px", transition: "color 0.2s" }}
-                                      onMouseEnter={(e) => e.target.style.color = "var(--danger)"}
-                                      onMouseLeave={(e) => e.target.style.color = "var(--text)"}
-                                    >
-                                      <i className="fa-solid fa-trash-can" style={{ pointerEvents: "none" }}></i>
-                                    </button>
+                                    {!isViewer && (
+                                      <button
+                                        type="button"
+                                        className="attachment-action-icon"
+                                        onClick={() => handleDeleteAttachment(file._id)}
+                                        title="Delete file"
+                                        style={{ background: "none", border: "none", color: "var(--text)", cursor: "pointer", fontSize: "16px", padding: "4px", transition: "color 0.2s" }}
+                                        onMouseEnter={(e) => e.target.style.color = "var(--danger)"}
+                                        onMouseLeave={(e) => e.target.style.color = "var(--text)"}
+                                      >
+                                        <i className="fa-solid fa-trash-can" style={{ pointerEvents: "none" }}></i>
+                                      </button>
+                                    )}
                                   </div>
                                 </li>
                               );
@@ -525,43 +532,47 @@ const CardModal = ({
                           </ul>
                         </div>
 
-                        <button
-                          type="submit"
-                          className="details-save-button"
-                          disabled={isSavingDetails || !editForm.title.trim()}
-                        >
-                          {isSavingDetails ? "Saving..." : "Save Card Details"}
-                        </button>
+                        {!isViewer && (
+                          <button
+                            type="submit"
+                            className="details-save-button"
+                            disabled={isSavingDetails || !editForm.title.trim()}
+                          >
+                            {isSavingDetails ? "Saving..." : "Save Card Details"}
+                          </button>
+                        )}
                       </form>
 
                       <div className="comments-section">
                         <h3 className="modal-section-title">Comments</h3>
 
-                        <form onSubmit={handleCommentSubmit} className="comment-form">
-                          <div className="quill-editor-wrapper comment-quill">
-                            <ReactQuill
-                              theme="snow"
-                              value={newCommentText}
-                              onChange={setNewCommentText}
-                              placeholder="Write a comment..."
-                              modules={{
-                                toolbar: [
-                                  ['bold', 'italic', 'underline', 'strike'],
-                                  [{ 'list': 'ordered' }, { 'list': 'bullet' }],
-                                  ['link', 'code-block'],
-                                  ['clean']
-                                ]
-                              }}
-                            />
-                          </div>
-                          <button
-                            type="submit"
-                            className="comment-submit-button"
-                            disabled={!newCommentText || newCommentText === '<p><br></p>'}
-                          >
-                            Post Comment
-                          </button>
-                        </form>
+                        {!isViewer && (
+                          <form onSubmit={handleCommentSubmit} className="comment-form">
+                            <div className="quill-editor-wrapper comment-quill">
+                              <ReactQuill
+                                theme="snow"
+                                value={newCommentText}
+                                onChange={setNewCommentText}
+                                placeholder="Write a comment..."
+                                modules={{
+                                  toolbar: [
+                                    ['bold', 'italic', 'underline', 'strike'],
+                                    [{ 'list': 'ordered' }, { 'list': 'bullet' }],
+                                    ['link', 'code-block'],
+                                    ['clean']
+                                  ]
+                                }}
+                              />
+                            </div>
+                            <button
+                              type="submit"
+                              className="comment-submit-button"
+                              disabled={!newCommentText || newCommentText === '<p><br></p>'}
+                            >
+                              Post Comment
+                            </button>
+                          </form>
+                        )}
 
                         <ul className="comments-list">
                           {card.comments?.map((comment) => (
@@ -608,6 +619,7 @@ const CardModal = ({
                               className={`label-item ${selectedLabels.includes(label.text) ? "selected" : ""
                                 }`}
                               onClick={() => {
+                                if (isViewer) return;
                                 setSelectedLabels((prev) =>
                                   prev.includes(label.text)
                                     ? prev.filter((t) => t !== label.text)
@@ -618,6 +630,7 @@ const CardModal = ({
                                 backgroundColor: label.color,
                                 color: "#fff",
                                 opacity: selectedLabels.includes(label.text) ? 1 : 0.6,
+                                cursor: isViewer ? "default" : "pointer",
                               }}
                             >
                               {selectedLabels.includes(label.text) && (
@@ -642,41 +655,43 @@ const CardModal = ({
                         {card.assignedTo?.length === 0 && <p>No one assigned.</p>}
                       </ul>
 
-                      <div className="member-assignment-section">
-                        <div className="assignment-heading">
-                          <h3 className="modal-section-title">Members</h3>
-                          <span>{selectedAssignees.length} selected</span>
+                      {!isViewer && (
+                        <div className="member-assignment-section">
+                          <div className="assignment-heading">
+                            <h3 className="modal-section-title">Members</h3>
+                            <span>{selectedAssignees.length} selected</span>
+                          </div>
+                          <div className="members-list">
+                            {projectMembers.length > 0 ? (
+                              projectMembers.map((member) => (
+                                <div key={member._id} className="member-item">
+                                  <input
+                                    type="checkbox"
+                                    id={`member-${member._id}`}
+                                    checked={selectedAssignees.includes(member._id)}
+                                    onChange={() => handleAssigneeChange(member._id)}
+                                  />
+                                  <label htmlFor={`member-${member._id}`}>
+                                    <div className="user-avatar" title={member.name}>
+                                      <Avatar user={member} />
+                                    </div>
+                                    <span className="user-name">{member.name}</span>
+                                  </label>
+                                </div>
+                              ))
+                            ) : (
+                              <p className="empty-state-text">No project members yet.</p>
+                            )}
+                          </div>
+                          <button
+                            onClick={handleAssigneeSave}
+                            className="assignee-save-button"
+                            disabled={isSavingAssignees || !assignmentChanged}
+                          >
+                            {isSavingAssignees ? "Saving..." : "Save Assignments"}
+                          </button>
                         </div>
-                        <div className="members-list">
-                          {projectMembers.length > 0 ? (
-                            projectMembers.map((member) => (
-                              <div key={member._id} className="member-item">
-                                <input
-                                  type="checkbox"
-                                  id={`member-${member._id}`}
-                                  checked={selectedAssignees.includes(member._id)}
-                                  onChange={() => handleAssigneeChange(member._id)}
-                                />
-                                <label htmlFor={`member-${member._id}`}>
-                                  <div className="user-avatar" title={member.name}>
-                                    <Avatar user={member} />
-                                  </div>
-                                  <span className="user-name">{member.name}</span>
-                                </label>
-                              </div>
-                            ))
-                          ) : (
-                            <p className="empty-state-text">No project members yet.</p>
-                          )}
-                        </div>
-                        <button
-                          onClick={handleAssigneeSave}
-                          className="assignee-save-button"
-                          disabled={isSavingAssignees || !assignmentChanged}
-                        >
-                          {isSavingAssignees ? "Saving..." : "Save Assignments"}
-                        </button>
-                      </div>
+                      )}
                     </div>
                   </div>
                 </>

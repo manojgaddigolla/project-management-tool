@@ -23,6 +23,7 @@ import CardModal from "../components/kanban/CardModal";
 import ActivityFeed from "../components/kanban/ActivityFeed";
 import BoardSkeleton from "../components/kanban/BoardSkeleton";
 import ProjectAnalytics from "../components/analytics/ProjectAnalytics";
+import { PREDEFINED_LABELS } from "../utils/constants";
 import "./BoardPage.css";
 
 const BoardPage = () => {
@@ -41,10 +42,16 @@ const BoardPage = () => {
     projectId,
     projectMembers,
     isOwner,
+    projectRole,
+    handleUpdateRole,
   } = useBoard();
+
+  const isAdmin = projectRole === "admin";
+  const isViewer = projectRole === "viewer";
 
   const [selectedCardId, setSelectedCardId] = useState(null);
   const [inviteEmail, setInviteEmail] = useState("");
+  const [inviteRole, setInviteRole] = useState("editor");
   const [newColumnTitle, setNewColumnTitle] = useState("");
   const [isAddingColumn, setIsAddingColumn] = useState(false);
   const [isSettingsOpen, setSettingsOpen] = useState(false);
@@ -56,6 +63,8 @@ const BoardPage = () => {
   const [filters, setFilters] = useState({
     query: "",
     priority: "all",
+    label: "all",
+    assignee: "all",
     overdueOnly: false,
   });
 
@@ -135,6 +144,8 @@ const BoardPage = () => {
   const isFiltering =
     filters.query.trim() ||
     filters.priority !== "all" ||
+    filters.label !== "all" ||
+    filters.assignee !== "all" ||
     filters.overdueOnly;
 
   const visibleColumns = useMemo(() => {
@@ -154,6 +165,10 @@ const BoardPage = () => {
             .some((value) => value.toLowerCase().includes(query));
         const matchesPriority =
           filters.priority === "all" || card.priority === filters.priority;
+        const matchesLabel =
+          filters.label === "all" || (card.labels && card.labels.includes(filters.label));
+        const matchesAssignee =
+          filters.assignee === "all" || (card.assignedTo && card.assignedTo.some(user => user._id === filters.assignee));
         const isOverdue =
           card.dueDate &&
           new Date(card.dueDate) < new Date() &&
@@ -162,6 +177,8 @@ const BoardPage = () => {
         return (
           matchesQuery &&
           matchesPriority &&
+          matchesLabel &&
+          matchesAssignee &&
           (!filters.overdueOnly || isOverdue)
         );
       });
@@ -191,10 +208,12 @@ const BoardPage = () => {
     try {
       await inviteUserToProject(projectId, {
         email: inviteEmail,
+        role: inviteRole,
         socketId: socketId,
       });
       toast.success(`Invitation sent to ${inviteEmail}`);
       setInviteEmail("");
+      setInviteRole("editor");
     } catch (err) {
       console.error("Invite failed:", err);
       toast.error("Failed to send invitation.");
@@ -279,6 +298,15 @@ const BoardPage = () => {
     }
   };
 
+  const onChangeRole = async (member, newRole) => {
+    try {
+      await handleUpdateRole(member._id, newRole);
+      toast.success(`Role updated to ${newRole}`);
+    } catch (err) {
+      toast.error(err.msg || "Could not update role.");
+    }
+  };
+
   const handleFilterChange = (event) => {
     const { name, value, checked, type } = event.target;
     setFilters((currentFilters) => ({
@@ -288,7 +316,7 @@ const BoardPage = () => {
   };
 
   const clearFilters = () => {
-    setFilters({ query: "", priority: "all", overdueOnly: false });
+    setFilters({ query: "", priority: "all", label: "all", assignee: "all", overdueOnly: false });
   };
 
   const handleDragStart = ({ active }) => {
@@ -333,7 +361,7 @@ const BoardPage = () => {
           )}
         </div>
         <div className="board-actions">
-          {isOwner && (
+          {isAdmin && (
             <form onSubmit={handleInviteSubmit} className="invite-form">
               <input
                 type="email"
@@ -343,6 +371,16 @@ const BoardPage = () => {
                 onChange={(e) => setInviteEmail(e.target.value)}
                 required
               />
+              <select 
+                className="invite-input"
+                style={{ width: "90px" }}
+                value={inviteRole}
+                onChange={(e) => setInviteRole(e.target.value)}
+              >
+                <option value="editor">Editor</option>
+                <option value="viewer">Viewer</option>
+                <option value="admin">Admin</option>
+              </select>
               <button type="submit" className="invite-button">
                 Invite
               </button>
@@ -375,7 +413,7 @@ const BoardPage = () => {
               <>Show Summary <i className="fa-solid fa-chevron-down" style={{ marginLeft: "6px" }}></i></>
             )}
           </button>
-          {isOwner && (
+          {isAdmin && (
             <button
               className="board-action-button"
               onClick={() => setSettingsOpen((open) => !open)}
@@ -466,7 +504,7 @@ const BoardPage = () => {
         </section>
       )}
 
-      {isSettingsOpen && isOwner && (
+      {isSettingsOpen && isAdmin && (
         <section className="project-settings-panel">
           <form onSubmit={handleProjectUpdate} className="project-settings-form">
             <div>
@@ -497,6 +535,7 @@ const BoardPage = () => {
                 const isProjectOwner =
                   boardData.project?.owner?._id === member._id;
                 const isCurrentUser = currentUser?._id === member._id;
+                const memberRole = isProjectOwner ? "Owner" : (boardData.project?.roles?.[member._id] || "editor");
 
                 return (
                   <div key={member._id} className="team-member">
@@ -511,8 +550,23 @@ const BoardPage = () => {
                       <strong>{member.name}</strong>
                       <p>{member.email}</p>
                     </div>
-                    <span>{isProjectOwner ? "Owner" : "Member"}</span>
-                    {!isProjectOwner && !isCurrentUser && (
+                    
+                    {isProjectOwner ? (
+                      <span>Owner</span>
+                    ) : (
+                      <select 
+                        value={memberRole} 
+                        onChange={(e) => onChangeRole(member, e.target.value)}
+                        disabled={!isAdmin || isCurrentUser}
+                        style={{ border: "1px solid #ccc", padding: "4px", borderRadius: "4px", fontSize: "0.85rem", textTransform: "capitalize" }}
+                      >
+                        <option value="admin">Admin</option>
+                        <option value="editor">Editor</option>
+                        <option value="viewer">Viewer</option>
+                      </select>
+                    )}
+
+                    {!isProjectOwner && !isCurrentUser && isAdmin && (
                       <button
                         type="button"
                         onClick={() => handleRemoveMember(member)}
@@ -535,21 +589,23 @@ const BoardPage = () => {
         />
       )}
 
-      <form className="add-column-form" onSubmit={handleAddColumn}>
-        <input
-          type="text"
-          value={newColumnTitle}
-          onChange={(event) => setNewColumnTitle(event.target.value)}
-          placeholder="Add a workflow column"
-          disabled={isAddingColumn}
-        />
-        <button
-          type="submit"
-          disabled={!newColumnTitle.trim() || isAddingColumn}
-        >
-          {isAddingColumn ? "Adding..." : "Add Column"}
-        </button>
-      </form>
+      {!isViewer && (
+        <form className="add-column-form" onSubmit={handleAddColumn}>
+          <input
+            type="text"
+            value={newColumnTitle}
+            onChange={(event) => setNewColumnTitle(event.target.value)}
+            placeholder="Add a workflow column"
+            disabled={isAddingColumn}
+          />
+          <button
+            type="submit"
+            disabled={!newColumnTitle.trim() || isAddingColumn}
+          >
+            {isAddingColumn ? "Adding..." : "Add Column"}
+          </button>
+        </form>
+      )}
 
       <div className="board-toolbar">
         <input
@@ -569,6 +625,26 @@ const BoardPage = () => {
           <option value="high">High</option>
           <option value="medium">Medium</option>
           <option value="low">Low</option>
+        </select>
+        <select
+          name="label"
+          value={filters.label}
+          onChange={handleFilterChange}
+        >
+          <option value="all">All labels</option>
+          {PREDEFINED_LABELS.map(label => (
+            <option key={label.text} value={label.text}>{label.text}</option>
+          ))}
+        </select>
+        <select
+          name="assignee"
+          value={filters.assignee}
+          onChange={handleFilterChange}
+        >
+          <option value="all">All assignees</option>
+          {projectMembers?.map(member => (
+            <option key={member._id} value={member._id}>{member.name}</option>
+          ))}
         </select>
         <label className="overdue-toggle">
           <input
@@ -613,7 +689,8 @@ const BoardPage = () => {
                 onCreateCard={handleCreateCard}
                 onRenameColumn={handleUpdateColumn}
                 onDeleteColumn={handleDeleteColumn}
-                dragDisabled={Boolean(isFiltering)}
+                dragDisabled={Boolean(isFiltering || isViewer)}
+                isViewer={isViewer}
               />
             ))}
           </div>
@@ -632,6 +709,7 @@ const BoardPage = () => {
                 onRenameColumn={() => {}}
                 onDeleteColumn={() => {}}
                 dragDisabled={true}
+                isViewer={isViewer}
               />
             </div>
           ) : null}
@@ -646,6 +724,7 @@ const BoardPage = () => {
         projectMembers={projectMembers}
         onChanged={refreshBoard}
         onDeleted={handleCloseModal}
+        isViewer={isViewer}
       />
 
       <ActivityFeed
