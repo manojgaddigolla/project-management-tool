@@ -89,9 +89,9 @@ export const inviteUserToProject = async (projectId, inviteData) => {
   return response.data;
 };
 
-export const getProjectAnalytics = async (projectId) => {
+export const getProjectAnalytics = async (projectId, days = 14) => {
   try {
-    const response = await axiosInstance.get(`/projects/${projectId}/analytics`);
+    const response = await axiosInstance.get(`/projects/${projectId}/analytics?days=${days}`);
     return response.data;
   } catch (error) {
     throw error.response ? error.response.data : error;

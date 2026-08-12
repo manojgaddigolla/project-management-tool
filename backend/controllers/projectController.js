@@ -208,6 +208,33 @@ const getProjectAnalytics = async (req, res) => {
   const overdueTaskList = openDatedTasks.filter(entry => entry.dueDate < startOfToday).slice(0, 6).map(formatDeadlineTask);
   const dueSoonTasks = openDatedTasks.filter(entry => entry.dueDate >= startOfToday && entry.dueDate <= twoWeeksFromToday).slice(0, 8).map(formatDeadlineTask);
   const completionRate = totalTasks ? Math.round(completedTasks / totalTasks * 100) : 0;
+
+  const days = req.query.days ? parseInt(req.query.days, 10) : 14;
+  const tasksOverTime = [];
+  const completedCardsList = cards.filter(isDoneCard).map(entry => entry.card);
+  
+  // Sort completed cards by update date
+  completedCardsList.sort((a, b) => new Date(a.updatedAt) - new Date(b.updatedAt));
+
+  for (let i = days - 1; i >= 0; i--) {
+    const targetDate = new Date();
+    targetDate.setHours(0, 0, 0, 0);
+    targetDate.setDate(targetDate.getDate() - i);
+    
+    const nextDate = new Date(targetDate);
+    nextDate.setDate(nextDate.getDate() + 1);
+
+    // Find cards updated (completed) before or during this day
+    const completedUpToDay = completedCardsList.filter(
+      card => new Date(card.updatedAt) < nextDate
+    ).length;
+
+    tasksOverTime.push({
+      date: targetDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+      completed: completedUpToDay,
+    });
+  }
+
   res.json({
     summary: {
       totalTasks,
@@ -227,6 +254,7 @@ const getProjectAnalytics = async (req, res) => {
     })),
     dueSoonTasks,
     overdueTaskList,
+    tasksOverTime, // <-- Added here
     recentActivity: activities
   });
 };
