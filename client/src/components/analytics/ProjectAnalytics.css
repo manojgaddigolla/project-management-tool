@@ -1,14 +1,14 @@
 .analytics-shell {
-  background: #ffffff;
-  border: 1px solid #dfe1e6;
+  background: var(--surface);
+  border: 1px solid var(--border);
   border-radius: 8px;
-  box-shadow: 0 18px 42px rgba(9, 30, 66, 0.1);
+  box-shadow: var(--shadow-lg);
   margin-bottom: 18px;
   padding: 18px;
 }
 
 .analytics-error {
-  color: #ae2e24;
+  color: var(--danger);
 }
 
 .analytics-header {
@@ -20,7 +20,7 @@
 }
 
 .analytics-eyebrow {
-  color: #0c66e4;
+  color: var(--brand);
   font-size: 0.78rem;
   font-weight: 900;
   letter-spacing: 0.08em;
@@ -29,43 +29,149 @@
 
 .analytics-header h2 {
   font-size: 1.45rem;
+  color: var(--text-h);
   margin: 0;
 }
 
 .completion-ring {
   align-items: center;
-  background: #ffffff;
-  border-radius: 999px;
   display: flex;
-  flex-direction: column;
   height: 96px;
   justify-content: center;
-  min-width: 96px;
+  width: 96px;
   position: relative;
-  overflow: hidden;
 }
 
-.completion-ring span {
-  color: #101828;
-  font-size: 1.35rem;
-  font-weight: 950;
-  position: relative;
-  z-index: 1;
+.completion-ring-svg {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  transform: rotate(-90deg);
+  overflow: visible;
 }
 
-.completion-ring p {
-  color: #5e6c84;
-  font-size: 0.75rem;
-  font-weight: 800;
-  position: relative;
-  z-index: 1;
+.completion-ring-bg {
+  fill: none;
+  stroke: var(--border);
+  stroke-width: 8;
 }
 
 .completion-ring-progress {
+  fill: none;
+  stroke: var(--brand);
+  stroke-width: 8;
+  stroke-linecap: round;
+  stroke-dasharray: 264;
+  stroke-dashoffset: 264;
+  transition: stroke-dashoffset 1s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.completion-ring-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  z-index: 1;
+}
+
+.completion-ring-content span {
+  color: var(--text-h);
+  font-size: 1.5rem;
+  font-weight: 800;
+  line-height: 1.1;
+  margin-bottom: -2px;
+}
+
+.completion-ring-content p {
+  color: var(--text);
+  font-size: 0.65rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin: 0;
+}
+
+/* Premium AI Summary Styling */
+.ai-summary-panel {
+  position: relative;
+  border: 1px solid var(--border) !important;
+  box-shadow: var(--shadow-md) !important;
+  background: var(--surface) !important;
+  border-radius: 16px !important;
+  padding: 24px 32px !important;
+  overflow: hidden;
+  animation: slideDownFade 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+[data-theme="dark"] .ai-summary-panel {
+  background: var(--bg) !important;
+}
+
+.ai-summary-panel::before {
+  content: "";
   position: absolute;
-  inset: 0;
-  background: radial-gradient(circle, #ffffff 58%, transparent 60%),
-    conic-gradient(#0c66e4 var(--progress), #e9f2ff 0);
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, #4f46e5, #ec4899);
+}
+
+.ai-markdown-content {
+  color: var(--text);
+  font-size: 0.95rem;
+  line-height: 1.7;
+}
+
+.ai-markdown-content h1,
+.ai-markdown-content h2,
+.ai-markdown-content h3 {
+  color: var(--text-h);
+  font-weight: 700;
+  margin-top: 1.5em;
+  margin-bottom: 0.75em;
+  letter-spacing: -0.025em;
+}
+
+.ai-markdown-content h3 {
+  font-size: 1.1rem;
+}
+
+.ai-markdown-content p {
+  margin-bottom: 1.25em;
+}
+
+.ai-markdown-content ul,
+.ai-markdown-content ol {
+  margin-bottom: 1.25em;
+  padding-left: 1.5em;
+}
+
+.ai-markdown-content li {
+  margin-bottom: 0.5em;
+}
+
+.ai-markdown-content li::marker {
+  color: var(--brand);
+}
+
+.ai-markdown-content strong {
+  color: var(--text-h);
+  font-weight: 600;
+}
+
+@keyframes slideDownFade {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .analytics-kpis {
@@ -77,14 +183,14 @@
 
 .analytics-kpis div,
 .analytics-panel {
-  background: #f8fafc;
-  border: 1px solid #dfe1e6;
+  background: var(--bg);
+  border: 1px solid var(--border);
   border-radius: 8px;
   padding: 14px;
 }
 
 .analytics-kpis span {
-  color: #101828;
+  color: var(--text-h);
   display: block;
   font-size: 1.5rem;
   font-weight: 950;
@@ -92,7 +198,7 @@
 
 .analytics-kpis p,
 .analytics-empty {
-  color: #5e6c84;
+  color: var(--text);
   font-weight: 750;
 }
 
@@ -103,7 +209,7 @@
 }
 
 .analytics-panel h3 {
-  color: #172b4d;
+  color: var(--text-h);
   font-size: 1rem;
   margin: 0 0 12px;
 }
@@ -115,7 +221,7 @@
 
 .analytics-bar-label {
   align-items: center;
-  color: #44546f;
+  color: var(--text);
   display: flex;
   font-size: 0.85rem;
   font-weight: 850;
@@ -125,20 +231,20 @@
 }
 
 .analytics-bar-track {
-  background: #e9edf5;
+  background: var(--border);
   border-radius: 999px;
   height: 10px;
   overflow: hidden;
 }
 
 .analytics-bar-fill {
-  background: linear-gradient(90deg, #0c66e4, #579dff);
+  background: var(--brand);
   border-radius: inherit;
   height: 100%;
 }
 
 .analytics-bar-fill.green {
-  background: linear-gradient(90deg, #1f845a, #4bce97);
+  background: var(--success);
 }
 
 .workload-list,
@@ -150,8 +256,8 @@
 .workload-item,
 .deadline-item {
   align-items: center;
-  background: #ffffff;
-  border: 1px solid #dfe1e6;
+  background: var(--surface);
+  border: 1px solid var(--border);
   border-radius: 8px;
   display: flex;
   justify-content: space-between;
@@ -165,7 +271,7 @@
 }
 
 .workload-track {
-  background: #e9edf5;
+  background: var(--border);
   border-radius: 999px;
   height: 8px;
   margin-top: 8px;
@@ -174,39 +280,40 @@
 }
 
 .workload-fill {
-  background: linear-gradient(90deg, #6554c0, #9f8fef);
+  background: var(--brand);
   border-radius: inherit;
   height: 100%;
 }
 
 .workload-item strong,
 .deadline-item strong {
-  color: #172b4d;
+  color: var(--text-h);
 }
 
 .workload-item p,
 .deadline-item p {
-  color: #5e6c84;
+  color: var(--text);
   font-size: 0.84rem;
 }
 
 .workload-item span,
 .deadline-item span {
-  background: #e9f2ff;
+  background: var(--bg);
+  border: 1px solid var(--border);
   border-radius: 999px;
-  color: #0c66e4;
+  color: var(--brand);
   font-weight: 900;
   padding: 4px 9px;
 }
 
 .deadline-item.overdue {
-  background: #fff7f7;
-  border-color: #fecdca;
+  background: var(--bg);
+  border-color: var(--danger);
 }
 
 .deadline-item.overdue span {
-  background: #ffeceb;
-  color: #ae2e24;
+  background: var(--danger);
+  color: #fff;
 }
 
 @media (max-width: 860px) {

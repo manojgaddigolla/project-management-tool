@@ -14,6 +14,14 @@ const createNotification = require("../utils/notificationManager");
 const {
   getPopulatedBoard
 } = require("../utils/boardUtils");
+const { GoogleGenAI } = require("@google/genai");
+
+let ai;
+try {
+  ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+} catch (e) {
+  console.warn("GoogleGenAI init failed (cardController)");
+}
 const normalizeDueDate = dueDate => {
   if (!dueDate) return undefined;
   const parsed = new Date(dueDate);
@@ -558,19 +566,44 @@ const generateSubtasks = async (req, res) => {
     return res.status(403).json({ msg: "Viewers cannot perform this action" });
   }
 
-  // Smart AI Mock Logic: Analyze title and description to generate contextual subtasks
-  const textToAnalyze = (card.title + " " + (card.description || "")).toLowerCase();
+  // Smart AI Logic using Google Gemini
   let generatedTasks = [];
-  if (textToAnalyze.includes("api") || textToAnalyze.includes("backend") || textToAnalyze.includes("endpoint") || textToAnalyze.includes("server")) {
-    generatedTasks = ["Design API schema and request/response payload", "Implement backend controller and route logic", "Add input validation middleware", "Write unit tests for API endpoints", "Update API documentation"];
-  } else if (textToAnalyze.includes("ui") || textToAnalyze.includes("frontend") || textToAnalyze.includes("design") || textToAnalyze.includes("component") || textToAnalyze.includes("page")) {
-    generatedTasks = ["Review UI design mockups", "Implement responsive React components", "Apply CSS styling and design tokens", "Add loading states and error boundaries", "Verify cross-browser compatibility"];
-  } else if (textToAnalyze.includes("bug") || textToAnalyze.includes("fix") || textToAnalyze.includes("issue") || textToAnalyze.includes("error")) {
-    generatedTasks = ["Reproduce the reported issue locally", "Identify root cause in the codebase", "Implement code fix", "Add regression test to prevent recurrence", "Deploy fix to staging for verification"];
-  } else if (textToAnalyze.includes("database") || textToAnalyze.includes("schema") || textToAnalyze.includes("model")) {
-    generatedTasks = ["Draft database schema modifications", "Update Mongoose models to reflect changes", "Create database migration scripts", "Verify query performance and indexing"];
-  } else {
-    generatedTasks = [`Review requirements for: ${card.title}`, "Draft implementation strategy", "Execute core development tasks", "Perform QA testing", "Submit Pull Request for peer review"];
+  if (!ai) {
+    return res.status(500).json({ msg: "AI provider is not configured. Missing GEMINI_API_KEY." });
+  }
+
+  try {
+    const prompt = `
+You are a senior technical project manager. 
+Your job is to take a task and break it down into a checklist of small, actionable sub-tasks.
+Only output a raw JSON array of strings representing the sub-tasks. Do not output any markdown formatting, backticks, or explanation.
+
+Task Title: ${card.title}
+Task Description: ${card.description || "No description provided."}
+
+Output format example:
+["Setup database schema", "Create API endpoint", "Write unit tests"]
+`;
+
+    const response = await ai.models.generateContent({
+      model: "gemini-3.5-flash",
+      contents: prompt,
+    });
+
+    let rawText = response.text.trim();
+    if (rawText.startsWith('```json')) {
+      rawText = rawText.replace(/```json/g, '').replace(/```/g, '').trim();
+    } else if (rawText.startsWith('```')) {
+      rawText = rawText.replace(/```/g, '').trim();
+    }
+
+    generatedTasks = JSON.parse(rawText);
+    if (!Array.isArray(generatedTasks)) {
+      throw new Error("Output was not an array");
+    }
+  } catch (err) {
+    console.error("Gemini AI Breakdown Error:", err);
+    return res.status(500).json({ msg: "AI failed to generate a valid checklist." });
   }
 
   // Filter out duplicates that already exist in the card's checklist

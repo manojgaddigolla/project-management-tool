@@ -1,10 +1,11 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { getProjectAnalytics } from "../../services/projectService";
+import { getProjectAnalytics, getProjectAiSummary } from "../../services/projectService";
 import { toast } from "react-toastify";
 import {
   AreaChart, Area, BarChart, Bar, PieChart, Pie, Cell,
   XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer
 } from "recharts";
+import ReactMarkdown from "react-markdown";
 import "./ProjectAnalytics.css";
 
 const BarList = ({ items, tone = "blue" }) => {
@@ -47,20 +48,20 @@ const CustomTooltip = ({ active, payload, label }) => {
   if (active && payload && payload.length) {
     return (
       <div className="custom-tooltip" style={{ 
-        backgroundColor: 'rgba(255, 255, 255, 0.85)', 
-        backdropFilter: 'blur(12px)',
-        WebkitBackdropFilter: 'blur(12px)',
+        backgroundColor: 'var(--glass-bg)', 
+        backdropFilter: 'var(--glass-blur)',
+        WebkitBackdropFilter: 'var(--glass-blur)',
         padding: '12px 16px', 
-        border: '1px solid rgba(0, 0, 0, 0.08)', 
+        border: '1px solid var(--border)', 
         borderRadius: '12px', 
-        boxShadow: '0 8px 32px rgba(0, 0, 0, 0.08)' 
+        boxShadow: 'var(--shadow-md)' 
       }}>
-        <p className="label" style={{ margin: '0 0 8px 0', fontSize: '0.85rem', fontWeight: 700, color: '#111827', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{`${label}`}</p>
+        <p className="label" style={{ margin: '0 0 8px 0', fontSize: '0.85rem', fontWeight: 700, color: 'var(--text-h)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{`${label}`}</p>
         {payload.map((entry, index) => (
           <div key={`item-${index}`} style={{ display: 'flex', alignItems: 'center', gap: '8px', margin: '4px 0' }}>
             <span style={{ display: 'block', width: '8px', height: '8px', borderRadius: '50%', backgroundColor: entry.color || 'var(--brand)' }}></span>
-            <span style={{ fontSize: '0.9rem', color: '#4b5563', fontWeight: 500 }}>{entry.name}:</span>
-            <span style={{ fontSize: '0.95rem', color: '#111827', fontWeight: 700 }}>{entry.value}</span>
+            <span style={{ fontSize: '0.9rem', color: 'var(--text)', fontWeight: 500 }}>{entry.name}:</span>
+            <span style={{ fontSize: '0.95rem', color: 'var(--text-h)', fontWeight: 700 }}>{entry.value}</span>
           </div>
         ))}
       </div>
@@ -75,6 +76,10 @@ const ProjectAnalytics = ({ projectId, refreshKey }) => {
   const [error, setError] = useState("");
   const [showAdvanced, setShowAdvanced] = useState(false);
   const [timeRange, setTimeRange] = useState(14);
+  
+  // AI State
+  const [aiSummary, setAiSummary] = useState("");
+  const [loadingAi, setLoadingAi] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -161,6 +166,19 @@ ${analytics.byPriority.map(p => `- ${p.label}: ${p.value}`).join('\n')}
     }
   };
 
+  const handleGenerateSummary = async () => {
+    if (aiSummary) return; // Already generated
+    try {
+      setLoadingAi(true);
+      const data = await getProjectAiSummary(projectId, analyticsText);
+      setAiSummary(data.summary);
+    } catch (err) {
+      toast.error(err.msg || "Failed to generate AI summary");
+    } finally {
+      setLoadingAi(false);
+    }
+  };
+
   if (loading) {
     return <div className="analytics-shell">Loading analytics...</div>;
   }
@@ -184,20 +202,67 @@ ${analytics.byPriority.map(p => `- ${p.label}: ${p.value}`).join('\n')}
             <h2>Project Health</h2>
           </div>
           <div className="completion-ring" aria-label="Completion rate">
-            <div
-              className="completion-ring-progress"
-              style={{ "--progress": `${analytics.summary.completionRate}%` }}
-            />
-            <span>{analytics.summary.completionRate}%</span>
-            <p>complete</p>
+            <svg viewBox="0 0 100 100" className="completion-ring-svg">
+              <circle className="completion-ring-bg" cx="50" cy="50" r="42" />
+              <circle
+                className="completion-ring-progress"
+                cx="50"
+                cy="50"
+                r="42"
+                style={{ strokeDashoffset: `calc(264 - (264 * ${analytics.summary.completionRate || 0}) / 100)` }}
+              />
+            </svg>
+            <div className="completion-ring-content">
+              <span>{analytics.summary.completionRate}%</span>
+              <p>complete</p>
+            </div>
           </div>
         </div>
 
         <div style={{ display: "flex", gap: "12px", flexWrap: "wrap", alignItems: "center" }}>
+          <button 
+            className="board-action-button" 
+            onClick={handleGenerateSummary} 
+            disabled={loadingAi}
+            style={{ 
+              padding: "10px 20px", 
+              fontSize: "0.92rem", 
+              background: "var(--brand)", 
+              color: "var(--surface)",
+              border: "1px solid rgba(255,255,255,0.1)",
+              borderRadius: "999px",
+              fontWeight: 600,
+              display: "flex",
+              alignItems: "center",
+              gap: "8px",
+              boxShadow: "0 4px 12px rgba(12, 102, 228, 0.2), 0 0 0 1px rgba(255,255,255,0.1) inset",
+              transition: "all 0.2s cubic-bezier(0.16, 1, 0.3, 1)",
+              cursor: loadingAi ? "not-allowed" : "pointer",
+              opacity: loadingAi ? 0.8 : 1
+            }}
+            onMouseEnter={(e) => {
+              if (!loadingAi) {
+                e.currentTarget.style.transform = "translateY(-1px)";
+                e.currentTarget.style.boxShadow = "0 6px 16px rgba(12, 102, 228, 0.3), 0 0 0 1px rgba(255,255,255,0.1) inset";
+                e.currentTarget.style.background = "var(--brand-strong)";
+              }
+            }}
+            onMouseLeave={(e) => {
+              if (!loadingAi) {
+                e.currentTarget.style.transform = "translateY(0)";
+                e.currentTarget.style.boxShadow = "0 4px 12px rgba(12, 102, 228, 0.2), 0 0 0 1px rgba(255,255,255,0.1) inset";
+                e.currentTarget.style.background = "var(--brand)";
+              }
+            }}
+          >
+            {loadingAi ? <i className="fa-solid fa-spinner fa-spin"></i> : <i className="fa-solid fa-sparkles"></i>}
+            {loadingAi ? "Analyzing..." : "Analyze with AI"}
+          </button>
+
           {/* Segmented Control for Toggle */}
           <div style={{ 
             display: "flex", 
-            backgroundColor: "var(--surface-sunken, #f1f5f9)", 
+            backgroundColor: "var(--bg)", 
             padding: "4px", 
             borderRadius: "8px", 
             border: "1px solid var(--border)",
@@ -209,11 +274,11 @@ ${analytics.byPriority.map(p => `- ${p.label}: ${p.value}`).join('\n')}
                 padding: "6px 14px", 
                 fontSize: "0.85rem", 
                 fontWeight: 600,
-                backgroundColor: !showAdvanced ? "var(--surface, #ffffff)" : "transparent", 
-                color: !showAdvanced ? "var(--text-h, #111827)" : "var(--text-muted, #6b7280)",
+                backgroundColor: !showAdvanced ? "var(--surface)" : "transparent", 
+                color: !showAdvanced ? "var(--text-h)" : "var(--text)",
                 border: "none",
                 borderRadius: "6px",
-                boxShadow: !showAdvanced ? "0 1px 3px rgba(0,0,0,0.1)" : "none",
+                boxShadow: !showAdvanced ? "var(--shadow-sm)" : "none",
                 cursor: "pointer",
                 transition: "all 0.2s ease"
               }}
@@ -227,11 +292,11 @@ ${analytics.byPriority.map(p => `- ${p.label}: ${p.value}`).join('\n')}
                 padding: "6px 14px", 
                 fontSize: "0.85rem", 
                 fontWeight: 600,
-                backgroundColor: showAdvanced ? "var(--surface, #ffffff)" : "transparent", 
-                color: showAdvanced ? "var(--text-h, #111827)" : "var(--text-muted, #6b7280)",
+                backgroundColor: showAdvanced ? "var(--surface)" : "transparent", 
+                color: showAdvanced ? "var(--text-h)" : "var(--text)",
                 border: "none",
                 borderRadius: "6px",
-                boxShadow: showAdvanced ? "0 1px 3px rgba(0,0,0,0.1)" : "none",
+                boxShadow: showAdvanced ? "var(--shadow-sm)" : "none",
                 cursor: "pointer",
                 transition: "all 0.2s ease"
               }}
@@ -249,6 +314,56 @@ ${analytics.byPriority.map(p => `- ${p.label}: ${p.value}`).join('\n')}
           </button>
         </div>
       </div>
+
+      {(aiSummary || loadingAi) && (
+        <div className="analytics-panel ai-summary-panel" style={{ marginBottom: "24px" }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: "16px" }}>
+            <h3 style={{ display: 'flex', alignItems: 'center', gap: '10px', color: 'var(--text-h)', margin: 0, fontSize: '1.25rem', fontWeight: 800 }}>
+              <span style={{ 
+                background: 'linear-gradient(135deg, #4f46e5, #ec4899)', 
+                WebkitBackgroundClip: 'text', 
+                WebkitTextFillColor: 'transparent' 
+              }}>
+                <i className="fa-solid fa-sparkles"></i> AI Executive Summary
+              </span>
+            </h3>
+            {aiSummary && (
+              <button 
+                onClick={() => setAiSummary("")}
+                style={{
+                  background: "transparent",
+                  border: "none",
+                  color: "var(--text)",
+                  cursor: "pointer",
+                  padding: "4px 8px",
+                  borderRadius: "6px",
+                  fontSize: "1rem",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  transition: "all 0.2s"
+                }}
+                onMouseEnter={(e) => { e.target.style.color = 'var(--text-h)'; e.target.style.backgroundColor = 'var(--bg)'; }}
+                onMouseLeave={(e) => { e.target.style.color = 'var(--text)'; e.target.style.backgroundColor = 'transparent'; }}
+                title="Hide Summary"
+              >
+                <i className="fa-solid fa-xmark" style={{ pointerEvents: "none" }}></i>
+              </button>
+            )}
+          </div>
+          
+          {loadingAi ? (
+            <div style={{ padding: "32px 0", color: "var(--text)", display: "flex", flexDirection: "column", gap: "16px", alignItems: "center", justifyContent: "center" }}>
+              <i className="fa-solid fa-circle-notch fa-spin" style={{ fontSize: "2rem", color: "var(--brand)" }}></i> 
+              <span style={{ fontWeight: 500 }}>Generating premium insights...</span>
+            </div>
+          ) : (
+            <div className="ai-markdown-content">
+              <ReactMarkdown>{aiSummary}</ReactMarkdown>
+            </div>
+          )}
+        </div>
+      )}
 
       <div className="analytics-kpis" style={{ marginBottom: "32px" }}>
         <div>
@@ -274,11 +389,11 @@ ${analytics.byPriority.map(p => `- ${p.label}: ${p.value}`).join('\n')}
           {/* Tasks Completed Over Time */}
           <article className="analytics-panel" style={{ gridColumn: "1 / -1", overflow: 'hidden', padding: '24px' }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "24px" }}>
-              <h3 style={{ margin: 0, fontSize: '1.1rem', fontWeight: 700, color: '#111827' }}>Tasks Completed Over Time</h3>
+              <h3 style={{ margin: 0, fontSize: '1.1rem', fontWeight: 700, color: 'var(--text-h)' }}>Tasks Completed Over Time</h3>
               <select 
                 value={timeRange} 
                 onChange={(e) => setTimeRange(Number(e.target.value))}
-                style={{ padding: "8px 14px", borderRadius: "8px", backgroundColor: "var(--surface)", color: "var(--text)", border: "1px solid var(--border)", fontWeight: 500, outline: 'none', cursor: 'pointer', boxShadow: '0 1px 2px rgba(0,0,0,0.05)' }}
+                style={{ padding: "8px 14px", borderRadius: "8px", backgroundColor: "var(--surface)", color: "var(--text)", border: "1px solid var(--border)", fontWeight: 500, outline: 'none', cursor: 'pointer', boxShadow: 'var(--shadow-sm)' }}
               >
                 <option value={7}>Last 7 Days</option>
                 <option value={14}>Last 14 Days</option>
@@ -296,9 +411,9 @@ ${analytics.byPriority.map(p => `- ${p.label}: ${p.value}`).join('\n')}
                         <stop offset="95%" stopColor="#6366f1" stopOpacity={0}/>
                       </linearGradient>
                     </defs>
-                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(0,0,0,0.06)" />
-                    <XAxis dataKey="date" stroke="#9ca3af" fontSize={11} tickLine={false} axisLine={false} dy={10} />
-                    <YAxis stroke="#9ca3af" fontSize={11} tickLine={false} axisLine={false} allowDecimals={false} dx={-10} />
+                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--border)" />
+                    <XAxis dataKey="date" stroke="var(--text)" fontSize={11} tickLine={false} axisLine={false} dy={10} />
+                    <YAxis stroke="var(--text)" fontSize={11} tickLine={false} axisLine={false} allowDecimals={false} dx={-10} />
                     <Tooltip content={<CustomTooltip />} cursor={{ stroke: '#6366f1', strokeWidth: 1, strokeDasharray: '4 4' }} />
                     <Area type="monotone" dataKey="completed" name="Completed Tasks" stroke="#6366f1" strokeWidth={3} fillOpacity={1} fill="url(#colorCompleted)" activeDot={{ r: 6, fill: '#6366f1', stroke: '#fff', strokeWidth: 2 }} />
                   </AreaChart>
@@ -311,7 +426,7 @@ ${analytics.byPriority.map(p => `- ${p.label}: ${p.value}`).join('\n')}
 
           {/* Status Breakdown - Donut Chart */}
           <article className="analytics-panel" style={{ padding: '24px' }}>
-            <h3 style={{ margin: "0 0 24px 0", fontSize: '1.1rem', fontWeight: 700, color: '#111827' }}>Status Breakdown</h3>
+            <h3 style={{ margin: "0 0 24px 0", fontSize: '1.1rem', fontWeight: 700, color: 'var(--text-h)' }}>Status Breakdown</h3>
             <div style={{ width: '100%', height: 260, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
@@ -336,9 +451,9 @@ ${analytics.byPriority.map(p => `- ${p.label}: ${p.value}`).join('\n')}
             </div>
             <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: '16px', marginTop: '20px' }}>
               {analytics.byStatus.filter(s => s.value > 0).map((entry, index) => (
-                <div key={entry.label} style={{ display: 'flex', alignItems: 'center', fontSize: '0.85rem', color: '#4b5563', fontWeight: 500 }}>
+                <div key={entry.label} style={{ display: 'flex', alignItems: 'center', fontSize: '0.85rem', color: 'var(--text)', fontWeight: 500 }}>
                   <span style={{ display: 'inline-block', width: '10px', height: '10px', borderRadius: '50%', backgroundColor: COLORS[index % COLORS.length], marginRight: '8px' }}></span>
-                  {entry.label} <strong style={{ color: '#111827', marginLeft: '4px' }}>{entry.value}</strong>
+                  {entry.label} <strong style={{ color: 'var(--text-h)', marginLeft: '4px' }}>{entry.value}</strong>
                 </div>
               ))}
             </div>
@@ -346,14 +461,14 @@ ${analytics.byPriority.map(p => `- ${p.label}: ${p.value}`).join('\n')}
 
           {/* Team Workload - Elegant Bar Chart */}
           <article className="analytics-panel" style={{ padding: '24px' }}>
-            <h3 style={{ margin: "0 0 24px 0", fontSize: '1.1rem', fontWeight: 700, color: '#111827' }}>Team Workload</h3>
+            <h3 style={{ margin: "0 0 24px 0", fontSize: '1.1rem', fontWeight: 700, color: 'var(--text-h)' }}>Team Workload</h3>
             <div style={{ width: '100%', height: 260 }}>
               {workloadItems.length > 0 ? (
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart data={workloadItems} margin={{ top: 0, right: 30, left: -20, bottom: 0 }} layout="vertical" barSize={16}>
-                    <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="rgba(0,0,0,0.06)" />
-                    <XAxis type="number" stroke="#9ca3af" fontSize={11} tickLine={false} axisLine={false} allowDecimals={false} />
-                    <YAxis dataKey="name" type="category" stroke="#4b5563" fontSize={12} fontWeight={500} tickLine={false} axisLine={false} width={100} />
+                    <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="var(--border)" />
+                    <XAxis type="number" stroke="var(--text)" fontSize={11} tickLine={false} axisLine={false} allowDecimals={false} />
+                    <YAxis dataKey="name" type="category" stroke="var(--text)" fontSize={12} fontWeight={500} tickLine={false} axisLine={false} width={100} />
                     <Tooltip content={<CustomTooltip />} cursor={{ fill: 'rgba(0,0,0,0.02)' }} />
                     <Bar dataKey="Completed" stackId="a" fill="#10b981" radius={[0, 0, 0, 0]} />
                     <Bar dataKey="Open" stackId="a" fill="#6366f1" />

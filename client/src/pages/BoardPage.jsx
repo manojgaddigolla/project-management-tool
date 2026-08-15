@@ -459,7 +459,7 @@ const BoardPage = () => {
               <i className="fa-solid fa-xmark"></i>
             </button>
           </div>
-          <div style={{ background: "#f4f5f7", color: "#44546f", border: "1px solid #dfe1e6", padding: "16px", borderRadius: "var(--radius-sm)", overflowX: "auto" }}>
+          <div style={{ background: "var(--bg)", color: "var(--text)", border: "1px solid var(--border)", padding: "16px", borderRadius: "var(--radius-sm)", overflowX: "auto" }}>
             <pre style={{ margin: 0, fontFamily: "inherit", fontSize: "0.95rem", whiteSpace: "pre-wrap", wordWrap: "break-word" }}>
               {boardData.project?.name} project summary
               {"\n"}Total tasks: {boardStats.totalCards}
@@ -558,7 +558,7 @@ const BoardPage = () => {
                         value={memberRole} 
                         onChange={(e) => onChangeRole(member, e.target.value)}
                         disabled={!isAdmin || isCurrentUser}
-                        style={{ border: "1px solid #ccc", padding: "4px", borderRadius: "4px", fontSize: "0.85rem", textTransform: "capitalize" }}
+                        style={{ background: "var(--surface)", color: "var(--text-h)", border: "1px solid var(--border)", padding: "4px", borderRadius: "4px", fontSize: "0.85rem", textTransform: "capitalize" }}
                       >
                         <option value="admin">Admin</option>
                         <option value="editor">Editor</option>

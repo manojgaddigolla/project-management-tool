@@ -98,6 +98,15 @@ export const getProjectAnalytics = async (projectId, days = 14) => {
   }
 };
 
+export const getProjectAiSummary = async (projectId, analyticsText) => {
+  try {
+    const response = await axiosInstance.post(`/projects/${projectId}/ai-summary`, { analyticsText });
+    return response.data;
+  } catch (error) {
+    throw error.response ? error.response.data : error;
+  }
+};
+
 export const removeProjectMember = async (projectId, userId) => {
   const response = await axiosInstance.delete(
     `/projects/${projectId}/members/${userId}`,

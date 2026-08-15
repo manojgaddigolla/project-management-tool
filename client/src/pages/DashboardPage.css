@@ -130,6 +130,12 @@
   cursor: not-allowed;
 }
 
+.cancel-create-btn {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  color: var(--text);
+}
+
 .dashboard-loading,
 .dashboard-error {
   text-align: center;
@@ -144,6 +150,13 @@
   background: #ffeceb;
   border: 1px solid #fecdca;
   border-radius: var(--radius-md);
+  font-weight: 600;
+}
+
+[data-theme="dark"] .dashboard-error {
+  background: rgba(248, 81, 73, 0.1);
+  border-color: rgba(248, 81, 73, 0.2);
+}
   font-weight: 600;
 }
 
@@ -193,6 +206,15 @@
   border-color: rgba(12, 102, 228, 0.3);
 }
 
+.project-card-footer {
+  padding: 16px;
+  border-top: 1px solid var(--border);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+}
+
 .project-card-kicker {
   color: var(--text);
   font-size: 0.75rem;
@@ -222,7 +244,7 @@
   flex-wrap: wrap;
   gap: 12px;
   padding-top: 20px;
-  border-top: 1px solid #f0f1f4;
+  border-top: 1px solid var(--border);
 }
 
 .project-card-link,
@@ -268,6 +290,15 @@
 
 .project-delete-button:hover {
   background: #fee4e2;
+}
+
+[data-theme="dark"] .project-delete-button {
+  background: rgba(248, 81, 73, 0.1);
+  border-color: rgba(248, 81, 73, 0.2);
+}
+
+[data-theme="dark"] .project-delete-button:hover {
+  background: rgba(248, 81, 73, 0.2);
 }
 
 .project-delete-button:disabled {

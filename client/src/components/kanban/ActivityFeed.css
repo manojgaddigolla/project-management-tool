@@ -4,8 +4,8 @@
     right: 0;
     height: 100vh;
     width: min(420px, 100vw);
-    background-color: #ffffff;
-    box-shadow: -18px 0 44px rgba(9, 30, 66, 0.18);
+    background-color: var(--surface);
+    box-shadow: -18px 0 44px rgba(0, 0, 0, 0.18);
     z-index: 1050;
     display: flex;
     flex-direction: column;
@@ -19,7 +19,7 @@
 
 .activity-feed-header {
     padding: 16px 20px;
-    border-bottom: 1px solid #dfe1e6;
+    border-bottom: 1px solid var(--border);
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -29,6 +29,7 @@
     font-size: 18px;
     font-weight: 800;
     margin: 0;
+    color: var(--text-h);
 }
 
 .close-activity-feed-btn {
@@ -36,7 +37,7 @@
     border: none;
     font-size: 24px;
     cursor: pointer;
-    color: #6b778c;
+    color: var(--text);
 }
 
 .activity-list {
@@ -49,8 +50,8 @@
 
 .activity-item {
     display: flex;
-    background: #f8fafc;
-    border: 1px solid #dfe1e6;
+    background: var(--bg);
+    border: 1px solid var(--border);
     border-radius: 8px;
     margin-bottom: 12px;
     padding: 12px;
@@ -60,7 +61,8 @@
     width: 32px;
     height: 32px;
     border-radius: 50%;
-    background-color: #dfe1e6;
+    background-color: var(--border);
+    color: var(--text-h);
     margin-right: 12px;
     flex-shrink: 0;
     display: flex;
@@ -81,11 +83,11 @@
     font-size: 14px;
     line-height: 1.4;
     word-break: break-word;
-    color: #172b4d;
+    color: var(--text-h);
 }
 
 .activity-content .activity-date {
     font-size: 12px;
-    color: #5e6c84;
+    color: var(--text);
     margin-top: 4px;
 }

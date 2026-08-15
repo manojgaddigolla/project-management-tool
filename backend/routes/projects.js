@@ -14,6 +14,7 @@ const {
   removeProjectMember,
   updateMemberRole,
 } = require("../controllers/projectController");
+const { generateSummary } = require("../controllers/aiController");
 
 router.post(
   "/",
@@ -37,6 +38,7 @@ router.put(
 router.get("/", auth, getProjects);
 
 router.get("/:id/analytics", [auth, checkProjectMember], getProjectAnalytics);
+router.post("/:id/ai-summary", [auth, checkProjectMember], generateSummary);
 
 router.put(
   "/:id",

@@ -658,26 +658,34 @@
   background: rgba(248, 81, 73, 0.2);
 }
 
+[data-theme="dark"] .assignment-heading span {
+  background: rgba(59, 130, 246, 0.15);
+}
+
+[data-theme="dark"] .member-item label:hover {
+  background-color: rgba(255, 255, 255, 0.05);
+}
+
 .ai-generate-btn {
-  background: linear-gradient(135deg, #e0f2fe, #dcfce7);
-  color: #0369a1;
-  border: 1px solid #bae6fd;
-  padding: 6px 12px;
+  background: var(--brand);
+  color: var(--surface);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 8px 16px;
   border-radius: 999px;
-  font-size: 0.75rem;
-  font-weight: 700;
+  font-size: 0.8rem;
+  font-weight: 600;
   cursor: pointer;
   display: flex;
   align-items: center;
   gap: 6px;
-  transition: all 0.2s ease;
-  box-shadow: 0 1px 2px rgba(14, 165, 233, 0.1);
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 4px 12px rgba(12, 102, 228, 0.2), 0 0 0 1px rgba(255, 255, 255, 0.1) inset;
 }
 
 .ai-generate-btn:hover {
-  background: linear-gradient(135deg, #bae6fd, #bbf7d0);
   transform: translateY(-1px);
-  box-shadow: 0 2px 4px rgba(14, 165, 233, 0.15);
+  background: var(--brand-strong);
+  box-shadow: 0 6px 16px rgba(12, 102, 228, 0.3), 0 0 0 1px rgba(255, 255, 255, 0.1) inset;
 }
 
 .ai-generate-btn:disabled {
@@ -691,13 +699,13 @@
 }
 
 [data-theme="dark"] .ai-generate-btn {
-  background: linear-gradient(135deg, rgba(14, 165, 233, 0.1), rgba(34, 197, 94, 0.1));
-  color: #7dd3fc;
-  border-color: rgba(14, 165, 233, 0.2);
-  box-shadow: none;
+  background: var(--brand);
+  color: var(--surface);
+  border-color: rgba(255, 255, 255, 0.1);
+  box-shadow: 0 4px 12px rgba(88, 166, 255, 0.2), 0 0 0 1px rgba(255, 255, 255, 0.1) inset;
 }
 
 [data-theme="dark"] .ai-generate-btn:hover {
-  background: linear-gradient(135deg, rgba(14, 165, 233, 0.15), rgba(34, 197, 94, 0.15));
-  border-color: rgba(14, 165, 233, 0.3);
+  background: var(--brand-strong);
+  box-shadow: 0 6px 16px rgba(88, 166, 255, 0.3), 0 0 0 1px rgba(255, 255, 255, 0.1) inset;
 }

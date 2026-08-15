@@ -87,7 +87,7 @@
 
 .secondary-home-action:hover {
   background: var(--bg);
-  border-color: #b3bac5;
+  border-color: var(--border);
 }
 
 .home-hero-media {
@@ -152,7 +152,7 @@
 .feature-grid article:hover {
   transform: translateY(-2px);
   box-shadow: var(--shadow-lg);
-  border-color: #cce0ff;
+  border-color: var(--brand);
 }
 
 .feature-grid span {
