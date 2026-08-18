@@ -296,9 +296,7 @@ const moveCard = async (req, res) => {
       errors: errors.array()
     });
   }
-  const {
-    io
-  } = req;
+  const { io } = req;
   const {
     sourceColumnId,
     destinationColumnId,
@@ -308,79 +306,92 @@ const moveCard = async (req, res) => {
   } = req.body;
   const cardId = req.params.id;
   const userId = req.user.id;
-  const card = await Card.findById(cardId);
-  if (!card) return res.status(404).json({
-    msg: "Card not found"
-  });
-  const sourceColumn = await Column.findById(sourceColumnId);
-  if (!sourceColumn) {
-    return res.status(404).json({
-      msg: "Source column not found"
-    });
-  }
-  const destinationColumn = sourceColumnId === destinationColumnId ? sourceColumn : await Column.findById(destinationColumnId);
-  if (!destinationColumn) {
-    return res.status(404).json({
-      msg: "Destination column not found"
-    });
-  }
-  if (sourceColumn.board.toString() !== destinationColumn.board.toString()) {
-    return res.status(400).json({
-      msg: "Columns must belong to the same board"
-    });
-  }
-  if (card.column.toString() !== sourceColumnId) {
-    return res.status(400).json({
-      msg: "Card is not in the source column"
-    });
-  }
-  const board = await Board.findById(sourceColumn.board);
-  const project = await Project.findById(board.project);
-  const isMember = project.members.some(member => member.toString() === userId);
-  if (!isMember) {
-    return res.status(403).json({
-      msg: "User is not authorized to move this card"
-    });
-  }
-  if (!canModify(project, userId)) {
-    return res.status(403).json({ msg: "Viewers cannot perform this action" });
-  }
-  const fromColumnName = sourceColumn.title;
-  const toColumnName = destinationColumn.title;
-  const projectId = board.project.toString();
-  const actualSourceIndex = sourceColumn.cards.findIndex(id => id.toString() === cardId);
-  if (actualSourceIndex === -1) {
-    return res.status(400).json({
-      msg: "Card is missing from the source column"
-    });
-  }
-  if (Number(sourceIndex) !== actualSourceIndex) {
-    return res.status(409).json({
-      msg: "Board state changed. Please refresh and try again."
-    });
-  }
-  const normalizedDestinationIndex = Math.max(0, Math.min(Number(destinationIndex), destinationColumn.cards.length));
-  const [movedCardId] = sourceColumn.cards.splice(actualSourceIndex, 1);
 
-  // In dnd-kit style arrayMove, the destination index doesn't require a -1 adjustment 
-  // after splice because the splice natively shifts elements.
-  destinationColumn.cards.splice(normalizedDestinationIndex, 0, movedCardId);
-  await sourceColumn.save();
-  if (sourceColumnId !== destinationColumnId) {
-    await destinationColumn.save();
-    card.column = destinationColumnId;
-    await card.save();
+  const session = await mongoose.startSession();
+
+  try {
+    let projectId;
+    let fromColumnName;
+    let toColumnName;
+    let cardTitle;
+
+    await session.withTransaction(async () => {
+      const card = await Card.findById(cardId).session(session);
+      if (!card) throw { status: 404, msg: "Card not found" };
+
+      const sourceColumn = await Column.findById(sourceColumnId).session(session);
+      if (!sourceColumn) throw { status: 404, msg: "Source column not found" };
+
+      const destinationColumn = sourceColumnId === destinationColumnId 
+        ? sourceColumn 
+        : await Column.findById(destinationColumnId).session(session);
+      if (!destinationColumn) throw { status: 404, msg: "Destination column not found" };
+
+      if (sourceColumn.board.toString() !== destinationColumn.board.toString()) {
+        throw { status: 400, msg: "Columns must belong to the same board" };
+      }
+      if (card.column.toString() !== sourceColumnId) {
+        throw { status: 400, msg: "Card is not in the source column" };
+      }
+
+      const board = await Board.findById(sourceColumn.board).session(session);
+      const project = await Project.findById(board.project).session(session);
+
+      const isMember = project.members.some(member => member.toString() === userId);
+      if (!isMember) throw { status: 403, msg: "User is not authorized to move this card" };
+      if (!canModify(project, userId)) throw { status: 403, msg: "Viewers cannot perform this action" };
+
+      fromColumnName = sourceColumn.title;
+      toColumnName = destinationColumn.title;
+      projectId = board.project.toString();
+      cardTitle = card.title;
+
+      const actualSourceIndex = sourceColumn.cards.findIndex(id => id.toString() === cardId);
+      if (actualSourceIndex === -1) {
+        throw { status: 400, msg: "Card is missing from the source column" };
+      }
+      if (Number(sourceIndex) !== actualSourceIndex) {
+        throw { status: 409, msg: "Board state changed. Please refresh and try again." };
+      }
+
+      const normalizedDestinationIndex = Math.max(0, Math.min(Number(destinationIndex), destinationColumn.cards.length));
+      const [movedCardId] = sourceColumn.cards.splice(actualSourceIndex, 1);
+
+      destinationColumn.cards.splice(normalizedDestinationIndex, 0, movedCardId);
+      await sourceColumn.save({ session });
+      
+      if (sourceColumnId !== destinationColumnId) {
+        await destinationColumn.save({ session });
+        card.column = destinationColumnId;
+        await card.save({ session });
+      }
+    });
+
+    session.endSession();
+
+    // Side effects (sockets, activity logs) execute only after transaction succeeds
+    const updatedBoard = await getPopulatedBoard(projectId);
+    const payload = {
+      board: updatedBoard,
+      originatorSocketId: socketId
+    };
+    io?.to(projectId).emit("boardUpdated", payload);
+    
+    const user = await User.findById(userId);
+    const actionText = `${user.name} moved card '${cardTitle}' from '${fromColumnName}' to '${toColumnName}'`;
+    await createActivityLog(projectId, userId, actionText, cardId);
+    
+    return res.json(updatedBoard);
+
+  } catch (error) {
+    session.endSession();
+    // Handle specific application errors we threw manually
+    if (error && error.status && error.msg) {
+      return res.status(error.status).json({ msg: error.msg });
+    }
+    console.error("Move Card Transaction Error:", error);
+    return res.status(500).json({ msg: "Server error during card move" });
   }
-  const updatedBoard = await getPopulatedBoard(projectId);
-  const payload = {
-    board: updatedBoard,
-    originatorSocketId: socketId
-  };
-  io?.to(projectId).emit("boardUpdated", payload);
-  const user = await User.findById(userId);
-  const actionText = `${user.name} moved card '${card.title}' from '${fromColumnName}' to '${toColumnName}'`;
-  await createActivityLog(projectId, userId, actionText, cardId);
-  res.json(updatedBoard);
 };
 const addComment = async (req, res) => {
   const errors = validationResult(req);

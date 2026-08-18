@@ -129,9 +129,6 @@ const deleteColumn = async (req, res) => {
       msg: 'Move or delete cards before deleting this column'
     });
   }
-  await Card.deleteMany({
-    column: column._id
-  });
   board.columns.pull(column._id);
   await board.save();
   await Column.findByIdAndDelete(column._id);
