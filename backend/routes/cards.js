@@ -25,7 +25,34 @@ const storage = multer.diskStorage({
     cb(null, uniqueSuffix + "-" + file.originalname);
   },
 });
-const upload = multer({ storage: storage });
+const fileFilter = (req, file, cb) => {
+  const allowedTypes = [
+    "image/jpeg",
+    "image/png",
+    "image/gif",
+    "image/webp",
+    "application/pdf",
+    "application/msword",
+    "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+    "application/vnd.ms-excel",
+    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    "text/plain",
+    "application/zip"
+  ];
+  if (allowedTypes.includes(file.mimetype)) {
+    cb(null, true);
+  } else {
+    cb(new Error("Invalid file type. Only images, PDFs, docs, sheets, zips, and text files are allowed."), false);
+  }
+};
+
+const upload = multer({ 
+  storage: storage,
+  limits: {
+    fileSize: 10 * 1024 * 1024 // 10MB limit
+  },
+  fileFilter: fileFilter
+});
 
 router.post(
   "/",
@@ -118,7 +145,20 @@ router.post(
 
 router.post(
   "/:cardId/attachments",
-  [auth, upload.single("file")],
+  auth,
+  (req, res, next) => {
+    upload.single("file")(req, res, (err) => {
+      if (err instanceof multer.MulterError) {
+        // A Multer error occurred when uploading (e.g., LIMIT_FILE_SIZE)
+        return res.status(400).json({ msg: `Upload error: ${err.message}` });
+      } else if (err) {
+        // An unknown error occurred or custom fileFilter error
+        return res.status(400).json({ msg: err.message });
+      }
+      // Everything went fine
+      next();
+    });
+  },
   addAttachment,
 );
 
