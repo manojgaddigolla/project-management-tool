@@ -14,12 +14,17 @@ export const CardPreview = ({ card, className = "" }) => {
     <div className={`kanban-card-content ${className}`}>
       {card.labels?.length > 0 && (
         <div className="kanban-card-labels">
-          {card.labels.map((labelText) => {
-            const labelDef = PREDEFINED_LABELS.find(l => l.text === labelText);
-            const color = labelDef ? labelDef.color : "#9aa0a6";
+          {card.labels.map((l, index) => {
+            const isString = typeof l === 'string';
+            const labelText = isString ? l : l.text;
+            let color = isString ? undefined : l.color;
+            if (!color) {
+              const labelDef = PREDEFINED_LABELS.find(def => def.text === labelText);
+              color = labelDef ? labelDef.color : "#9aa0a6";
+            }
             return (
               <span 
-                key={labelText} 
+                key={`${labelText}-${index}`} 
                 className="kanban-card-label" 
                 style={{ backgroundColor: color }}
               >

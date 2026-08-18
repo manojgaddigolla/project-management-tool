@@ -14,14 +14,7 @@ const createNotification = require("../utils/notificationManager");
 const {
   getPopulatedBoard
 } = require("../utils/boardUtils");
-const { GoogleGenAI } = require("@google/genai");
-
-let ai;
-try {
-  ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
-} catch (e) {
-  console.warn("GoogleGenAI init failed (cardController)");
-}
+const { generateTaskBreakdown } = require("./aiController");
 const normalizeDueDate = dueDate => {
   if (!dueDate) return undefined;
   const parsed = new Date(dueDate);
@@ -577,44 +570,13 @@ const generateSubtasks = async (req, res) => {
     return res.status(403).json({ msg: "Viewers cannot perform this action" });
   }
 
-  // Smart AI Logic using Google Gemini
+  // Smart AI Logic using Google Gemini via aiController
   let generatedTasks = [];
-  if (!ai) {
-    return res.status(500).json({ msg: "AI provider is not configured. Missing GEMINI_API_KEY." });
-  }
-
   try {
-    const prompt = `
-You are a senior technical project manager. 
-Your job is to take a task and break it down into a checklist of small, actionable sub-tasks.
-Only output a raw JSON array of strings representing the sub-tasks. Do not output any markdown formatting, backticks, or explanation.
-
-Task Title: ${card.title}
-Task Description: ${card.description || "No description provided."}
-
-Output format example:
-["Setup database schema", "Create API endpoint", "Write unit tests"]
-`;
-
-    const response = await ai.models.generateContent({
-      model: "gemini-3.5-flash",
-      contents: prompt,
-    });
-
-    let rawText = response.text.trim();
-    if (rawText.startsWith('```json')) {
-      rawText = rawText.replace(/```json/g, '').replace(/```/g, '').trim();
-    } else if (rawText.startsWith('```')) {
-      rawText = rawText.replace(/```/g, '').trim();
-    }
-
-    generatedTasks = JSON.parse(rawText);
-    if (!Array.isArray(generatedTasks)) {
-      throw new Error("Output was not an array");
-    }
+    generatedTasks = await generateTaskBreakdown(card.title, card.description);
   } catch (err) {
     console.error("Gemini AI Breakdown Error:", err);
-    return res.status(500).json({ msg: "AI failed to generate a valid checklist." });
+    return res.status(500).json({ msg: err.message || "AI failed to generate a valid checklist." });
   }
 
   // Filter out duplicates that already exist in the card's checklist

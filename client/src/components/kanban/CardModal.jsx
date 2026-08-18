@@ -27,6 +27,15 @@ const CardModal = ({
   isViewer = false,
 }) => {
   const [newCommentText, setNewCommentText] = useState("");
+  const normalizeLabels = (rawLabels) => {
+    return (rawLabels || []).map(l => {
+      if (typeof l === 'string') {
+        const def = PREDEFINED_LABELS.find(d => d.text === l);
+        return { text: l, color: def ? def.color : "#9aa0a6" };
+      }
+      return l;
+    });
+  };
   const [selectedAssignees, setSelectedAssignees] = useState([]);
   const [editForm, setEditForm] = useState({
     title: "",
@@ -66,7 +75,7 @@ const CardModal = ({
       dueDate: card?.dueDate ? card.dueDate.slice(0, 10) : "",
     });
     setChecklist(card?.checklist || []);
-    setSelectedLabels(card?.labels || []);
+    setSelectedLabels(normalizeLabels(card?.labels || []));
   }
 
 
@@ -613,32 +622,34 @@ const CardModal = ({
                       <div className="labels-section">
                         <h3 className="modal-section-title">Labels</h3>
                         <div className="labels-list">
-                          {PREDEFINED_LABELS.map((label) => (
-                            <div
-                              key={label.text}
-                              className={`label-item ${selectedLabels.includes(label.text) ? "selected" : ""
-                                }`}
-                              onClick={() => {
-                                if (isViewer) return;
-                                setSelectedLabels((prev) =>
-                                  prev.includes(label.text)
-                                    ? prev.filter((t) => t !== label.text)
-                                    : [...prev, label.text]
-                                );
-                              }}
-                              style={{
-                                backgroundColor: label.color,
-                                color: "#fff",
-                                opacity: selectedLabels.includes(label.text) ? 1 : 0.6,
-                                cursor: isViewer ? "default" : "pointer",
-                              }}
-                            >
-                              {selectedLabels.includes(label.text) && (
-                                <span style={{ marginRight: "4px", fontWeight: "bold" }}>✓</span>
-                              )}
-                              {label.text}
-                            </div>
-                          ))}
+                          {PREDEFINED_LABELS.map((label) => {
+                            const isSelected = selectedLabels.some((l) => l.text === label.text);
+                            return (
+                              <div
+                                key={label.text}
+                                className={`label-item ${isSelected ? "selected" : ""}`}
+                                onClick={() => {
+                                  if (isViewer) return;
+                                  setSelectedLabels((prev) =>
+                                    isSelected
+                                      ? prev.filter((t) => t.text !== label.text)
+                                      : [...prev, { text: label.text, color: label.color }]
+                                  );
+                                }}
+                                style={{
+                                  backgroundColor: label.color,
+                                  color: "#fff",
+                                  opacity: isSelected ? 1 : 0.6,
+                                  cursor: isViewer ? "default" : "pointer",
+                                }}
+                              >
+                                {isSelected && (
+                                  <span style={{ marginRight: "4px", fontWeight: "bold" }}>✓</span>
+                                )}
+                                {label.text}
+                              </div>
+                            );
+                          })}
                         </div>
                       </div>
 

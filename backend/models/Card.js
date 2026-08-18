@@ -25,8 +25,7 @@ const CardSchema = new mongoose.Schema(
 
     labels: [
       {
-        type: String,
-        trim: true,
+        type: mongoose.Schema.Types.Mixed,
       },
     ],
 

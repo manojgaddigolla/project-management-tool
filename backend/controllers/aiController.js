@@ -42,18 +42,16 @@ ${analyticsText}
   }
 };
 
-const generateTaskBreakdown = async (req, res) => {
-  try {
-    if (!ai) {
-      return res.status(500).json({ msg: "AI provider is not configured. Missing GEMINI_API_KEY." });
-    }
+const generateTaskBreakdown = async (title, description) => {
+  if (!ai) {
+    throw new Error("AI provider is not configured. Missing GEMINI_API_KEY.");
+  }
 
-    const { title, description } = req.body;
-    if (!title) {
-      return res.status(400).json({ msg: "Card title is required for breakdown." });
-    }
+  if (!title) {
+    throw new Error("Card title is required for breakdown.");
+  }
 
-    const prompt = `
+  const prompt = `
 You are a senior technical project manager. 
 Your job is to take a task and break it down into a checklist of small, actionable sub-tasks.
 Only output a raw JSON array of strings representing the sub-tasks. Do not output any markdown formatting, backticks, or explanation.
@@ -65,34 +63,28 @@ Output format example:
 ["Setup database schema", "Create API endpoint", "Write unit tests"]
 `;
 
-    const response = await ai.models.generateContent({
-      model: "gemini-3.5-flash",
-      contents: prompt,
-    });
+  const response = await ai.models.generateContent({
+    model: "gemini-3.5-flash",
+    contents: prompt,
+  });
 
-    let rawText = response.text.trim();
-    // Clean up potential markdown formatting if the LLM disobeys
-    if (rawText.startsWith('```json')) {
-      rawText = rawText.replace(/```json/g, '').replace(/```/g, '').trim();
-    } else if (rawText.startsWith('```')) {
-      rawText = rawText.replace(/```/g, '').trim();
+  let rawText = response.text.trim();
+  // Clean up potential markdown formatting if the LLM disobeys
+  if (rawText.startsWith('```json')) {
+    rawText = rawText.replace(/```json/g, '').replace(/```/g, '').trim();
+  } else if (rawText.startsWith('```')) {
+    rawText = rawText.replace(/```/g, '').trim();
+  }
+
+  try {
+    const subtasks = JSON.parse(rawText);
+    if (!Array.isArray(subtasks)) {
+      throw new Error("Output was not an array");
     }
-
-    let subtasks = [];
-    try {
-      subtasks = JSON.parse(rawText);
-      if (!Array.isArray(subtasks)) {
-        throw new Error("Output was not an array");
-      }
-    } catch (parseError) {
-      console.error("Failed to parse LLM JSON:", rawText);
-      return res.status(500).json({ msg: "AI generated malformed JSON." });
-    }
-
-    res.json({ subtasks });
-  } catch (err) {
-    console.error("AI Breakdown Error:", err);
-    res.status(500).json({ msg: "Failed to generate task breakdown." });
+    return subtasks;
+  } catch (parseError) {
+    console.error("Failed to parse LLM JSON:", rawText);
+    throw new Error("AI generated malformed JSON.");
   }
 };
 
